@@ -159,7 +159,7 @@ class Note:
 class Config:
     """Deals with saving and loading the configuration file."""
 
-    CONFIG_PATH = os.path.dirname(__file__) + "/autoentering_config.ini"
+    CONFIG_PATH = os.path.dirname(__file__) + "/obsidian_to_anki_config.ini"
 
     def update_config():
         """Update config with new notes."""
