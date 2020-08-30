@@ -13,6 +13,8 @@ This will make a configuration file, `obsidian_to_anki_config.ini`.
 ## Usage
 For simple documentation, run the script with the `-h` flag.
 
+Note that you need to have Anki running when using the script.
+
 In the markdown file, you must format your notes as follows:
 
 START  
