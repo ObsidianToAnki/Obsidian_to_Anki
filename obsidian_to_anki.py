@@ -388,6 +388,8 @@ class App:
             self.get_cards()
             self.move_cards()
             self.get_tags()
+            self.clear_tags()
+            self.add_tags()
             # App.anki_from_file(args.filename)
 
     def setup_parser(self):
@@ -515,7 +517,7 @@ class App:
         AnkiConnect.invoke(
             "removeTags",
             notes=[parsed.id for parsed in self.notes_to_edit],
-            tags="".join(self.tags)
+            tags=" ".join(self.tags)
         )
 
     def add_tags(self):
@@ -526,9 +528,10 @@ class App:
                 AnkiConnect.request(
                     "addTags",
                     notes=[parsed.id],
-                    tags="".join(parsed.note["tags"])
+                    tags=" ".join(parsed.note["tags"])
                 )
                 for parsed in self.notes_to_edit
+                if parsed.note["tags"]
             ]
         )
 

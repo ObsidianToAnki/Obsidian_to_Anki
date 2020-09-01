@@ -10,13 +10,13 @@ END
 START
 Cloze
 This is a {{c1::test1.}}
+Tags: A2
 ID: 1598986084524
 END
 
 START
 Cloze
 This is a {{c1::test4.}}
-Tags: AS
 ID: 1598986084609
 END
 
@@ -28,6 +28,6 @@ Item2: Two
 Item3: Three
 Item4: Four
 Item5: Five
-Tags: Brilliant AS
+Tags: AS
 ID: 1598986084694
 END
