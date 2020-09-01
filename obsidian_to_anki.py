@@ -102,6 +102,7 @@ class Note:
         "audio": list()
     }
     ID_PREFIX = "ID: "
+    Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
 
     def __init__(self, note_text):
         """Set up useful variables."""
@@ -159,7 +160,7 @@ class Note:
         template = Note.NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
-        return template
+        return Note.Note_and_id(note=template, id=self.identifier)
 
 
 class Config:
@@ -257,7 +258,8 @@ class App:
         result = AnkiConnect.invoke(
             "addNotes",
             notes=[
-                Note(note).parse() for note in App.notes_from_file(filename)
+                Note(note).parse().note
+                for note in App.notes_from_file(filename)
             ]
         )
         return result
