@@ -43,8 +43,8 @@ class AnkiConnect:
         else:
             update_note = dict()
             update_note["id"] = identifier
-            update_note["fields"] = note.fields
-            update_note["audio"] = note.audio
+            update_note["fields"] = note["fields"]
+            update_note["audio"] = note["audio"]
             return AnkiConnect.invoke(
                 "updateNoteFields", note=update_note
             )
@@ -279,6 +279,11 @@ class App:
             ]
         )
         return result
+
+    def anki_from_file2(filename):
+        for note in App.notes_from_file(filename):
+            parsed = Note(note).parse()
+            print(AnkiConnect.add_or_update(parsed))
 
     def main():
         """Execute the main functionality of the script."""
