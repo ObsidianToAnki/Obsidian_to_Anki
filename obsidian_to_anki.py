@@ -299,7 +299,7 @@ class App:
             return
         if args.filename:
             self.filename = args.filename
-            print("Reading file into memory...")
+            print("Reading file", args.filename, "into memory...")
             with open(args.filename) as f:
                 self.file = f.read()
             self.target_deck = App.DECK_REGEXP.search(self.file).group(0)
@@ -439,6 +439,7 @@ class App:
 
     def clear_tags(self):
         """Remove all currently used tags from notes to be edited."""
+        print("Replacing tags...")
         AnkiConnect.invoke(
             "removeTags",
             notes=[parsed.id for parsed in self.notes_to_edit],
