@@ -60,13 +60,24 @@ class AnkiConnect:
                 "addNote", note=note
             )
         else:
-            update_note = dict()
-            update_note["id"] = identifier
-            update_note["fields"] = note["fields"]
-            update_note["audio"] = note["audio"]
-            return AnkiConnect.invoke(
-                "updateNoteFields", note=update_note
-            )
+            AnkiConnect.note_update(note, identifier)
+
+    def note_update(note_dict, id):
+        """Update note with identifier id to match note_dict."""
+        # First, update fields
+        update_note = dict()
+        update_note["id"] = id
+        update_note["fields"] = note_dict["fields"]
+        update_note["audio"] = note_dict["audio"]
+        AnkiConnect.invoke(
+            "updateNoteFields", note=update_note
+        )
+        # Next, change deck
+        AnkiConnect.invoke(
+            "changeDeck",
+            cards=[id],
+            deck=Note.TARGET_DECK
+        )
 
 
 class FormatConverter:
@@ -216,15 +227,21 @@ class Config:
             print("Config file exists, reading...")
             config.read(Config.CONFIG_PATH)
         note_types = AnkiConnect.invoke("modelNames")
-        subs = {
-            note: {
+        fields_request = [
+            AnkiConnect.request(
+                "modelFieldNames", modelName=note
+            )
+            for note in note_types
+        ]
+        subs2 = dict()
+        for note, fields in zip(note_types, AnkiConnect.invoke(
+            "multi", actions=fields_request
+        )):
+            subs2[note] = {
                 field: field + ": "
-                for field in AnkiConnect.invoke(
-                    "modelFieldNames", modelName=note
-                )
-            } for note in note_types
-        }
-        for note, note_field_subs in subs.items():
+                for field in fields["result"]
+            }
+        for note, note_field_subs in subs2.items():
             if note not in config:
                 config[note] = dict()
             for field, sub in note_field_subs.items():
