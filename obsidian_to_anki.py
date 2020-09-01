@@ -327,7 +327,7 @@ class App:
             Config.update_config()
         Config.load_config()
         if args.config:
-            os.startfile(Config.CONFIG_PATH)
+            webbrowser.open(Config.CONFIG_PATH)
             return
         if args.filename:
             App.anki_from_file(args.filename)
