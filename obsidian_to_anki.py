@@ -6,6 +6,7 @@ import urllib.request
 import configparser
 import os
 import argparse
+import collections
 
 
 class AnkiConnect:
