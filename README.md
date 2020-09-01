@@ -30,12 +30,12 @@ To add appropriately-formatted notes from a file, run `obsidian_to_anki -f {FILE
 
 ## Deck formatting
 Anywhere within the file, format the deck that you want the notes to go into as follows:
-> TARGET DECK
-> {Deck name}
+> TARGET DECK  
+> {Deck name}  
 
 For example:
-> TARGET DECK
-> Mathematics
+> TARGET DECK  
+> Mathematics  
 
 You may place more than one TARGET DECK, but only the first instance will be read and used.
 
@@ -46,7 +46,7 @@ In the markdown file, you must format your notes as follows:
 > START  
 > {Note Type}  
 > {Note Fields}  
-> Tags: 
+> Tags:   
 > END  
 
 ### Tag formatting
