@@ -7,6 +7,20 @@ import configparser
 import os
 import argparse
 import collections
+import shutil
+
+
+def write_safe(filename, contents):
+    with open(filename + ".tmp", "w") as temp:
+        temp.write(contents)
+    os.rename(filename, filename + ".bak")
+    os.rename(filename + ".tmp", filename)
+    success = False
+    with open(filename) as f:
+        if f.read() == contents:
+            success = True
+    if success:
+        os.remove(filename + ".bak")
 
 
 class AnkiConnect:
@@ -281,9 +295,42 @@ class App:
         return result
 
     def anki_from_file2(filename):
-        for note in App.notes_from_file(filename):
+        print("Adding notes from", filename, "...")
+        with open(filename) as f:
+            file = f.read()
+            updated_file = file
+            position = 0
+        match = App.NOTE_REGEXP.search(updated_file, position)
+        while match:
+            note = match.group(0)
             parsed = Note(note).parse()
-            print(AnkiConnect.add_or_update(parsed))
+            result = AnkiConnect.add_or_update(parsed)
+            position = match.end()
+            if result is not None and parsed.id is None:
+                # This indicates a new note was added successfully:
+
+                # Result being None means either error or the result is
+                # an identifier.
+
+                # parsed.id being None means that there was
+                # No ID to begin with.
+
+                # So, we need to insert the note ID as a line.
+                print(
+                    "Successfully added note with ID",
+                    result
+                )
+                updated_file = "".join([
+                    updated_file[:match.end()],
+                    Note.ID_PREFIX + str(result) + "\n",
+                    updated_file[match.end():]
+                ])
+                position += len(Note.ID_PREFIX + str(result) + "\n")
+            else:
+                print("Successfully updated note with ID", parsed.id)
+            match = App.NOTE_REGEXP.search(updated_file, position)
+        print("All notes from", filename, "added, now writing new IDs.")
+        write_safe(filename, updated_file)
 
     def main():
         """Execute the main functionality of the script."""
@@ -295,7 +342,7 @@ class App:
             os.startfile(Config.CONFIG_PATH)
             return
         if args.filename:
-            print("Success! IDs are", App.anki_from_file(args.filename))
+            App.anki_from_file2(args.filename)
 
 
 if __name__ == "__main__":
