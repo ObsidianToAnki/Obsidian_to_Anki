@@ -7,7 +7,6 @@ import configparser
 import os
 import argparse
 import collections
-import shutil
 
 
 def write_safe(filename, contents):
@@ -276,25 +275,7 @@ class App:
 
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
 
-    def notes_from_file(filename):
-        """Get the notes from this file."""
-        with open(filename) as f:
-            file = f.read()
-            return App.NOTE_REGEXP.findall(file)
-
     def anki_from_file(filename):
-        """Add notes to anki from this file."""
-        print("Adding notes to Anki...")
-        result = AnkiConnect.invoke(
-            "addNotes",
-            notes=[
-                Note(note).parse().note
-                for note in App.notes_from_file(filename)
-            ]
-        )
-        return result
-
-    def anki_from_file2(filename):
         print("Adding notes from", filename, "...")
         with open(filename) as f:
             file = f.read()
