@@ -96,9 +96,11 @@ class Note:
             "allowDuplicate": False,
             "duplicateScope": "deck"
         },
-        "tags": list(),
+        "tags": ["Obsidian_to_Anki"],
+        # ^So that you can see what was added automatically.
         "audio": list()
     }
+    ID_PREFIX = "ID: "
 
     def __init__(self, note_text):
         """Set up useful variables."""
@@ -108,6 +110,11 @@ class Note:
         self.subs = Note.field_subs[self.note_type]
         self.current_field_num = 0
         self.field_names = list(self.subs)
+        if self.lines[-1].startswith(Note.ID_PREFIX):
+            self.identifier = self.lines.pop()[len(Note.ID_PREFIX):]
+            # The above removes the identifier line, for convenience of parsing
+        else:
+            self.identifier = None
 
     @property
     def current_field(self):
@@ -151,8 +158,6 @@ class Note:
         template = Note.NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
-        template["tags"] = ["Obsidian_to_Anki"]
-        # ^So that you can see what was added automatically.
         return template
 
 
