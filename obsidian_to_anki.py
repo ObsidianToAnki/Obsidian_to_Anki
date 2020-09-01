@@ -6,6 +6,25 @@ import urllib.request
 import configparser
 import os
 import argparse
+import collections
+
+
+def write_safe(filename, contents):
+    """
+    Write contents to filename while keeping a backup.
+
+    If write fails, a backup 'filename.bak' will still exist.
+    """
+    with open(filename + ".tmp", "w") as temp:
+        temp.write(contents)
+    os.rename(filename, filename + ".bak")
+    os.rename(filename + ".tmp", filename)
+    success = False
+    with open(filename) as f:
+        if f.read() == contents:
+            success = True
+    if success:
+        os.remove(filename + ".bak")
 
 
 class AnkiConnect:
@@ -31,6 +50,22 @@ class AnkiConnect:
         if response['error'] is not None:
             raise Exception(response['error'])
         return response['result']
+
+    def add_or_update(note_and_id):
+        """Add the note if id is None, otherwise update the note."""
+        note, identifier = note_and_id.note, note_and_id.id
+        if identifier is None:
+            return AnkiConnect.invoke(
+                "addNote", note=note
+            )
+        else:
+            update_note = dict()
+            update_note["id"] = identifier
+            update_note["fields"] = note["fields"]
+            update_note["audio"] = note["audio"]
+            return AnkiConnect.invoke(
+                "updateNoteFields", note=update_note
+            )
 
 
 class FormatConverter:
@@ -96,9 +131,12 @@ class Note:
             "allowDuplicate": False,
             "duplicateScope": "deck"
         },
-        "tags": list(),
+        "tags": ["Obsidian_to_Anki"],
+        # ^So that you can see what was added automatically.
         "audio": list()
     }
+    ID_PREFIX = "ID: "
+    Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
 
     def __init__(self, note_text):
         """Set up useful variables."""
@@ -108,6 +146,11 @@ class Note:
         self.subs = Note.field_subs[self.note_type]
         self.current_field_num = 0
         self.field_names = list(self.subs)
+        if self.lines[-1].startswith(Note.ID_PREFIX):
+            self.identifier = int(self.lines.pop()[len(Note.ID_PREFIX):])
+            # The above removes the identifier line, for convenience of parsing
+        else:
+            self.identifier = None
 
     @property
     def current_field(self):
@@ -151,9 +194,7 @@ class Note:
         template = Note.NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
-        template["tags"] = ["Obsidian_to_Anki"]
-        # ^So that you can see what was added automatically.
-        return template
+        return Note.Note_and_id(note=template, id=self.identifier)
 
 
 class Config:
@@ -239,22 +280,44 @@ class App:
 
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
 
-    def notes_from_file(filename):
-        """Get the notes from this file."""
+    def anki_from_file(filename):
+        """Add to or update notes from Anki, from filename."""
+        print("Adding notes from", filename, "...")
         with open(filename) as f:
             file = f.read()
-            return App.NOTE_REGEXP.findall(file)
+            updated_file = file
+            position = 0
+        match = App.NOTE_REGEXP.search(updated_file, position)
+        while match:
+            note = match.group(0)
+            parsed = Note(note).parse()
+            result = AnkiConnect.add_or_update(parsed)
+            position = match.end()
+            if result is not None and parsed.id is None:
+                # This indicates a new note was added successfully:
 
-    def anki_from_file(filename):
-        """Add notes to anki from this file."""
-        print("Adding notes to Anki...")
-        result = AnkiConnect.invoke(
-            "addNotes",
-            notes=[
-                Note(note).parse() for note in App.notes_from_file(filename)
-            ]
-        )
-        return result
+                # Result being None means either error or the result is
+                # an identifier.
+
+                # parsed.id being None means that there was
+                # No ID to begin with.
+
+                # So, we need to insert the note ID as a line.
+                print(
+                    "Successfully added note with ID",
+                    result
+                )
+                updated_file = "".join([
+                    updated_file[:match.end()],
+                    Note.ID_PREFIX + str(result) + "\n",
+                    updated_file[match.end():]
+                ])
+                position += len(Note.ID_PREFIX + str(result) + "\n")
+            else:
+                print("Successfully updated note with ID", parsed.id)
+            match = App.NOTE_REGEXP.search(updated_file, position)
+        print("All notes from", filename, "added, now writing new IDs.")
+        write_safe(filename, updated_file)
 
     def main():
         """Execute the main functionality of the script."""
@@ -266,7 +329,7 @@ class App:
             os.startfile(Config.CONFIG_PATH)
             return
         if args.filename:
-            print("Success! IDs are", App.anki_from_file(args.filename))
+            App.anki_from_file2(args.filename)
 
 
 if __name__ == "__main__":
