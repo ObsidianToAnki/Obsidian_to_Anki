@@ -233,15 +233,19 @@ class Config:
             )
             for note in note_types
         ]
-        subs2 = dict()
-        for note, fields in zip(note_types, AnkiConnect.invoke(
-            "multi", actions=fields_request
-        )):
-            subs2[note] = {
+        subs = {
+            note: {
                 field: field + ": "
                 for field in fields["result"]
             }
-        for note, note_field_subs in subs2.items():
+            for note, fields in zip(
+                note_types,
+                AnkiConnect.invoke(
+                    "multi", actions=fields_request
+                )
+            )
+        }
+        for note, note_field_subs in subs.items():
             if note not in config:
                 config[note] = dict()
             for field, sub in note_field_subs.items():
