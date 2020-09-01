@@ -123,19 +123,7 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
-    DEFAULT_DECK = "Default"
-    NOTE_DICT_TEMPLATE = {
-        "deckName": DEFAULT_DECK,
-        "modelName": "",
-        "fields": dict(),
-        "options": {
-            "allowDuplicate": False,
-            "duplicateScope": "deck"
-        },
-        "tags": ["Obsidian_to_Anki"],
-        # ^So that you can see what was added automatically.
-        "audio": list()
-    }
+    TARGET_DECK = "Default"
     ID_PREFIX = "ID: "
     Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
 
@@ -152,6 +140,22 @@ class Note:
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
+
+    @property
+    def NOTE_DICT_TEMPLATE(self):
+        """Template for making notes."""
+        return {
+            "deckName": Note.TARGET_DECK,
+            "modelName": "",
+            "fields": dict(),
+            "options": {
+                "allowDuplicate": False,
+                "duplicateScope": "deck"
+            },
+            "tags": ["Obsidian_to_Anki"],
+            # ^So that you can see what was added automatically.
+            "audio": list()
+        }
 
     @property
     def current_field(self):
@@ -192,7 +196,7 @@ class Note:
 
     def parse(self):
         """Get a properly formatted dictionary of the note."""
-        template = Note.NOTE_DICT_TEMPLATE.copy()
+        template = self.NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
         return Note.Note_and_id(note=template, id=self.identifier)
@@ -255,6 +259,7 @@ class Config:
 class App:
     """Master class that manages the application."""
 
+    # Setting up the parser
     parser = argparse.ArgumentParser(
         description="Add cards to Anki from an Obsidian markdown file."
     )
@@ -284,7 +289,9 @@ class App:
         """,
     )
 
+    # Useful REGEXPs
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
+    DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
 
     def anki_from_file(filename):
         """Add to or update notes from Anki, from filename."""
@@ -293,6 +300,9 @@ class App:
             file = f.read()
             updated_file = file
             position = 0
+        target_deck = App.DECK_REGEXP.search(file)
+        if target_deck is not None:
+            Note.TARGET_DECK = target_deck.group(0)
         match = App.NOTE_REGEXP.search(updated_file, position)
         while match:
             note = match.group(0)
@@ -327,6 +337,7 @@ class App:
 
     def main():
         """Execute the main functionality of the script."""
+        # Get the target deck
         args = App.parser.parse_args()
         if args.update:
             Config.update_config()
