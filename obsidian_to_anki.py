@@ -366,15 +366,16 @@ class App:
             print("Reading file into memory...")
             with open(args.filename) as f:
                 self.file = f.read()
-            self.target_deck = App.DECK_REGEXP.search(self.file)
+            self.target_deck = App.DECK_REGEXP.search(self.file).group(0)
             if self.target_deck is not None:
-                Note.TARGET_DECK = self.target_deck.group(0)
+                Note.TARGET_DECK = self.target_deck
             print("Identified target deck as", Note.TARGET_DECK)
             self.scan_file()
             self.add_notes()
             self.write_ids()
             self.update_fields()
             self.get_cards()
+            self.move_cards()
             # App.anki_from_file(args.filename)
 
     def setup_parser(self):
@@ -476,6 +477,15 @@ class App:
             ]
         ):
             self.cards += info["cards"]
+
+    def move_cards(self):
+        """Move all cards to target deck."""
+        print("Moving cards to target deck...")
+        AnkiConnect.invoke(
+            "changeDeck",
+            cards=self.cards,
+            deck=self.target_deck
+        )
 
 
 if __name__ == "__main__":
