@@ -33,6 +33,22 @@ class AnkiConnect:
             raise Exception(response['error'])
         return response['result']
 
+    def add_or_update(note_and_id):
+        """Add the note if id is None, otherwise update the note."""
+        note, identifier = note_and_id.note, note_and_id.id
+        if identifier is None:
+            return AnkiConnect.invoke(
+                "addNote", note=note
+            )
+        else:
+            update_note = dict()
+            update_note["id"] = identifier
+            update_note["fields"] = note.fields
+            update_note["audio"] = note.audio
+            return AnkiConnect.invoke(
+                "updateNoteFields", note=update_note
+            )
+
 
 class FormatConverter:
     """Converting Obsidian formatting to Anki formatting."""
@@ -113,7 +129,7 @@ class Note:
         self.current_field_num = 0
         self.field_names = list(self.subs)
         if self.lines[-1].startswith(Note.ID_PREFIX):
-            self.identifier = self.lines.pop()[len(Note.ID_PREFIX):]
+            self.identifier = int(self.lines.pop()[len(Note.ID_PREFIX):])
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
