@@ -28,6 +28,26 @@ def write_safe(filename, contents):
         os.remove(filename + ".bak")
 
 
+def string_insert(string, position_inserts):
+    """
+    Insert strings in position_inserts into string, at indices.
+
+    position_inserts will look like:
+    [(0, "hi"), (3, "hello"), (5, "beep")]
+    """
+    offset = 0
+    for position, insert_str in position_inserts:
+        string = "".join(
+            [
+                string[:position + offset],
+                insert_str,
+                string[position + offset:]
+            ]
+        )
+        offset += len(insert_str)
+    return string
+
+
 class AnkiConnect:
     """Namespace for AnkiConnect functions."""
 
@@ -375,6 +395,8 @@ class App:
 
 
 if __name__ == "__main__":
+    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App.main()
+    """
