@@ -304,40 +304,11 @@ class Config:
 class App:
     """Master class that manages the application."""
 
-    # Setting up the parser
-    parser = argparse.ArgumentParser(
-        description="Add cards to Anki from an Obsidian markdown file."
-    )
-    parser.add_argument(
-        "-f",
-        type=str,
-        help="The file you want to add flashcards from.",
-        dest="filename"
-    )
-    parser.add_argument(
-        "-c", "--config",
-        action="store_true",
-        dest="config",
-        help="""
-            Opens up config file for editing.
-        """
-    )
-    parser.add_argument(
-        "-u", "--update",
-        action="store_true",
-        dest="update",
-        help="""
-            Whether you want to update the config file
-            using new notes from Anki.
-            Note that this does NOT open the config file for editing,
-            use -c for that.
-        """,
-    )
-
     # Useful REGEXPs
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
 
+    @staticmethod
     def anki_from_file(filename):
         """Add to or update notes from Anki, from filename."""
         print("Adding notes from", filename, "...")
@@ -380,10 +351,10 @@ class App:
         print("All notes from", filename, "added, now writing new IDs.")
         write_safe(filename, updated_file)
 
-    def main():
+    def __init__(self):
         """Execute the main functionality of the script."""
-        # Get the target deck
-        args = App.parser.parse_args()
+        self.setup_parser()
+        args = self.parser.parse_args()
         if args.update:
             Config.update_config()
         Config.load_config()
@@ -391,12 +362,111 @@ class App:
             webbrowser.open(Config.CONFIG_PATH)
             return
         if args.filename:
-            App.anki_from_file(args.filename)
+            self.filename = args.filename
+            print("Reading file into memory...")
+            with open(args.filename) as f:
+                self.file = f.read()
+            self.target_deck = App.DECK_REGEXP.search(self.file)
+            if self.target_deck is not None:
+                Note.TARGET_DECK = self.target_deck.group(0)
+            print("Identified target deck as", Note.TARGET_DECK)
+            print("Scanning file for notes...")
+            self.scan_file()
+            print("Adding notes into Anki...")
+            self.add_notes()
+            print("Writing new note IDs to file...")
+            self.write_ids()
+            print("Updating fields of existing notes...")
+            self.update_fields()
+            # App.anki_from_file(args.filename)
+
+    def setup_parser(self):
+        """Set up the argument parser."""
+        self.parser = argparse.ArgumentParser(
+            description="Add cards to Anki from an Obsidian markdown file."
+        )
+        self.parser.add_argument(
+            "-f",
+            type=str,
+            help="The file you want to add flashcards from.",
+            dest="filename"
+        )
+        self.parser.add_argument(
+            "-c", "--config",
+            action="store_true",
+            dest="config",
+            help="""
+                Opens up config file for editing.
+            """
+        )
+        self.parser.add_argument(
+            "-u", "--update",
+            action="store_true",
+            dest="update",
+            help="""
+                Whether you want to update the config file
+                using new notes from Anki.
+                Note that this does NOT open the config file for editing,
+                use -c for that.
+            """,
+        )
+
+    def scan_file(self):
+        """Sort notes from file into adding vs editing."""
+        self.notes_to_add = list()
+        self.id_indexes = list()
+        self.notes_to_edit = list()
+        for note_match in App.NOTE_REGEXP.finditer(self.file):
+            note, position = note_match.group(0), note_match.end()
+            parsed = Note(note).parse()
+            if parsed.id is None:
+                self.notes_to_add.append(parsed.note)
+                self.id_indexes.append(position)
+            else:
+                self.notes_to_edit.append(parsed)
+
+    @staticmethod
+    def id_to_str(id):
+        """Get the string repr of id."""
+        return "ID: " + str(id) + "\n"
+
+    def add_notes(self):
+        """Add notes to Anki."""
+        self.identifiers = map(
+            App.id_to_str, AnkiConnect.invoke(
+                "addNotes",
+                notes=self.notes_to_add
+            )
+        )
+
+    def write_ids(self):
+        """Write the identifiers to the file."""
+        self.file = string_insert(
+            self.file, zip(
+                self.id_indexes, self.identifiers
+            )
+        )
+        write_safe(self.filename, self.file)
+
+    def update_fields(self):
+        """Update the fields of current notes."""
+        AnkiConnect.invoke(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "updateNoteFields", note={
+                        "id": parsed.id,
+                        "fields": parsed.note["fields"],
+                        "audio": parsed.note["audio"]
+                    }
+                )
+                for parsed in self.notes_to_edit
+            ]
+        )
+        pass
 
 
 if __name__ == "__main__":
-    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
-    App.main()
-    """
+    App()
