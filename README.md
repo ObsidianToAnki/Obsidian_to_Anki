@@ -73,12 +73,12 @@ When the script successfully adds a note, it will append an ID to the Note Data.
 
 Example output:
 
-> START
-> Basic
-> This is a test.
-> Back: Test successful!
-> ID: 1566052191670
-> END
+> START  
+> Basic  
+> This is a test.  
+> Back: Test successful!  
+> ID: 1566052191670  
+> END  
 
 ### Default
 By default, the script:
