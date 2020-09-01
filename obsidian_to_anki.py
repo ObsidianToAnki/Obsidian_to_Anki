@@ -7,6 +7,7 @@ import configparser
 import os
 import argparse
 import collections
+import webbrowser
 
 
 def write_safe(filename, contents):
