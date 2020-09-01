@@ -493,6 +493,12 @@ class App:
             deck=self.target_deck
         )
 
+    def get_tags(self):
+        """Get a set of currently used tags for notes to be edited."""
+        self.tags = set()
+        for info in self.info:
+            self.tags.update(info["tags"])
+
 
 if __name__ == "__main__":
     if not os.path.exists(Config.CONFIG_PATH):
