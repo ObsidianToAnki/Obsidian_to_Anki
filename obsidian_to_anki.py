@@ -259,24 +259,29 @@ class App:
         description="Add cards to Anki from an Obsidian markdown file."
     )
     parser.add_argument(
-        "-filename", type=str, help="The file you want to add flashcards from."
+        "-f",
+        type=str,
+        help="The file you want to add flashcards from.",
+        dest="filename"
     )
     parser.add_argument(
-        "-update",
+        "-c", "--config",
         action="store_true",
+        dest="config",
+        help="""
+            Opens up config file for editing.
+        """
+    )
+    parser.add_argument(
+        "-u", "--update",
+        action="store_true",
+        dest="update",
         help="""
             Whether you want to update the config file
             using new notes from Anki.
             Note that this does NOT open the config file for editing,
-            you have to do that manually.
+            use -c for that.
         """,
-    )
-    parser.add_argument(
-        "-config",
-        action="store_true",
-        help="""
-            Opens up config file for editing.
-        """
     )
 
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
