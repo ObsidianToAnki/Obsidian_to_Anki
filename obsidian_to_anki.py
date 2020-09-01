@@ -370,17 +370,11 @@ class App:
             if self.target_deck is not None:
                 Note.TARGET_DECK = self.target_deck.group(0)
             print("Identified target deck as", Note.TARGET_DECK)
-            print("Scanning file for notes...")
             self.scan_file()
-            print("Adding notes into Anki...")
             self.add_notes()
-            print("Writing new note IDs to file...")
             self.write_ids()
-            print("Updating fields of existing notes...")
             self.update_fields()
-            print("Getting card IDs")
             self.get_cards()
-            print(self.cards)
             # App.anki_from_file(args.filename)
 
     def setup_parser(self):
@@ -416,6 +410,7 @@ class App:
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
+        print("Scanning file for notes...")
         self.notes_to_add = list()
         self.id_indexes = list()
         self.notes_to_edit = list()
@@ -435,6 +430,7 @@ class App:
 
     def add_notes(self):
         """Add notes to Anki."""
+        print("Adding notes into Anki...")
         self.identifiers = map(
             App.id_to_str, AnkiConnect.invoke(
                 "addNotes",
@@ -444,6 +440,7 @@ class App:
 
     def write_ids(self):
         """Write the identifiers to the file."""
+        print("Writing new note IDs to file...")
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, self.identifiers
@@ -453,6 +450,7 @@ class App:
 
     def update_fields(self):
         """Update the fields of current notes."""
+        print("Updating fields of existing notes...")
         AnkiConnect.invoke(
             "multi",
             actions=[
@@ -469,6 +467,7 @@ class App:
 
     def get_cards(self):
         """Get the card IDs for all notes that need to be edited."""
+        print("Getting card IDs")
         self.cards = list()
         for info in AnkiConnect.invoke(
             "notesInfo",
