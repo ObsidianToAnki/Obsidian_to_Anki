@@ -329,7 +329,7 @@ class App:
             os.startfile(Config.CONFIG_PATH)
             return
         if args.filename:
-            App.anki_from_file2(args.filename)
+            App.anki_from_file(args.filename)
 
 
 if __name__ == "__main__":
