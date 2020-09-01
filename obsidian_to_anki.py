@@ -518,6 +518,20 @@ class App:
             tags="".join(self.tags)
         )
 
+    def add_tags(self):
+        """Add user-set tags for notes to be edited."""
+        AnkiConnect.invoke(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "addTags",
+                    notes=[parsed.id],
+                    tags="".join(parsed.note["tags"])
+                )
+                for parsed in self.notes_to_edit
+            ]
+        )
+
 
 if __name__ == "__main__":
     if not os.path.exists(Config.CONFIG_PATH):
