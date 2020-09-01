@@ -72,37 +72,6 @@ class AnkiConnect:
             raise Exception(response['error'])
         return response['result']
 
-    def add_or_update(note_and_id):
-        """Add the note if id is None, otherwise update the note."""
-        note, identifier = note_and_id.note, note_and_id.id
-        if identifier is None:
-            return AnkiConnect.invoke(
-                "addNote", note=note
-            )
-        else:
-            AnkiConnect.note_update(note, identifier)
-
-    def note_update(note_dict, id):
-        """Update note with identifier id to match note_dict."""
-        # First, update fields
-        update_note = dict()
-        update_note["id"] = id
-        update_note["fields"] = note_dict["fields"]
-        update_note["audio"] = note_dict["audio"]
-        AnkiConnect.invoke(
-            "updateNoteFields", note=update_note
-        )
-        # Next, change deck
-        cards = AnkiConnect.invoke(
-            "notesInfo",
-            notes=[id]
-        )[0]["cards"]
-        AnkiConnect.invoke(
-            "changeDeck",
-            cards=cards,
-            deck=Note.TARGET_DECK
-        )
-
 
 class FormatConverter:
     """Converting Obsidian formatting to Anki formatting."""
@@ -318,49 +287,6 @@ class App:
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
 
-    @staticmethod
-    def anki_from_file(filename):
-        """Add to or update notes from Anki, from filename."""
-        print("Adding notes from", filename, "...")
-        with open(filename) as f:
-            file = f.read()
-            updated_file = file
-            position = 0
-        target_deck = App.DECK_REGEXP.search(file)
-        if target_deck is not None:
-            Note.TARGET_DECK = target_deck.group(0)
-        match = App.NOTE_REGEXP.search(updated_file, position)
-        while match:
-            note = match.group(0)
-            parsed = Note(note).parse()
-            result = AnkiConnect.add_or_update(parsed)
-            position = match.end()
-            if result is not None and parsed.id is None:
-                # This indicates a new note was added successfully:
-
-                # Result being None means either error or the result is
-                # an identifier.
-
-                # parsed.id being None means that there was
-                # No ID to begin with.
-
-                # So, we need to insert the note ID as a line.
-                print(
-                    "Successfully added note with ID",
-                    result
-                )
-                updated_file = "".join([
-                    updated_file[:match.end()],
-                    Note.ID_PREFIX + str(result) + "\n",
-                    updated_file[match.end():]
-                ])
-                position += len(Note.ID_PREFIX + str(result) + "\n")
-            else:
-                print("Successfully updated note with ID", parsed.id)
-            match = App.NOTE_REGEXP.search(updated_file, position)
-        print("All notes from", filename, "added, now writing new IDs.")
-        write_safe(filename, updated_file)
-
     def __init__(self):
         """Execute the main functionality of the script."""
         self.setup_parser()
@@ -390,7 +316,6 @@ class App:
             self.get_tags()
             self.clear_tags()
             self.add_tags()
-            # App.anki_from_file(args.filename)
 
     def setup_parser(self):
         """Set up the argument parser."""
