@@ -73,9 +73,13 @@ class AnkiConnect:
             "updateNoteFields", note=update_note
         )
         # Next, change deck
+        cards = AnkiConnect.invoke(
+            "notesInfo",
+            notes=[id]
+        )[0]["cards"]
         AnkiConnect.invoke(
             "changeDeck",
-            cards=[id],
+            cards=cards,
             deck=Note.TARGET_DECK
         )
 
