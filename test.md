@@ -8,10 +8,10 @@ END
 START
 Ordered Explanation/Procedure
 Numbers in English
-1. One
-2. Two
-3. Three
-4. Four
+Item1: One
+Item2: Two
+Item3: Three
+Item4: Four
 END
 
 Good luck!
