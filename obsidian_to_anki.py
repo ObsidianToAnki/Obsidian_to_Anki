@@ -378,6 +378,9 @@ class App:
             self.write_ids()
             print("Updating fields of existing notes...")
             self.update_fields()
+            print("Getting card IDs")
+            self.get_cards()
+            print(self.cards)
             # App.anki_from_file(args.filename)
 
     def setup_parser(self):
@@ -463,7 +466,17 @@ class App:
                 for parsed in self.notes_to_edit
             ]
         )
-        pass
+
+    def get_cards(self):
+        """Get the card IDs for all notes that need to be edited."""
+        self.cards = list()
+        for info in AnkiConnect.invoke(
+            "notesInfo",
+            notes=[
+                parsed.id for parsed in self.notes_to_edit
+            ]
+        ):
+            self.cards += info["cards"]
 
 
 if __name__ == "__main__":
