@@ -10,6 +10,11 @@ import collections
 
 
 def write_safe(filename, contents):
+    """
+    Write contents to filename while keeping a backup.
+
+    If write fails, a backup 'filename.bak' will still exist.
+    """
     with open(filename + ".tmp", "w") as temp:
         temp.write(contents)
     os.rename(filename, filename + ".bak")
@@ -276,6 +281,7 @@ class App:
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
 
     def anki_from_file(filename):
+        """Add to or update notes from Anki, from filename."""
         print("Adding notes from", filename, "...")
         with open(filename) as f:
             file = f.read()
