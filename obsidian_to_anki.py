@@ -160,6 +160,8 @@ class Note:
 
     TARGET_DECK = "Default"
     ID_PREFIX = "ID: "
+    TAG_PREFIX = "Tags: "
+    TAG_SEP = " "
     Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
 
     def __init__(self, note_text):
@@ -175,6 +177,12 @@ class Note:
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
+        if self.lines[-1].startswith(Note.TAG_PREFIX):
+            self.tags = self.lines.pop()[len(Note.TAG_PREFIX):].split(
+                Note.TAG_SEP
+            )
+        else:
+            self.tags = None
 
     @property
     def NOTE_DICT_TEMPLATE(self):
@@ -234,6 +242,8 @@ class Note:
         template = self.NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
+        if self.tags:
+            template["tags"] = template["tags"] + self.tags
         return Note.Note_and_id(note=template, id=self.identifier)
 
 
@@ -377,6 +387,7 @@ class App:
             self.get_info()
             self.get_cards()
             self.move_cards()
+            self.get_tags()
             # App.anki_from_file(args.filename)
 
     def setup_parser(self):
@@ -498,6 +509,14 @@ class App:
         self.tags = set()
         for info in self.info:
             self.tags.update(info["tags"])
+
+    def clear_tags(self):
+        """Remove all currently used tags from notes to be edited."""
+        AnkiConnect.invoke(
+            "removeTags",
+            notes=[parsed.id for parsed in self.notes_to_edit],
+            tags="".join(self.tags)
+        )
 
 
 if __name__ == "__main__":

@@ -4,19 +4,20 @@ Test
 START
 Cloze
 This is a {{c1::test.}}
-ID: 1598980260341
+ID: 1598986084415
 END
 
 START
 Cloze
 This is a {{c1::test1.}}
-ID: 1598980260457
+ID: 1598986084524
 END
 
 START
 Cloze
 This is a {{c1::test4.}}
-ID: 1598980260554
+Tags: AS
+ID: 1598986084609
 END
 
 START
@@ -27,5 +28,6 @@ Item2: Two
 Item3: Three
 Item4: Four
 Item5: Five
-ID: 1598980260644
+Tags: Brilliant AS
+ID: 1598986084694
 END
