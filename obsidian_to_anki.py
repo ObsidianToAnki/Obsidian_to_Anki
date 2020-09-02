@@ -83,11 +83,9 @@ class FormatConverter:
 
     ANKI_INLINE_START = r"\("
     ANKI_INLINE_END = r"\)"
-    ANKI_INLINE_MATH_REGEXP = re.compile(r"\\\([\s\S]*?\\\)")
 
     ANKI_DISPLAY_START = r"\["
     ANKI_DISPLAY_END = r"\]"
-    ANKI_DISPLAY_MATH_REGEXP = re.compile(r"\\\[[\s\S]*?\\\]")
 
     ANKI_MATH_REGEXP = re.compile(r"(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))")
 
