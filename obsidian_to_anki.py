@@ -76,15 +76,24 @@ class AnkiConnect:
 class FormatConverter:
     """Converting Obsidian formatting to Anki formatting."""
 
-    INLINE_MATH_REGEXP = re.compile(r"(?<!\$)\$(?=[\S])(?=[^$])[\s\S]*?\S\$")
-    DISPLAY_MATH_REGEXP = re.compile(r"\$\$[\s\S]*?\$\$")
+    OBS_INLINE_MATH_REGEXP = re.compile(
+        r"(?<!\$)\$(?=[\S])(?=[^$])[\s\S]*?\S\$"
+    )
+    OBS_DISPLAY_MATH_REGEXP = re.compile(r"\$\$[\s\S]*?\$\$")
 
     ANKI_INLINE_START = r"\("
     ANKI_INLINE_END = r"\)"
+    ANKI_INLINE_MATH_REGEXP = re.compile(r"\\\([\s\S]*?\\\)")
 
     ANKI_DISPLAY_START = r"\["
     ANKI_DISPLAY_END = r"\]"
+    ANKI_DISPLAY_MATH_REGEXP = re.compile(r"\\\[[\s\S]*?\\\]")
 
+    ANKI_MATH_REGEXP = re.compile(r"(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))")
+
+    MATH_REPLACE = "OBSTOANKIMATH"
+
+    @staticmethod
     def inline_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted inline math."""
         found_string = matchobject.group(0)
@@ -95,6 +104,7 @@ class FormatConverter:
         result += FormatConverter.ANKI_INLINE_END
         return result
 
+    @staticmethod
     def display_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted display math."""
         found_string = matchobject.group(0)
@@ -105,18 +115,41 @@ class FormatConverter:
         result += FormatConverter.ANKI_DISPLAY_END
         return result
 
+    @staticmethod
     def obsidian_to_anki_math(note_text):
         """Convert Obsidian-formatted math to Anki-formatted math."""
-        return FormatConverter.INLINE_MATH_REGEXP.sub(
+        return FormatConverter.OBS_INLINE_MATH_REGEXP.sub(
             FormatConverter.inline_anki_repl,
-            FormatConverter.DISPLAY_MATH_REGEXP.sub(
+            FormatConverter.OBS_DISPLAY_MATH_REGEXP.sub(
                 FormatConverter.display_anki_repl, note_text
             )
         )
 
+    @staticmethod
+    def markdown_parse(text):
+        """Apply markdown conversions to text."""
+        # Dummy function at the moment
+        return text
+
+    @staticmethod
     def format(note_text):
         """Apply all format conversions to note_text."""
         note_text = FormatConverter.obsidian_to_anki_math(note_text)
+        math_matches = []
+        for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
+            note_text
+        ):
+            math_matches.append(math_match.group(0))
+        note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
+            FormatConverter.MATH_REPLACE, note_text
+        )
+        note_text = FormatConverter.markdown_parse(note_text)
+        for math_match in math_matches:
+            note_text = note_text.replace(
+                FormatConverter.MATH_REPLACE,
+                math_match,
+                1
+            )
         return note_text
 
 
@@ -463,6 +496,17 @@ class App:
 
 
 if __name__ == "__main__":
+    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App()
+    """
+    test1 = """
+    Hello
+    This is a test.
+    Test *markdown formatting*.
+    Also want to test $x = 5$ stuff
+    And maybe $$
+    z = 10
+    $$ stuff too?"""
+    print(FormatConverter.format(test1))
