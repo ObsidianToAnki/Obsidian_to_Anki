@@ -161,6 +161,8 @@ class FormatConverter:
                 math_match,
                 1
             )
+        FormatConverter.get_images(note_text)
+        note_text = FormatConverter.fix_image_src(note_text)
         return note_text
 
     @staticmethod
