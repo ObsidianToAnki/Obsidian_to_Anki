@@ -177,9 +177,8 @@ class FormatConverter:
         """Replace the src in matchobject appropriately."""
         found_string, found_path = matchobject.group(0), matchobject.group(1)
         found_string = found_string.replace(
-            found_path, "_" + os.path.basename(found_path)
+            found_path, os.path.basename(found_path)
         )
-        # Underscore to try to prevent file overwrites.
         return found_string
 
     @staticmethod
@@ -384,6 +383,7 @@ class App:
                 Note.TARGET_DECK = self.target_deck
             print("Identified target deck as", Note.TARGET_DECK)
             self.scan_file()
+            self.add_images()
             self.add_notes()
             self.write_ids()
             self.update_fields()
@@ -439,6 +439,22 @@ class App:
                 self.id_indexes.append(position)
             else:
                 self.notes_to_edit.append(parsed)
+
+    def add_images(self):
+        """Add images from FormatConverter to Anki's media folder."""
+        AnkiConnect.invoke(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "storeMediaFile",
+                    filename=imgpath.replace(
+                        imgpath, os.path.basename(imgpath)
+                    ),
+                    url=imgpath
+                )
+                for imgpath in FormatConverter.IMAGE_PATHS
+            ]
+        )
 
     @staticmethod
     def id_to_str(id):
