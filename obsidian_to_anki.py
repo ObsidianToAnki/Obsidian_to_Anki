@@ -54,6 +54,12 @@ def string_insert(string, position_inserts):
     return string
 
 
+def file_encode(filepath):
+    """Encode the file as base 64."""
+    with open(filepath, 'rb') as f:
+        return base64.b64encode(f.read()).decode('utf-8')
+
+
 class AnkiConnect:
     """Namespace for AnkiConnect functions."""
 
@@ -566,8 +572,4 @@ if __name__ == "__main__":
         Config.update_config()
     App()
     """
-    AnkiConnect.invoke(
-        "storeMediaFile",
-        filename=os.path.basename("./Attachments/test0.png"),
-        url="./Attachments/test0.png"
-    )
+    print(file_encode("./Attachments/test0.png"))
