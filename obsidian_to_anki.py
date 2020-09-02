@@ -135,11 +135,12 @@ class FormatConverter:
     def format(note_text):
         """Apply all format conversions to note_text."""
         note_text = FormatConverter.obsidian_to_anki_math(note_text)
-        math_matches = []
-        for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
-            note_text
-        ):
-            math_matches.append(math_match.group(0))
+        math_matches = [
+            math_match.group(0)
+            for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
+                note_text
+            )
+        ]
         note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
             FormatConverter.MATH_REPLACE, note_text
         )
