@@ -10,6 +10,13 @@ Script to add flashcards from an Obsidian markdown file to Anki.
 6. From the command line, run the script once with no arguments - `{Path to script}/obsidian_to_anki.py`
 This will make a configuration file in the same directory as the script, "obsidian_to_anki_config.ini".
 
+## Permissions
+The script needs to be able to:
+* Make a config file in the directory the script is installed
+* Read the file in the directory the script is used
+* Make a backup file in the directory the script is used
+* Rename files in the directory the script is used
+
 ## Usage
 For simple documentation, run the script with the `-h` flag.
 
@@ -21,16 +28,38 @@ To update the config file with new note types from Anki, run `obsidian_to_anki -
 
 To add appropriately-formatted notes from a file, run `obsidian_to_anki -f {FILENAME}`
 
-### Note formatting
+## Deck formatting
+Anywhere within the file, format the deck that you want the notes to go into as follows:
+> TARGET DECK  
+> {Deck name}  
+
+For example:
+> TARGET DECK  
+> Mathematics  
+
+You may place more than one TARGET DECK, but only the first instance will be read and used.
+
+## Note formatting
 
 In the markdown file, you must format your notes as follows:
 
 > START  
 > {Note Type}  
-> {Note Data}  
+> {Note Fields}  
+> Tags:   
 > END  
 
+### Tag formatting
 
+Note that the Tags: line is optional - if you don't want tags, you may leave out the line.
+
+Tags should be formatted as such:
+
+> Tags: Tag1 Tag2 Tag3
+
+So, a space between the colon and the first tag, and a space between tags.
+
+### Field formatting
 
 Apart from the first field, each field must have a prefix to indicate to the program when to move on to the next field. For example:
 
@@ -44,17 +73,17 @@ When the script successfully adds a note, it will append an ID to the Note Data.
 
 Example output:
 
-> START
-> Basic
-> This is a test.
-> Back: Test successful!
-> ID: 1566052191670
-> END
+> START  
+> Basic  
+> This is a test.  
+> Back: Test successful!  
+> ID: 1566052191670  
+> END  
 
 ### Default
 By default, the script:
-- Adds notes with the tag "Obsidian_to_Anki"
-- Adds to the Default deck
+- Adds notes with the tag "Obsidian_to_Anki" (+ other specified tags, if applicable)
+- Adds to the Default deck (if TARGET DECK is not specified)
 - Adds to the current profile in Anki
 
 ## Config
@@ -103,9 +132,9 @@ Currently supported features:
 * Updating notes from Obsidian
 * Substitutions (see above)
 * Auto-convert math formatting
+* Tags
+* Adding to decks other than Default
 
 Not currently supported features:
 * Media
 * Markdown formatting
-* Tags
-* Adding to decks other than Default
