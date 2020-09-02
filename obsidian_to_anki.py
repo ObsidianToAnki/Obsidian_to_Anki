@@ -96,6 +96,9 @@ class FormatConverter:
 
     MATH_REPLACE = "OBSTOANKIMATH"
 
+    IMAGE_PATHS = set()
+    IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
+
     @staticmethod
     def inline_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted inline math."""
@@ -138,16 +141,20 @@ class FormatConverter:
     def format(note_text):
         """Apply all format conversions to note_text."""
         note_text = FormatConverter.obsidian_to_anki_math(note_text)
+        # Extract the parts that are anki math
         math_matches = [
             math_match.group(0)
             for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
                 note_text
             )
         ]
+        # Replace them to be later added  back, so they don't interfere
+        # With markdown parsing
         note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
             FormatConverter.MATH_REPLACE, note_text
         )
         note_text = FormatConverter.markdown_parse(note_text)
+        # Add back the parts that are anki math
         for math_match in math_matches:
             note_text = note_text.replace(
                 FormatConverter.MATH_REPLACE,
@@ -155,6 +162,31 @@ class FormatConverter:
                 1
             )
         return note_text
+
+    @staticmethod
+    def get_images(html_text):
+        """Get all the images that need to be added."""
+        for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
+            FormatConverter.IMAGE_PATHS.add(match.group(1))
+            # ^Adds the image path (relative to cwd)
+
+    @staticmethod
+    def fix_image_src_repl(matchobject):
+        """Replace the src in matchobject appropriately."""
+        found_string, found_path = matchobject.group(0), matchobject.group(1)
+        found_string = found_string.replace(
+            found_path, "_" + os.path.basename(found_path)
+        )
+        # Underscore to try to prevent file overwrites.
+        return found_string
+
+    @staticmethod
+    def fix_image_src(html_text):
+        """Fix the src of the images so that it's relative to Anki."""
+        return FormatConverter.IMAGE_REGEXP.sub(
+            FormatConverter.fix_image_src_repl,
+            html_text
+        )
 
 
 class Note:
@@ -511,5 +543,3 @@ if __name__ == "__main__":
         Config.update_config()
     App()
     """
-    test = r"![hello](./test2.txt)"
-    print(FormatConverter.format(test))
