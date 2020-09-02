@@ -395,19 +395,11 @@ class App:
                 Note.TARGET_DECK = self.target_deck
             print("Identified target deck as", Note.TARGET_DECK)
             self.scan_file()
-            """
-            self.add_images()
-            self.add_notes()
+            self.requests_group_1()
             self.write_ids()
-            self.update_fields()
-            self.get_info()
             self.get_cards()
-            self.move_cards()
             self.get_tags()
-            self.clear_tags()
-            self.add_tags()
-            """
-            print(self.requests_group_1())
+            self.requests_group_2()
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -578,6 +570,8 @@ class App:
         """
         requests = list()
         # Adding images
+        print("Adding images with these paths...")
+        print(FormatConverter.IMAGE_PATHS)
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -594,6 +588,7 @@ class App:
             )
         )
         # Adding notes
+        print("Adding notes into Anki...")
         requests.append(
             AnkiConnect.request(
                 "addNotes",
@@ -601,6 +596,7 @@ class App:
             )
         )
         # Updating note fields
+        print("Updating fields of existing notes...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -617,6 +613,7 @@ class App:
             )
         )
         # Getting info
+        print("Getting info on notes to be edited...")
         requests.append(
             AnkiConnect.request(
                 "notesInfo",
@@ -625,7 +622,52 @@ class App:
                 ]
             )
         )
-        return AnkiConnect.invoke(
+        result = AnkiConnect.invoke(
+            "multi",
+            actions=requests
+        )
+        self.identifiers = map(
+            App.id_to_str, result[1]["result"]
+        )
+        self.info = result[3]["result"]
+
+    def requests_group_2(self):
+        """Perform requests group 2.
+
+        This moves cards, clears tags and adds tags.
+        """
+        requests = list()
+        print("Moving cards to target deck...")
+        requests.append(
+            AnkiConnect.request(
+                "changeDeck",
+                cards=self.cards,
+                deck=self.target_deck
+            )
+        )
+        print("Replacing tags...")
+        requests.append(
+            AnkiConnect.request(
+                "removeTags",
+                notes=[parsed.id for parsed in self.notes_to_edit],
+                tags=" ".join(self.tags)
+            )
+        )
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    AnkiConnect.request(
+                        "addTags",
+                        notes=[parsed.id],
+                        tags=" ".join(parsed.note["tags"])
+                    )
+                    for parsed in self.notes_to_edit
+                    if parsed.note["tags"]
+                ]
+            )
+        )
+        AnkiConnect.invoke(
             "multi",
             actions=requests
         )
