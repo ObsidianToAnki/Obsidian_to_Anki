@@ -8,6 +8,12 @@ import os
 import argparse
 import collections
 import webbrowser
+import markdown
+import base64
+
+md_parser = markdown.Markdown(
+    extensions=['extra'], output_format="html5"
+)
 
 
 def write_safe(filename, contents):
@@ -48,6 +54,12 @@ def string_insert(string, position_inserts):
     return string
 
 
+def file_encode(filepath):
+    """Encode the file as base 64."""
+    with open(filepath, 'rb') as f:
+        return base64.b64encode(f.read()).decode('utf-8')
+
+
 class AnkiConnect:
     """Namespace for AnkiConnect functions."""
 
@@ -76,8 +88,10 @@ class AnkiConnect:
 class FormatConverter:
     """Converting Obsidian formatting to Anki formatting."""
 
-    INLINE_MATH_REGEXP = re.compile(r"(?<!\$)\$(?=[\S])(?=[^$])[\s\S]*?\S\$")
-    DISPLAY_MATH_REGEXP = re.compile(r"\$\$[\s\S]*?\$\$")
+    OBS_INLINE_MATH_REGEXP = re.compile(
+        r"(?<!\$)\$(?=[\S])(?=[^$])[\s\S]*?\S\$"
+    )
+    OBS_DISPLAY_MATH_REGEXP = re.compile(r"\$\$[\s\S]*?\$\$")
 
     ANKI_INLINE_START = r"\("
     ANKI_INLINE_END = r"\)"
@@ -85,6 +99,14 @@ class FormatConverter:
     ANKI_DISPLAY_START = r"\["
     ANKI_DISPLAY_END = r"\]"
 
+    ANKI_MATH_REGEXP = re.compile(r"(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))")
+
+    MATH_REPLACE = "OBSTOANKIMATH"
+
+    IMAGE_PATHS = set()
+    IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
+
+    @staticmethod
     def inline_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted inline math."""
         found_string = matchobject.group(0)
@@ -95,6 +117,7 @@ class FormatConverter:
         result += FormatConverter.ANKI_INLINE_END
         return result
 
+    @staticmethod
     def display_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted display math."""
         found_string = matchobject.group(0)
@@ -105,19 +128,74 @@ class FormatConverter:
         result += FormatConverter.ANKI_DISPLAY_END
         return result
 
+    @staticmethod
     def obsidian_to_anki_math(note_text):
         """Convert Obsidian-formatted math to Anki-formatted math."""
-        return FormatConverter.INLINE_MATH_REGEXP.sub(
+        return FormatConverter.OBS_INLINE_MATH_REGEXP.sub(
             FormatConverter.inline_anki_repl,
-            FormatConverter.DISPLAY_MATH_REGEXP.sub(
+            FormatConverter.OBS_DISPLAY_MATH_REGEXP.sub(
                 FormatConverter.display_anki_repl, note_text
             )
         )
 
+    @staticmethod
+    def markdown_parse(text):
+        """Apply markdown conversions to text."""
+        text = md_parser.reset().convert(text)
+        return text
+
+    @staticmethod
     def format(note_text):
         """Apply all format conversions to note_text."""
         note_text = FormatConverter.obsidian_to_anki_math(note_text)
+        # Extract the parts that are anki math
+        math_matches = [
+            math_match.group(0)
+            for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
+                note_text
+            )
+        ]
+        # Replace them to be later added  back, so they don't interfere
+        # With markdown parsing
+        note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
+            FormatConverter.MATH_REPLACE, note_text
+        )
+        note_text = FormatConverter.markdown_parse(note_text)
+        # Add back the parts that are anki math
+        for math_match in math_matches:
+            note_text = note_text.replace(
+                FormatConverter.MATH_REPLACE,
+                math_match,
+                1
+            )
+        print(note_text)
+        FormatConverter.get_images(note_text)
+        note_text = FormatConverter.fix_image_src(note_text)
         return note_text
+
+    @staticmethod
+    def get_images(html_text):
+        """Get all the images that need to be added."""
+        for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
+            FormatConverter.IMAGE_PATHS.add(match.group(1))
+            # ^Adds the image path (relative to cwd)
+
+    @staticmethod
+    def fix_image_src_repl(matchobject):
+        """Replace the src in matchobject appropriately."""
+        found_string, found_path = matchobject.group(0), matchobject.group(1)
+        found_string = found_string.replace(
+            found_path, os.path.basename(found_path)
+        )
+        return found_string
+
+    @staticmethod
+    def fix_image_src(html_text):
+        """Fix the src of the images so that it's relative to Anki."""
+        return FormatConverter.IMAGE_REGEXP.sub(
+            FormatConverter.fix_image_src_repl,
+            html_text
+        )
 
 
 class Note:
@@ -135,7 +213,7 @@ class Note:
 
     def __init__(self, note_text):
         """Set up useful variables."""
-        self.text = FormatConverter.format(note_text)
+        self.text = note_text
         self.lines = self.text.splitlines()
         self.note_type = Note.note_subs[self.lines[0]]
         self.subs = Note.field_subs[self.note_type]
@@ -201,10 +279,16 @@ class Note:
         fields = dict.fromkeys(self.field_names, "")
         for line in self.lines[1:]:
             if self.next_sub and line.startswith(self.next_sub):
+                # This means we're entering a new field.
+                # So, we should format the text in the current field
                 self.current_field_num += 1
                 line = line[len(self.current_sub):]
-            fields[self.current_field] += line + " "
-        return {key: value.rstrip() for key, value in fields.items()}
+            fields[self.current_field] += line + "\n"
+        fields = {
+            key: FormatConverter.format(value)
+            for key, value in fields.items()
+        }
+        return {key: value.strip() for key, value in fields.items()}
 
     def parse(self):
         """Get a properly formatted dictionary of the note."""
@@ -219,7 +303,12 @@ class Note:
 class Config:
     """Deals with saving and loading the configuration file."""
 
-    CONFIG_PATH = os.path.dirname(__file__) + "/obsidian_to_anki_config.ini"
+    CONFIG_PATH = os.path.expanduser(
+        os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "obsidian_to_anki_config.ini"
+        )
+    )
 
     def update_config():
         """Update config with new notes."""
@@ -307,6 +396,7 @@ class App:
                 Note.TARGET_DECK = self.target_deck
             print("Identified target deck as", Note.TARGET_DECK)
             self.scan_file()
+            self.add_images()
             self.add_notes()
             self.write_ids()
             self.update_fields()
@@ -362,6 +452,24 @@ class App:
                 self.id_indexes.append(position)
             else:
                 self.notes_to_edit.append(parsed)
+
+    def add_images(self):
+        """Add images from FormatConverter to Anki's media folder."""
+        print("Adding images with these paths...")
+        print(FormatConverter.IMAGE_PATHS)
+        AnkiConnect.invoke(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "storeMediaFile",
+                    filename=imgpath.replace(
+                        imgpath, os.path.basename(imgpath)
+                    ),
+                    data=file_encode(imgpath)
+                )
+                for imgpath in FormatConverter.IMAGE_PATHS
+            ]
+        )
 
     @staticmethod
     def id_to_str(id):
