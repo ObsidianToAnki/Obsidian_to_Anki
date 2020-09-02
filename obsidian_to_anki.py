@@ -10,7 +10,9 @@ import collections
 import webbrowser
 import markdown
 
-md_parser = markdown.Markdown(extensions=['fenced_code'], output_format="html5")
+md_parser = markdown.Markdown(
+    extensions=['extra'], output_format="html5"
+)
 
 
 def write_safe(filename, contents):
