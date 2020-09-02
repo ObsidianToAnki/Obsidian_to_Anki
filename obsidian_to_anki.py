@@ -588,7 +588,133 @@ class App:
 class File:
     """Class for performing script operations at the file-level."""
 
-    pass
+    def __init__(self, filepath):
+        """Perform initial file reading and attribute setting."""
+        self.filename = filepath
+        print("Reading file", self.filename, "into memory...")
+        with open(self.filename) as f:
+            self.file = f.read()
+        self.target_deck = App.DECK_REGEXP.search(self.file).group(0)
+        if self.target_deck is not None:
+            Note.TARGET_DECK = self.target_deck
+        print(
+            "Identified target deck for", self.filename,
+            "as", Note.TARGET_DECK
+        )
+        self.scan_file()
+
+    def scan_file(self):
+        """Sort notes from file into adding vs editing."""
+        print("Scanning file for notes...")
+        self.notes_to_add = list()
+        self.id_indexes = list()
+        self.notes_to_edit = list()
+        for note_match in App.NOTE_REGEXP.finditer(self.file):
+            note, position = note_match.group(0), note_match.end()
+            parsed = Note(note).parse()
+            if parsed.id is None:
+                self.notes_to_add.append(parsed.note)
+                self.id_indexes.append(position)
+            else:
+                self.notes_to_edit.append(parsed)
+
+    @staticmethod
+    def id_to_str(id):
+        """Get the string repr of id."""
+        return "ID: " + str(id) + "\n"
+
+    def write_ids(self):
+        """Write the identifiers to the file."""
+        print("Writing new note IDs to file...")
+        self.file = string_insert(
+            self.file, zip(
+                self.id_indexes, self.identifiers
+            )
+        )
+        write_safe(self.filename, self.file)
+
+    def get_cards(self):
+        """Get the card IDs for all notes that need to be edited."""
+        print("Getting card IDs")
+        self.cards = list()
+        for info in self.info:
+            self.cards += info["cards"]
+
+    def get_tags(self):
+        """Get a set of currently used tags for notes to be edited."""
+        self.tags = set()
+        for info in self.info:
+            self.tags.update(info["tags"])
+
+    def get_add_images(self):
+        """Get the AnkiConnect-formatted add_images request."""
+        return AnkiConnect.request(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "storeMediaFile",
+                    filename=imgpath.replace(
+                        imgpath, os.path.basename(imgpath)
+                    ),
+                    data=file_encode(imgpath)
+                )
+                for imgpath in FormatConverter.IMAGE_PATHS
+            ]
+        )
+
+    def requests_group_1(self):
+        """Perform requests group 1.
+
+        This adds images, adds notes, updates fields and gets note info.
+        """
+        requests = list()
+        # Adding images
+        print("Adding images with these paths...")
+        print(FormatConverter.IMAGE_PATHS)
+        requests.append(self.get_add_images())
+        # Adding notes
+        print("Adding notes into Anki...")
+        requests.append(
+            AnkiConnect.request(
+                "addNotes",
+                notes=self.notes_to_add
+            )
+        )
+        # Updating note fields
+        print("Updating fields of existing notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    AnkiConnect.request(
+                        "updateNoteFields", note={
+                            "id": parsed.id,
+                            "fields": parsed.note["fields"],
+                            "audio": parsed.note["audio"]
+                        }
+                    )
+                    for parsed in self.notes_to_edit
+                ]
+            )
+        )
+        # Getting info
+        print("Getting info on notes to be edited...")
+        requests.append(
+            AnkiConnect.request(
+                "notesInfo",
+                notes=[
+                    parsed.id for parsed in self.notes_to_edit
+                ]
+            )
+        )
+        result = AnkiConnect.invoke(
+            "multi",
+            actions=requests
+        )
+        self.identifiers = map(
+            App.id_to_str, result[1]["result"]
+        )
+        self.info = result[3]["result"]
 
 
 if __name__ == "__main__":
