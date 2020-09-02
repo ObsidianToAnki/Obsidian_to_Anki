@@ -6,6 +6,46 @@ import urllib.request
 import configparser
 import os
 import argparse
+import collections
+import webbrowser
+
+
+def write_safe(filename, contents):
+    """
+    Write contents to filename while keeping a backup.
+
+    If write fails, a backup 'filename.bak' will still exist.
+    """
+    with open(filename + ".tmp", "w") as temp:
+        temp.write(contents)
+    os.rename(filename, filename + ".bak")
+    os.rename(filename + ".tmp", filename)
+    success = False
+    with open(filename) as f:
+        if f.read() == contents:
+            success = True
+    if success:
+        os.remove(filename + ".bak")
+
+
+def string_insert(string, position_inserts):
+    """
+    Insert strings in position_inserts into string, at indices.
+
+    position_inserts will look like:
+    [(0, "hi"), (3, "hello"), (5, "beep")]
+    """
+    offset = 0
+    for position, insert_str in position_inserts:
+        string = "".join(
+            [
+                string[:position + offset],
+                insert_str,
+                string[position + offset:]
+            ]
+        )
+        offset += len(insert_str)
+    return string
 
 
 class AnkiConnect:
@@ -87,18 +127,11 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
-    DEFAULT_DECK = "Default"
-    NOTE_DICT_TEMPLATE = {
-        "deckName": DEFAULT_DECK,
-        "modelName": "",
-        "fields": dict(),
-        "options": {
-            "allowDuplicate": False,
-            "duplicateScope": "deck"
-        },
-        "tags": list(),
-        "audio": list()
-    }
+    TARGET_DECK = "Default"
+    ID_PREFIX = "ID: "
+    TAG_PREFIX = "Tags: "
+    TAG_SEP = " "
+    Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
 
     def __init__(self, note_text):
         """Set up useful variables."""
@@ -108,6 +141,33 @@ class Note:
         self.subs = Note.field_subs[self.note_type]
         self.current_field_num = 0
         self.field_names = list(self.subs)
+        if self.lines[-1].startswith(Note.ID_PREFIX):
+            self.identifier = int(self.lines.pop()[len(Note.ID_PREFIX):])
+            # The above removes the identifier line, for convenience of parsing
+        else:
+            self.identifier = None
+        if self.lines[-1].startswith(Note.TAG_PREFIX):
+            self.tags = self.lines.pop()[len(Note.TAG_PREFIX):].split(
+                Note.TAG_SEP
+            )
+        else:
+            self.tags = None
+
+    @property
+    def NOTE_DICT_TEMPLATE(self):
+        """Template for making notes."""
+        return {
+            "deckName": Note.TARGET_DECK,
+            "modelName": "",
+            "fields": dict(),
+            "options": {
+                "allowDuplicate": False,
+                "duplicateScope": "deck"
+            },
+            "tags": ["Obsidian_to_Anki"],
+            # ^So that you can see what was added automatically.
+            "audio": list()
+        }
 
     @property
     def current_field(self):
@@ -148,12 +208,12 @@ class Note:
 
     def parse(self):
         """Get a properly formatted dictionary of the note."""
-        template = Note.NOTE_DICT_TEMPLATE.copy()
+        template = self.NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
-        template["tags"] = ["Obsidian_to_Anki"]
-        # ^So that you can see what was added automatically.
-        return template
+        if self.tags:
+            template["tags"] = template["tags"] + self.tags
+        return Note.Note_and_id(note=template, id=self.identifier)
 
 
 class Config:
@@ -170,13 +230,23 @@ class Config:
             print("Config file exists, reading...")
             config.read(Config.CONFIG_PATH)
         note_types = AnkiConnect.invoke("modelNames")
+        fields_request = [
+            AnkiConnect.request(
+                "modelFieldNames", modelName=note
+            )
+            for note in note_types
+        ]
         subs = {
             note: {
                 field: field + ": "
-                for field in AnkiConnect.invoke(
-                    "modelFieldNames", modelName=note
+                for field in fields["result"]
+            }
+            for note, fields in zip(
+                note_types,
+                AnkiConnect.invoke(
+                    "multi", actions=fields_request
                 )
-            } for note in note_types
+            )
         }
         for note, note_field_subs in subs.items():
             if note not in config:
@@ -213,63 +283,186 @@ class Config:
 class App:
     """Master class that manages the application."""
 
-    parser = argparse.ArgumentParser(
-        description="Add cards to Anki from an Obsidian markdown file."
-    )
-    parser.add_argument(
-        "-filename", type=str, help="The file you want to add flashcards from."
-    )
-    parser.add_argument(
-        "-update",
-        action="store_true",
-        help="""
-            Whether you want to update the config file
-            using new notes from Anki.
-            Note that this does NOT open the config file for editing,
-            you have to do that manually.
-        """,
-    )
-    parser.add_argument(
-        "-config",
-        action="store_true",
-        help="""
-            Opens up config file for editing.
-        """
-    )
-
+    # Useful REGEXPs
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
+    DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
 
-    def notes_from_file(filename):
-        """Get the notes from this file."""
-        with open(filename) as f:
-            file = f.read()
-            return App.NOTE_REGEXP.findall(file)
-
-    def anki_from_file(filename):
-        """Add notes to anki from this file."""
-        print("Adding notes to Anki...")
-        result = AnkiConnect.invoke(
-            "addNotes",
-            notes=[
-                Note(note).parse() for note in App.notes_from_file(filename)
-            ]
-        )
-        return result
-
-    def main():
+    def __init__(self):
         """Execute the main functionality of the script."""
-        args = App.parser.parse_args()
+        self.setup_parser()
+        args = self.parser.parse_args()
         if args.update:
             Config.update_config()
         Config.load_config()
         if args.config:
-            os.startfile(Config.CONFIG_PATH)
+            webbrowser.open(Config.CONFIG_PATH)
             return
         if args.filename:
-            print("Success! IDs are", App.anki_from_file(args.filename))
+            self.filename = args.filename
+            print("Reading file", args.filename, "into memory...")
+            with open(args.filename) as f:
+                self.file = f.read()
+            self.target_deck = App.DECK_REGEXP.search(self.file).group(0)
+            if self.target_deck is not None:
+                Note.TARGET_DECK = self.target_deck
+            print("Identified target deck as", Note.TARGET_DECK)
+            self.scan_file()
+            self.add_notes()
+            self.write_ids()
+            self.update_fields()
+            self.get_info()
+            self.get_cards()
+            self.move_cards()
+            self.get_tags()
+            self.clear_tags()
+            self.add_tags()
+
+    def setup_parser(self):
+        """Set up the argument parser."""
+        self.parser = argparse.ArgumentParser(
+            description="Add cards to Anki from an Obsidian markdown file."
+        )
+        self.parser.add_argument(
+            "-f",
+            type=str,
+            help="The file you want to add flashcards from.",
+            dest="filename"
+        )
+        self.parser.add_argument(
+            "-c", "--config",
+            action="store_true",
+            dest="config",
+            help="""
+                Opens up config file for editing.
+            """
+        )
+        self.parser.add_argument(
+            "-u", "--update",
+            action="store_true",
+            dest="update",
+            help="""
+                Whether you want to update the config file
+                using new notes from Anki.
+                Note that this does NOT open the config file for editing,
+                use -c for that.
+            """,
+        )
+
+    def scan_file(self):
+        """Sort notes from file into adding vs editing."""
+        print("Scanning file for notes...")
+        self.notes_to_add = list()
+        self.id_indexes = list()
+        self.notes_to_edit = list()
+        for note_match in App.NOTE_REGEXP.finditer(self.file):
+            note, position = note_match.group(0), note_match.end()
+            parsed = Note(note).parse()
+            if parsed.id is None:
+                self.notes_to_add.append(parsed.note)
+                self.id_indexes.append(position)
+            else:
+                self.notes_to_edit.append(parsed)
+
+    @staticmethod
+    def id_to_str(id):
+        """Get the string repr of id."""
+        return "ID: " + str(id) + "\n"
+
+    def add_notes(self):
+        """Add notes to Anki."""
+        print("Adding notes into Anki...")
+        self.identifiers = map(
+            App.id_to_str, AnkiConnect.invoke(
+                "addNotes",
+                notes=self.notes_to_add
+            )
+        )
+
+    def write_ids(self):
+        """Write the identifiers to the file."""
+        print("Writing new note IDs to file...")
+        self.file = string_insert(
+            self.file, zip(
+                self.id_indexes, self.identifiers
+            )
+        )
+        write_safe(self.filename, self.file)
+
+    def update_fields(self):
+        """Update the fields of current notes."""
+        print("Updating fields of existing notes...")
+        AnkiConnect.invoke(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "updateNoteFields", note={
+                        "id": parsed.id,
+                        "fields": parsed.note["fields"],
+                        "audio": parsed.note["audio"]
+                    }
+                )
+                for parsed in self.notes_to_edit
+            ]
+        )
+
+    def get_info(self):
+        """Get info on all notes to be edited."""
+        print("Getting info on notes to be edited...")
+        self.info = AnkiConnect.invoke(
+            "notesInfo",
+            notes=[
+                parsed.id for parsed in self.notes_to_edit
+            ]
+        )
+
+    def get_cards(self):
+        """Get the card IDs for all notes that need to be edited."""
+        print("Getting card IDs")
+        self.cards = list()
+        for info in self.info:
+            self.cards += info["cards"]
+
+    def move_cards(self):
+        """Move all cards to target deck."""
+        print("Moving cards to target deck...")
+        AnkiConnect.invoke(
+            "changeDeck",
+            cards=self.cards,
+            deck=self.target_deck
+        )
+
+    def get_tags(self):
+        """Get a set of currently used tags for notes to be edited."""
+        self.tags = set()
+        for info in self.info:
+            self.tags.update(info["tags"])
+
+    def clear_tags(self):
+        """Remove all currently used tags from notes to be edited."""
+        print("Replacing tags...")
+        AnkiConnect.invoke(
+            "removeTags",
+            notes=[parsed.id for parsed in self.notes_to_edit],
+            tags=" ".join(self.tags)
+        )
+
+    def add_tags(self):
+        """Add user-set tags for notes to be edited."""
+        AnkiConnect.invoke(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "addTags",
+                    notes=[parsed.id],
+                    tags=" ".join(parsed.note["tags"])
+                )
+                for parsed in self.notes_to_edit
+                if parsed.note["tags"]
+            ]
+        )
 
 
 if __name__ == "__main__":
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
-    App.main()
+    App()
