@@ -220,7 +220,7 @@ class Config:
     """Deals with saving and loading the configuration file."""
 
     CONFIG_PATH = os.path.join(
-        os.path.dirname(__file__),
+        os.path.dirname(os.path.realpath(__file__)),
         "obsidian_to_anki_config.ini"
     )
 
