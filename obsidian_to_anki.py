@@ -303,9 +303,11 @@ class Note:
 class Config:
     """Deals with saving and loading the configuration file."""
 
-    CONFIG_PATH = os.path.join(
-        os.path.dirname(__file__),
-        "obsidian_to_anki_config.ini"
+    CONFIG_PATH = os.path.expanduser(
+        os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "obsidian_to_anki_config.ini"
+        )
     )
 
     def update_config():
