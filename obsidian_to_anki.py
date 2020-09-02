@@ -168,7 +168,6 @@ class FormatConverter:
                 math_match,
                 1
             )
-        print(note_text)
         FormatConverter.get_images(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
         return note_text
@@ -396,6 +395,7 @@ class App:
                 Note.TARGET_DECK = self.target_deck
             print("Identified target deck as", Note.TARGET_DECK)
             self.scan_file()
+            """
             self.add_images()
             self.add_notes()
             self.write_ids()
@@ -406,6 +406,8 @@ class App:
             self.get_tags()
             self.clear_tags()
             self.add_tags()
+            """
+            print(self.requests_group_1())
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -567,6 +569,65 @@ class App:
                 for parsed in self.notes_to_edit
                 if parsed.note["tags"]
             ]
+        )
+
+    def requests_group_1(self):
+        """Perform requests group 1.
+
+        This adds images, adds notes, updates fields and gets note info.
+        """
+        requests = list()
+        # Adding images
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    AnkiConnect.request(
+                        "storeMediaFile",
+                        filename=imgpath.replace(
+                            imgpath, os.path.basename(imgpath)
+                        ),
+                        data=file_encode(imgpath)
+                    )
+                    for imgpath in FormatConverter.IMAGE_PATHS
+                ]
+            )
+        )
+        # Adding notes
+        requests.append(
+            AnkiConnect.request(
+                "addNotes",
+                notes=self.notes_to_add
+            )
+        )
+        # Updating note fields
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    AnkiConnect.request(
+                        "updateNoteFields", note={
+                            "id": parsed.id,
+                            "fields": parsed.note["fields"],
+                            "audio": parsed.note["audio"]
+                        }
+                    )
+                    for parsed in self.notes_to_edit
+                ]
+            )
+        )
+        # Getting info
+        requests.append(
+            AnkiConnect.request(
+                "notesInfo",
+                notes=[
+                    parsed.id for parsed in self.notes_to_edit
+                ]
+            )
+        )
+        return AnkiConnect.invoke(
+            "multi",
+            actions=requests
         )
 
 
