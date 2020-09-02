@@ -9,6 +9,7 @@ import argparse
 import collections
 import webbrowser
 import markdown
+import base64
 
 md_parser = markdown.Markdown(
     extensions=['extra'], output_format="html5"
@@ -161,6 +162,7 @@ class FormatConverter:
                 math_match,
                 1
             )
+        print(note_text)
         FormatConverter.get_images(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
         return note_text
@@ -383,7 +385,8 @@ class App:
                 Note.TARGET_DECK = self.target_deck
             print("Identified target deck as", Note.TARGET_DECK)
             self.scan_file()
-            self.add_images()
+            # self.add_images()
+            """
             self.add_notes()
             self.write_ids()
             self.update_fields()
@@ -393,6 +396,7 @@ class App:
             self.get_tags()
             self.clear_tags()
             self.add_tags()
+            """
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -442,6 +446,7 @@ class App:
 
     def add_images(self):
         """Add images from FormatConverter to Anki's media folder."""
+        print(FormatConverter.IMAGE_PATHS)
         AnkiConnect.invoke(
             "multi",
             actions=[
@@ -556,6 +561,13 @@ class App:
 
 
 if __name__ == "__main__":
+    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App()
+    """
+    AnkiConnect.invoke(
+        "storeMediaFile",
+        filename=os.path.basename("./Attachments/test0.png"),
+        url="./Attachments/test0.png"
+    )
