@@ -2,7 +2,7 @@
 Script to add flashcards from an Obsidian markdown file to Anki.
 
 ## Setup
-1. Install [Python](https://www.python.org/downloads/)
+1. Install [Python](https://www.python.org/downloads/). Note that the script was written in Python3.8 - I don't think it would work on older versions (confirmed that it doesn't work on Python2 via [this issue](https://github.com/Pseudonium/Obsidian_to_Anki/issues/6#issue-690905446)
 2. Download the desired release.
 3. Place the script "obsidian_to_anki.py" in a convenient folder. You may wish to consider placing it in a Scripts folder, and adding the folder to your PATH
 4. Start up Anki, and navigate to your desired profile
