@@ -7,7 +7,9 @@ Script to add flashcards from an Obsidian markdown file to Anki.
 3. Place the script "obsidian_to_anki.py" in a convenient folder. You may wish to consider placing it in a Scripts folder, and adding the folder to your PATH
 4. Start up Anki, and navigate to your desired profile
 5. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
-6. From the command line, run the script once with no arguments - `{Path to script}/obsidian_to_anki.py`
+6. Install the `python-markdown` library - see installation instructions [here](https://github.com/Python-Markdown/markdown). `pip install markdown` should work.
+7. Check the Permissions tab below to ensure the script is able to run.
+8. From the command line, run the script once with no arguments - `{Path to script}/obsidian_to_anki.py`
 This will make a configuration file in the same directory as the script, "obsidian_to_anki_config.ini".
 
 ## Permissions
@@ -48,6 +50,16 @@ In the markdown file, you must format your notes as follows:
 > {Note Fields}  
 > Tags:   
 > END  
+
+### Markdown formatting
+
+Standard markdown formatting is supported. GitHub-flavoured code blocks are supported (but Anki won't show syntax highlighting)
+
+### Image formatting
+
+Embedded images are supported if the following criteria are met:
+1. The image is stored locally
+2. It is embedded using the standard markdown syntax: `![alt-text](path_to_image)`
 
 ### Tag formatting
 
@@ -125,16 +137,19 @@ Then you now format your notes like this:
 > {Note Data}  
 > END  
 
-## Supported?
+## Features
 
-Currently supported features:
+Current features:
 * Custom note types
 * Updating notes from Obsidian
 * Substitutions (see above)
 * Auto-convert math formatting
 * Tags
 * Adding to decks other than Default
-
-Not currently supported features:
-* Media
 * Markdown formatting
+* Embedded images (GIFs should work too)
+
+Not available:
+* Audio
+* Deleting notes from Obsidian
+* Reading from all files in a directory automatically - script works on a per-file basis
