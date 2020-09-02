@@ -8,6 +8,7 @@ import os
 import argparse
 import collections
 import webbrowser
+import markdown
 
 
 def write_safe(filename, contents):
