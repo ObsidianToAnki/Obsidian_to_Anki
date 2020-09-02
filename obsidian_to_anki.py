@@ -238,13 +238,14 @@ class Note:
             if self.next_sub and line.startswith(self.next_sub):
                 # This means we're entering a new field.
                 # So, we should format the text in the current field
-                fields[self.current_field] = FormatConverter.format(
-                    fields[self.current_field]
-                )
                 self.current_field_num += 1
                 line = line[len(self.current_sub):]
             fields[self.current_field] += line + "\n"
-        return {key: value.rstrip() for key, value in fields.items()}
+        fields = {
+            key: FormatConverter.format(value)
+            for key, value in fields.items()
+        }
+        return {key: value.strip() for key, value in fields.items()}
 
     def parse(self):
         """Get a properly formatted dictionary of the note."""

@@ -1,11 +1,13 @@
-Hello
-This is a test.
-Test _markdown formatting_.
-Would a `print(y)` block work?
-How about a
+OKay, so testing starts now
+
+TARGET DECK
+Test
+
+START
+Basic
+How to print something to the console
+Back: It should look like this
 ```python
-def hello():
-    print("Hello world!")
+print("Hello world!")
 ```
-Also want to test $x = 5$ stuff
-And maybe $$ z = 10 $$ stuff too?
+END
