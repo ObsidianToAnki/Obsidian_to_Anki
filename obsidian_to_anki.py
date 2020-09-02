@@ -303,7 +303,10 @@ class Note:
 class Config:
     """Deals with saving and loading the configuration file."""
 
-    CONFIG_PATH = os.path.dirname(__file__) + "/obsidian_to_anki_config.ini"
+    CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__),
+        "obsidian_to_anki_config.ini"
+    )
 
     def update_config():
         """Update config with new notes."""
@@ -391,8 +394,7 @@ class App:
                 Note.TARGET_DECK = self.target_deck
             print("Identified target deck as", Note.TARGET_DECK)
             self.scan_file()
-            # self.add_images()
-            """
+            self.add_images()
             self.add_notes()
             self.write_ids()
             self.update_fields()
@@ -402,7 +404,6 @@ class App:
             self.get_tags()
             self.clear_tags()
             self.add_tags()
-            """
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -452,6 +453,7 @@ class App:
 
     def add_images(self):
         """Add images from FormatConverter to Anki's media folder."""
+        print("Adding images with these paths...")
         print(FormatConverter.IMAGE_PATHS)
         AnkiConnect.invoke(
             "multi",
@@ -461,7 +463,7 @@ class App:
                     filename=imgpath.replace(
                         imgpath, os.path.basename(imgpath)
                     ),
-                    url=imgpath
+                    data=file_encode(imgpath)
                 )
                 for imgpath in FormatConverter.IMAGE_PATHS
             ]
@@ -567,9 +569,6 @@ class App:
 
 
 if __name__ == "__main__":
-    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App()
-    """
-    print(file_encode("./Attachments/test0.png"))
