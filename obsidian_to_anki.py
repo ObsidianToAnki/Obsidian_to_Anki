@@ -375,6 +375,8 @@ class App:
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
 
+    SUPPORTED_EXTS = [".md", ".txt"]
+
     def __init__(self):
         """Execute the main functionality of the script."""
         self.setup_parser()
@@ -385,21 +387,19 @@ class App:
         if args.config:
             webbrowser.open(Config.CONFIG_PATH)
             return
-        if args.filename:
-            self.filename = args.filename
-            print("Reading file", args.filename, "into memory...")
-            with open(args.filename) as f:
-                self.file = f.read()
-            self.target_deck = App.DECK_REGEXP.search(self.file).group(0)
-            if self.target_deck is not None:
-                Note.TARGET_DECK = self.target_deck
-            print("Identified target deck as", Note.TARGET_DECK)
-            self.scan_file()
-            self.requests_group_1()
-            self.write_ids()
-            self.get_cards()
-            self.get_tags()
-            self.requests_group_2()
+        if args.path:
+            self.path = args.path
+            if os.path.isdir(self.path):
+                with os.scandir(self.path) as it:
+                    self.files = [
+                        File(entry.path)
+                        for entry in it
+                        if entry.is_file() and os.path.splitext(
+                            entry.path
+                        )[1] in App.SUPPORTED_EXTS
+                    ]
+            else:
+                self.files = [File(self.path)]
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -407,10 +407,11 @@ class App:
             description="Add cards to Anki from an Obsidian markdown file."
         )
         self.parser.add_argument(
-            "-f",
-            type=str,
-            help="The file you want to add flashcards from.",
-            dest="filename"
+            "path",
+            nargs="?",
+            default=False,
+            help="Path to the file or directory you want to scan."
+            dest="path",
         )
         self.parser.add_argument(
             "-c", "--config",
@@ -431,43 +432,6 @@ class App:
                 use -c for that.
             """,
         )
-
-    def scan_file(self):
-        """Sort notes from file into adding vs editing."""
-        print("Scanning file for notes...")
-        self.notes_to_add = list()
-        self.id_indexes = list()
-        self.notes_to_edit = list()
-        for note_match in App.NOTE_REGEXP.finditer(self.file):
-            note, position = note_match.group(0), note_match.end()
-            parsed = Note(note).parse()
-            if parsed.id is None:
-                self.notes_to_add.append(parsed.note)
-                self.id_indexes.append(position)
-            else:
-                self.notes_to_edit.append(parsed)
-
-    @staticmethod
-    def id_to_str(id):
-        """Get the string repr of id."""
-        return "ID: " + str(id) + "\n"
-
-    def write_ids(self):
-        """Write the identifiers to the file."""
-        print("Writing new note IDs to file...")
-        self.file = string_insert(
-            self.file, zip(
-                self.id_indexes, self.identifiers
-            )
-        )
-        write_safe(self.filename, self.file)
-
-    def get_cards(self):
-        """Get the card IDs for all notes that need to be edited."""
-        print("Getting card IDs")
-        self.cards = list()
-        for info in self.info:
-            self.cards += info["cards"]
 
     def get_tags(self):
         """Get a set of currently used tags for notes to be edited."""
@@ -584,6 +548,53 @@ class App:
             actions=requests
         )
 
+    def get_add_images(self):
+        """Get the AnkiConnect-formatted add_images request."""
+        return AnkiConnect.request(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "storeMediaFile",
+                    filename=imgpath.replace(
+                        imgpath, os.path.basename(imgpath)
+                    ),
+                    data=file_encode(imgpath)
+                )
+                for imgpath in FormatConverter.IMAGE_PATHS
+            ]
+        )
+
+    def requests_1(self):
+        """Do big request 1.
+
+        This adds images, adds notes, updates fields and gets note info.
+        """
+        requests = list()
+        print("Adding images with these paths...")
+        print(FormatConverter.IMAGE_PATHS)
+        requests.append(self.get_add_images())
+        print("Adding notes into Anki...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_add_notes()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Updating fields of existing notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_update_fields()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Getting info on notes to be edited...")
+
 
 class File:
     """Class for performing script operations at the file-level."""
@@ -605,7 +616,7 @@ class File:
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
-        print("Scanning file for notes...")
+        print("Scanning file", self.filename, " for notes...")
         self.notes_to_add = list()
         self.id_indexes = list()
         self.notes_to_edit = list()
@@ -625,13 +636,36 @@ class File:
 
     def write_ids(self):
         """Write the identifiers to the file."""
-        print("Writing new note IDs to file...")
+        print("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, self.identifiers
             )
         )
         write_safe(self.filename, self.file)
+
+    def get_add_notes(self):
+        """Get the AnkiConnect-formatted request to add notes."""
+        return AnkiConnect.request(
+            "addNotes",
+            notes=self.notes_to_add
+        )
+
+    def get_update_fields(self):
+        """Get the AnkiConnect-formatted request to update fields."""
+        return AnkiConnect.request(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "updateNoteFields", note={
+                        "id": parsed.id,
+                        "fields": parsed.note["fields"],
+                        "audio": parsed.note["audio"]
+                    }
+                )
+                for parsed in self.notes_to_edit
+            ]
+        )
 
     def get_cards(self):
         """Get the card IDs for all notes that need to be edited."""
@@ -645,22 +679,6 @@ class File:
         self.tags = set()
         for info in self.info:
             self.tags.update(info["tags"])
-
-    def get_add_images(self):
-        """Get the AnkiConnect-formatted add_images request."""
-        return AnkiConnect.request(
-            "multi",
-            actions=[
-                AnkiConnect.request(
-                    "storeMediaFile",
-                    filename=imgpath.replace(
-                        imgpath, os.path.basename(imgpath)
-                    ),
-                    data=file_encode(imgpath)
-                )
-                for imgpath in FormatConverter.IMAGE_PATHS
-            ]
-        )
 
     def requests_group_1(self):
         """Perform requests group 1.
