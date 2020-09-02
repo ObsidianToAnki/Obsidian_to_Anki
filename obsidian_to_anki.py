@@ -170,7 +170,7 @@ class Note:
 
     def __init__(self, note_text):
         """Set up useful variables."""
-        self.text = FormatConverter.format(note_text)
+        self.text = note_text
         self.lines = self.text.splitlines()
         self.note_type = Note.note_subs[self.lines[0]]
         self.subs = Note.field_subs[self.note_type]
@@ -236,9 +236,14 @@ class Note:
         fields = dict.fromkeys(self.field_names, "")
         for line in self.lines[1:]:
             if self.next_sub and line.startswith(self.next_sub):
+                # This means we're entering a new field.
+                # So, we should format the text in the current field
+                fields[self.current_field] = FormatConverter.format(
+                    fields[self.current_field]
+                )
                 self.current_field_num += 1
                 line = line[len(self.current_sub):]
-            fields[self.current_field] += line + " "
+            fields[self.current_field] += line + "\n"
         return {key: value.rstrip() for key, value in fields.items()}
 
     def parse(self):
