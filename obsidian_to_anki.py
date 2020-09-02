@@ -10,6 +10,8 @@ import collections
 import webbrowser
 import markdown
 
+md_parser = markdown.Markdown(extensions=['fenced_code'], output_format="html5")
+
 
 def write_safe(filename, contents):
     """
@@ -127,7 +129,7 @@ class FormatConverter:
     @staticmethod
     def markdown_parse(text):
         """Apply markdown conversions to text."""
-        # Dummy function at the moment
+        text = md_parser.reset().convert(text)
         return text
 
     @staticmethod
@@ -496,17 +498,6 @@ class App:
 
 
 if __name__ == "__main__":
-    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App()
-    """
-    test1 = """
-    Hello
-    This is a test.
-    Test *markdown formatting*.
-    Also want to test $x = 5$ stuff
-    And maybe $$
-    z = 10
-    $$ stuff too?"""
-    print(FormatConverter.format(test1))
