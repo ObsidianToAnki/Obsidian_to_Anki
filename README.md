@@ -16,6 +16,7 @@ The script needs to be able to:
 * Read the file in the directory the script is used
 * Make a backup file in the directory the script is used
 * Rename files in the directory the script is used
+* Remove a backup file in the directory the script is used
 
 ## Usage
 For simple documentation, run the script with the `-h` flag.
