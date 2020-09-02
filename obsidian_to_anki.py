@@ -506,6 +506,10 @@ class App:
 
 
 if __name__ == "__main__":
+    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App()
+    """
+    test = r"![hello](./test2.txt)"
+    print(FormatConverter.format(test))
