@@ -585,6 +585,12 @@ class App:
         )
 
 
+class File:
+    """Class for performing script operations at the file-level."""
+
+    pass
+
+
 if __name__ == "__main__":
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
