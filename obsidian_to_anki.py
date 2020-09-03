@@ -400,6 +400,7 @@ class App:
                     ]
             else:
                 self.files = [File(self.path)]
+            self.parse_requests_1()
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -410,8 +411,7 @@ class App:
             "path",
             nargs="?",
             default=False,
-            help="Path to the file or directory you want to scan."
-            dest="path",
+            help="Path to the file or directory you want to scan.",
         )
         self.parser.add_argument(
             "-c", "--config",
@@ -567,7 +567,7 @@ class App:
     def requests_1(self):
         """Do big request 1.
 
-        This adds images, adds notes, updates fields and gets note info.
+        This adds images, adds notes, updates fields, gets note info and tags.
         """
         requests = list()
         print("Adding images with these paths...")
@@ -593,7 +593,37 @@ class App:
                 ]
             )
         )
-        print("Getting info on notes to be edited...")
+        print("Getting card IDs of notes to be edited...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_note_info()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Getting list of tags...")
+        requests.append(
+            AnkiConnect.request(
+                "getTags"
+            )
+        )
+        return AnkiConnect.invoke(
+            "multi",
+            actions=requests
+        )
+
+    def parse_requests_1(self):
+        """Get relevant info from requests_1."""
+        result = self.requests_1()
+        notes_ids = result[1]["result"]
+        cards_ids = result[3]["result"]
+        tags = result[4]["result"]
+        for notes_ids, file in zip(notes_ids, self.files):
+            file.note_ids = note_ids["result"]
+        for card_ids, file in zip(cards_ids, self.files):
+            file.card_ids = card_ids["result"]
 
 
 class File:
@@ -605,9 +635,9 @@ class File:
         print("Reading file", self.filename, "into memory...")
         with open(self.filename) as f:
             self.file = f.read()
-        self.target_deck = App.DECK_REGEXP.search(self.file).group(0)
+        self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
-            Note.TARGET_DECK = self.target_deck
+            Note.TARGET_DECK = self.target_deck.group(0)
         print(
             "Identified target deck for", self.filename,
             "as", Note.TARGET_DECK
@@ -664,6 +694,15 @@ class File:
                     }
                 )
                 for parsed in self.notes_to_edit
+            ]
+        )
+
+    def get_note_info(self):
+        """Get the AnkiConnect-formatted request to get note info."""
+        return AnkiConnect.request(
+            "notesInfo",
+            notes=[
+                parsed.id for parsed in self.notes_to_edit
             ]
         )
 
