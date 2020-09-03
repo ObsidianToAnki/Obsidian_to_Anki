@@ -12,7 +12,7 @@ import markdown
 import base64
 
 md_parser = markdown.Markdown(
-    extensions=['extra', 'nl2br'], output_format="html5"
+    extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
 )
 
 
