@@ -218,12 +218,16 @@ class Note:
         self.subs = Note.field_subs[self.note_type]
         self.current_field_num = 0
         self.field_names = list(self.subs)
+        self.delete = False
         if self.lines[-1].startswith(Note.ID_PREFIX):
             self.identifier = int(self.lines.pop()[len(Note.ID_PREFIX):])
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
-        if self.lines[-1].startswith(Note.TAG_PREFIX):
+        if not self.lines:
+            # This indicates a delete action.
+            self.delete = True
+        elif self.lines[-1].startswith(Note.TAG_PREFIX):
             self.tags = self.lines.pop()[len(Note.TAG_PREFIX):].split(
                 Note.TAG_SEP
             )
@@ -292,11 +296,14 @@ class Note:
     def parse(self):
         """Get a properly formatted dictionary of the note."""
         template = self.NOTE_DICT_TEMPLATE.copy()
-        template["modelName"] = self.note_type
-        template["fields"] = self.fields
-        if self.tags:
-            template["tags"] = template["tags"] + self.tags
-        return Note.Note_and_id(note=template, id=self.identifier)
+        if not self.delete:
+            template["modelName"] = self.note_type
+            template["fields"] = self.fields
+            if self.tags:
+                template["tags"] = template["tags"] + self.tags
+            return Note.Note_and_id(note=template, id=self.identifier)
+        else:
+            return Note.Note_and_id(note=False, id=self.identifier)
 
 
 class Config:
@@ -374,6 +381,7 @@ class App:
     # Useful REGEXPs
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
+    EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
@@ -405,6 +413,9 @@ class App:
                 file.get_cards()
                 print("Writing ids for file", file.filename)
                 file.write_ids()
+                print("Removing empty notes for file", file.filename)
+                file.remove_empties()
+                file.write_file()
             self.requests_2()
 
     def setup_parser(self):
@@ -463,7 +474,8 @@ class App:
     def requests_1(self):
         """Do big request 1.
 
-        This adds images, adds notes, updates fields, gets note info and tags.
+        This adds images, adds notes, updates fields,
+        gets note info, gets tags and removes notes.
         """
         requests = list()
         print("Adding images with these paths...")
@@ -505,6 +517,16 @@ class App:
                 "getTags"
             )
         )
+        print("Removing empty notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_delete_notes()
+                    for file in self.files
+                ]
+            )
+        )
         return AnkiConnect.invoke(
             "multi",
             actions=requests
@@ -526,7 +548,7 @@ class App:
     def requests_2(self):
         """Perform requests group 2.
 
-        This moves cards, clears tags and adds tags.
+        This moves cards, clears tags, adds tags.
         """
         requests = list()
         print("Moving cards to target deck...")
@@ -588,12 +610,16 @@ class File:
         self.notes_to_add = list()
         self.id_indexes = list()
         self.notes_to_edit = list()
+        self.notes_to_delete = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
             note, position = note_match.group(0), note_match.end()
             parsed = Note(note).parse()
             if parsed.id is None:
                 self.notes_to_add.append(parsed.note)
                 self.id_indexes.append(position)
+            elif not parsed.note:
+                # This indicates a delete action
+                self.notes_to_delete.append(parsed.id)
             else:
                 self.notes_to_edit.append(parsed)
 
@@ -603,7 +629,7 @@ class File:
         return "ID: " + str(id) + "\n"
 
     def write_ids(self):
-        """Write the identifiers to the file."""
+        """Write the identifiers to self.file."""
         print("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
             self.file, zip(
@@ -612,6 +638,15 @@ class File:
                 )
             )
         )
+
+    def remove_empties(self):
+        """Remove empty notes from self.file."""
+        self.file = App.EMPTY_REGEXP.sub(
+            "\n", self.file
+        )
+
+    def write_file(self):
+        """Write to the actual os file"""
         write_safe(self.filename, self.file)
 
     def get_add_notes(self):
@@ -619,6 +654,13 @@ class File:
         return AnkiConnect.request(
             "addNotes",
             notes=self.notes_to_add
+        )
+
+    def get_delete_notes(self):
+        """Get the AnkiConnect-formatted request to delete a note."""
+        return AnkiConnect.request(
+            "deleteNotes",
+            notes=self.notes_to_delete
         )
 
     def get_update_fields(self):
