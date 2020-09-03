@@ -72,7 +72,12 @@ In the markdown file, you must format your notes as follows:
 
 ### Markdown formatting
 
-Standard markdown formatting is supported. GitHub-flavoured code blocks are supported (but Anki won't show syntax highlighting)
+Standard markdown formatting is supported.
+You can check [test.md](./test.md) as an example.
+Front produced:
+![front](./Markdown_example_front.png)
+Back produced:
+![back](./Markdown_example_back.png)
 
 ### Image formatting
 
