@@ -12,7 +12,7 @@ import markdown
 import base64
 
 md_parser = markdown.Markdown(
-    extensions=['extra'], output_format="html5"
+    extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
 )
 
 
@@ -214,21 +214,26 @@ class Note:
         """Set up useful variables."""
         self.text = note_text
         self.lines = self.text.splitlines()
-        self.note_type = Note.note_subs[self.lines[0]]
-        self.subs = Note.field_subs[self.note_type]
         self.current_field_num = 0
-        self.field_names = list(self.subs)
+        self.delete = False
         if self.lines[-1].startswith(Note.ID_PREFIX):
             self.identifier = int(self.lines.pop()[len(Note.ID_PREFIX):])
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
-        if self.lines[-1].startswith(Note.TAG_PREFIX):
+        if not self.lines:
+            # This indicates a delete action.
+            self.delete = True
+            return
+        elif self.lines[-1].startswith(Note.TAG_PREFIX):
             self.tags = self.lines.pop()[len(Note.TAG_PREFIX):].split(
                 Note.TAG_SEP
             )
         else:
             self.tags = None
+        self.note_type = Note.note_subs[self.lines[0]]
+        self.subs = Note.field_subs[self.note_type]
+        self.field_names = list(self.subs)
 
     @property
     def NOTE_DICT_TEMPLATE(self):
@@ -292,11 +297,14 @@ class Note:
     def parse(self):
         """Get a properly formatted dictionary of the note."""
         template = self.NOTE_DICT_TEMPLATE.copy()
-        template["modelName"] = self.note_type
-        template["fields"] = self.fields
-        if self.tags:
-            template["tags"] = template["tags"] + self.tags
-        return Note.Note_and_id(note=template, id=self.identifier)
+        if not self.delete:
+            template["modelName"] = self.note_type
+            template["fields"] = self.fields
+            if self.tags:
+                template["tags"] = template["tags"] + self.tags
+            return Note.Note_and_id(note=template, id=self.identifier)
+        else:
+            return Note.Note_and_id(note=False, id=self.identifier)
 
 
 class Config:
@@ -374,6 +382,9 @@ class App:
     # Useful REGEXPs
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
+    EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
+
+    SUPPORTED_EXTS = [".md", ".txt"]
 
     def __init__(self):
         """Execute the main functionality of the script."""
@@ -385,26 +396,29 @@ class App:
         if args.config:
             webbrowser.open(Config.CONFIG_PATH)
             return
-        if args.filename:
-            self.filename = args.filename
-            print("Reading file", args.filename, "into memory...")
-            with open(args.filename) as f:
-                self.file = f.read()
-            self.target_deck = App.DECK_REGEXP.search(self.file).group(0)
-            if self.target_deck is not None:
-                Note.TARGET_DECK = self.target_deck
-            print("Identified target deck as", Note.TARGET_DECK)
-            self.scan_file()
-            self.add_images()
-            self.add_notes()
-            self.write_ids()
-            self.update_fields()
-            self.get_info()
-            self.get_cards()
-            self.move_cards()
-            self.get_tags()
-            self.clear_tags()
-            self.add_tags()
+        if args.path:
+            self.path = args.path
+            if os.path.isdir(self.path):
+                with os.scandir(self.path) as it:
+                    self.files = [
+                        File(entry.path)
+                        for entry in it
+                        if entry.is_file() and os.path.splitext(
+                            entry.path
+                        )[1] in App.SUPPORTED_EXTS
+                    ]
+            else:
+                self.files = [File(self.path)]
+            for file in self.files:
+                file.scan_file()
+            self.parse_requests_1()
+            for file in self.files:
+                file.get_cards()
+                file.write_ids()
+                print("Removing empty notes for file", file.filename)
+                file.remove_empties()
+                file.write_file()
+            self.requests_2()
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -412,10 +426,10 @@ class App:
             description="Add cards to Anki from an Obsidian markdown file."
         )
         self.parser.add_argument(
-            "-f",
-            type=str,
-            help="The file you want to add flashcards from.",
-            dest="filename"
+            "path",
+            nargs="?",
+            default=False,
+            help="Path to the file or directory you want to scan.",
         )
         self.parser.add_argument(
             "-c", "--config",
@@ -437,26 +451,15 @@ class App:
             """,
         )
 
-    def scan_file(self):
-        """Sort notes from file into adding vs editing."""
-        print("Scanning file for notes...")
-        self.notes_to_add = list()
-        self.id_indexes = list()
-        self.notes_to_edit = list()
-        for note_match in App.NOTE_REGEXP.finditer(self.file):
-            note, position = note_match.group(0), note_match.end()
-            parsed = Note(note).parse()
-            if parsed.id is None:
-                self.notes_to_add.append(parsed.note)
-                self.id_indexes.append(position)
-            else:
-                self.notes_to_edit.append(parsed)
+    def get_tags(self):
+        """Get a set of currently used tags for notes to be edited."""
+        self.tags = set()
+        for info in self.info:
+            self.tags.update(info["tags"])
 
-    def add_images(self):
-        """Add images from FormatConverter to Anki's media folder."""
-        print("Adding images with these paths...")
-        print(FormatConverter.IMAGE_PATHS)
-        AnkiConnect.invoke(
+    def get_add_images(self):
+        """Get the AnkiConnect-formatted add_images request."""
+        return AnkiConnect.request(
             "multi",
             actions=[
                 AnkiConnect.request(
@@ -470,35 +473,199 @@ class App:
             ]
         )
 
+    def requests_1(self):
+        """Do big request 1.
+
+        This adds images, adds notes, updates fields,
+        gets note info, gets tags and removes notes.
+        """
+        requests = list()
+        print("Adding images with these paths...")
+        print(FormatConverter.IMAGE_PATHS)
+        requests.append(self.get_add_images())
+        print("Adding notes into Anki...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_add_notes()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Updating fields of existing notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_update_fields()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Getting card IDs of notes to be edited...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_note_info()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Getting list of tags...")
+        requests.append(
+            AnkiConnect.request(
+                "getTags"
+            )
+        )
+        print("Removing empty notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_delete_notes()
+                    for file in self.files
+                ]
+            )
+        )
+        return AnkiConnect.invoke(
+            "multi",
+            actions=requests
+        )
+
+    def parse_requests_1(self):
+        """Get relevant info from requests_1."""
+        result = self.requests_1()
+        notes_ids = result[1]["result"]
+        cards_ids = result[3]["result"]
+        tags = result[4]["result"]
+        for note_ids, file in zip(notes_ids, self.files):
+            file.note_ids = note_ids["result"]
+        for card_ids, file in zip(cards_ids, self.files):
+            file.card_ids = card_ids["result"]
+        for file in self.files:
+            file.tags = tags
+
+    def requests_2(self):
+        """Perform requests group 2.
+
+        This moves cards, clears tags, adds tags.
+        """
+        requests = list()
+        print("Moving cards to target deck...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_change_decks()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Replacing tags...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_clear_tags()
+                    for file in self.files
+                ]
+            )
+        )
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_add_tags()
+                    for file in self.files
+                ]
+            )
+        )
+        AnkiConnect.invoke(
+            "multi",
+            actions=requests
+        )
+
+
+class File:
+    """Class for performing script operations at the file-level."""
+
+    def __init__(self, filepath):
+        """Perform initial file reading and attribute setting."""
+        self.filename = filepath
+        with open(self.filename) as f:
+            self.file = f.read()
+        self.target_deck = App.DECK_REGEXP.search(self.file)
+        if self.target_deck is not None:
+            Note.TARGET_DECK = self.target_deck.group(0)
+        print(
+            "Identified target deck for", self.filename,
+            "as", Note.TARGET_DECK
+        )
+
+    def scan_file(self):
+        """Sort notes from file into adding vs editing."""
+        print("Scanning file", self.filename, " for notes...")
+        self.notes_to_add = list()
+        self.id_indexes = list()
+        self.notes_to_edit = list()
+        self.notes_to_delete = list()
+        for note_match in App.NOTE_REGEXP.finditer(self.file):
+            note, position = note_match.group(0), note_match.end()
+            parsed = Note(note).parse()
+            if parsed.id is None:
+                self.notes_to_add.append(parsed.note)
+                self.id_indexes.append(position)
+            elif not parsed.note:
+                # This indicates a delete action
+                self.notes_to_delete.append(parsed.id)
+            else:
+                self.notes_to_edit.append(parsed)
+
     @staticmethod
     def id_to_str(id):
         """Get the string repr of id."""
         return "ID: " + str(id) + "\n"
 
-    def add_notes(self):
-        """Add notes to Anki."""
-        print("Adding notes into Anki...")
-        self.identifiers = map(
-            App.id_to_str, AnkiConnect.invoke(
-                "addNotes",
-                notes=self.notes_to_add
-            )
-        )
-
     def write_ids(self):
-        """Write the identifiers to the file."""
-        print("Writing new note IDs to file...")
+        """Write the identifiers to self.file."""
+        print("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
             self.file, zip(
-                self.id_indexes, self.identifiers
+                self.id_indexes, map(
+                    self.id_to_str, self.note_ids
+                )
             )
         )
+
+    def remove_empties(self):
+        """Remove empty notes from self.file."""
+        self.file = App.EMPTY_REGEXP.sub(
+            "", self.file
+        )
+
+    def write_file(self):
+        """Write to the actual os file"""
         write_safe(self.filename, self.file)
 
-    def update_fields(self):
-        """Update the fields of current notes."""
-        print("Updating fields of existing notes...")
-        AnkiConnect.invoke(
+    def get_add_notes(self):
+        """Get the AnkiConnect-formatted request to add notes."""
+        return AnkiConnect.request(
+            "addNotes",
+            notes=self.notes_to_add
+        )
+
+    def get_delete_notes(self):
+        """Get the AnkiConnect-formatted request to delete a note."""
+        return AnkiConnect.request(
+            "deleteNotes",
+            notes=self.notes_to_delete
+        )
+
+    def get_update_fields(self):
+        """Get the AnkiConnect-formatted request to update fields."""
+        return AnkiConnect.request(
             "multi",
             actions=[
                 AnkiConnect.request(
@@ -512,10 +679,9 @@ class App:
             ]
         )
 
-    def get_info(self):
-        """Get info on all notes to be edited."""
-        print("Getting info on notes to be edited...")
-        self.info = AnkiConnect.invoke(
+    def get_note_info(self):
+        """Get the AnkiConnect-formatted request to get note info."""
+        return AnkiConnect.request(
             "notesInfo",
             notes=[
                 parsed.id for parsed in self.notes_to_edit
@@ -526,36 +692,28 @@ class App:
         """Get the card IDs for all notes that need to be edited."""
         print("Getting card IDs")
         self.cards = list()
-        for info in self.info:
+        for info in self.card_ids:
             self.cards += info["cards"]
 
-    def move_cards(self):
-        """Move all cards to target deck."""
-        print("Moving cards to target deck...")
-        AnkiConnect.invoke(
+    def get_change_decks(self):
+        """Get the AnkiConnect-formatted request to change decks."""
+        return AnkiConnect.request(
             "changeDeck",
             cards=self.cards,
-            deck=self.target_deck
+            deck=Note.TARGET_DECK
         )
 
-    def get_tags(self):
-        """Get a set of currently used tags for notes to be edited."""
-        self.tags = set()
-        for info in self.info:
-            self.tags.update(info["tags"])
-
-    def clear_tags(self):
-        """Remove all currently used tags from notes to be edited."""
-        print("Replacing tags...")
-        AnkiConnect.invoke(
+    def get_clear_tags(self):
+        """Get the AnkiConnect-formatted request to clear tags."""
+        return AnkiConnect.request(
             "removeTags",
             notes=[parsed.id for parsed in self.notes_to_edit],
             tags=" ".join(self.tags)
         )
 
-    def add_tags(self):
-        """Add user-set tags for notes to be edited."""
-        AnkiConnect.invoke(
+    def get_add_tags(self):
+        """Get the AnkiConnect-formatted request to add tags."""
+        return AnkiConnect.request(
             "multi",
             actions=[
                 AnkiConnect.request(
