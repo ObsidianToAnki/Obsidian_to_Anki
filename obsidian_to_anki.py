@@ -405,6 +405,7 @@ class App:
                 file.get_cards()
                 print("Writing ids for file", file.filename)
                 file.write_ids()
+            self.requests_2()
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -442,115 +443,6 @@ class App:
         self.tags = set()
         for info in self.info:
             self.tags.update(info["tags"])
-
-    def requests_group_1(self):
-        """Perform requests group 1.
-
-        This adds images, adds notes, updates fields and gets note info.
-        """
-        requests = list()
-        # Adding images
-        print("Adding images with these paths...")
-        print(FormatConverter.IMAGE_PATHS)
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    AnkiConnect.request(
-                        "storeMediaFile",
-                        filename=imgpath.replace(
-                            imgpath, os.path.basename(imgpath)
-                        ),
-                        data=file_encode(imgpath)
-                    )
-                    for imgpath in FormatConverter.IMAGE_PATHS
-                ]
-            )
-        )
-        # Adding notes
-        print("Adding notes into Anki...")
-        requests.append(
-            AnkiConnect.request(
-                "addNotes",
-                notes=self.notes_to_add
-            )
-        )
-        # Updating note fields
-        print("Updating fields of existing notes...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    AnkiConnect.request(
-                        "updateNoteFields", note={
-                            "id": parsed.id,
-                            "fields": parsed.note["fields"],
-                            "audio": parsed.note["audio"]
-                        }
-                    )
-                    for parsed in self.notes_to_edit
-                ]
-            )
-        )
-        # Getting info
-        print("Getting info on notes to be edited...")
-        requests.append(
-            AnkiConnect.request(
-                "notesInfo",
-                notes=[
-                    parsed.id for parsed in self.notes_to_edit
-                ]
-            )
-        )
-        result = AnkiConnect.invoke(
-            "multi",
-            actions=requests
-        )
-        self.identifiers = map(
-            App.id_to_str, result[1]["result"]
-        )
-        self.info = result[3]["result"]
-
-    def requests_group_2(self):
-        """Perform requests group 2.
-
-        This moves cards, clears tags and adds tags.
-        """
-        requests = list()
-        print("Moving cards to target deck...")
-        requests.append(
-            AnkiConnect.request(
-                "changeDeck",
-                cards=self.cards,
-                deck=self.target_deck
-            )
-        )
-        print("Replacing tags...")
-        requests.append(
-            AnkiConnect.request(
-                "removeTags",
-                notes=[parsed.id for parsed in self.notes_to_edit],
-                tags=" ".join(self.tags)
-            )
-        )
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    AnkiConnect.request(
-                        "addTags",
-                        notes=[parsed.id],
-                        tags=" ".join(parsed.note["tags"])
-                    )
-                    for parsed in self.notes_to_edit
-                    if parsed.note["tags"]
-                ]
-            )
-        )
-        AnkiConnect.invoke(
-            "multi",
-            actions=requests
-        )
 
     def get_add_images(self):
         """Get the AnkiConnect-formatted add_images request."""
@@ -661,13 +553,8 @@ class App:
             AnkiConnect.request(
                 "multi",
                 actions=[
-                    AnkiConnect.request(
-                        "addTags",
-                        notes=[parsed.id],
-                        tags=" ".join(parsed.note["tags"])
-                    )
-                    for parsed in self.notes_to_edit
-                    if parsed.note["tags"]
+                    file.get_add_tags()
+                    for file in self.files
                 ]
             )
         )
@@ -720,7 +607,9 @@ class File:
         print("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
             self.file, zip(
-                self.id_indexes, self.note_ids
+                self.id_indexes, map(
+                    self.id_to_str, self.note_ids
+                )
             )
         )
         write_safe(self.filename, self.file)
@@ -769,7 +658,7 @@ class File:
         return AnkiConnect.request(
             "changeDeck",
             cards=self.cards,
-            deck=self.target_deck
+            deck=Note.TARGET_DECK
         )
 
     def get_clear_tags(self):
@@ -778,6 +667,21 @@ class File:
             "removeTags",
             notes=[parsed.id for parsed in self.notes_to_edit],
             tags=" ".join(self.tags)
+        )
+
+    def get_add_tags(self):
+        """Get the AnkiConnect-formatted request to add tags."""
+        return AnkiConnect.request(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "addTags",
+                    notes=[parsed.id],
+                    tags=" ".join(parsed.note["tags"])
+                )
+                for parsed in self.notes_to_edit
+                if parsed.note["tags"]
+            ]
         )
 
 
