@@ -214,10 +214,7 @@ class Note:
         """Set up useful variables."""
         self.text = note_text
         self.lines = self.text.splitlines()
-        self.note_type = Note.note_subs[self.lines[0]]
-        self.subs = Note.field_subs[self.note_type]
         self.current_field_num = 0
-        self.field_names = list(self.subs)
         self.delete = False
         if self.lines[-1].startswith(Note.ID_PREFIX):
             self.identifier = int(self.lines.pop()[len(Note.ID_PREFIX):])
@@ -227,12 +224,16 @@ class Note:
         if not self.lines:
             # This indicates a delete action.
             self.delete = True
+            return
         elif self.lines[-1].startswith(Note.TAG_PREFIX):
             self.tags = self.lines.pop()[len(Note.TAG_PREFIX):].split(
                 Note.TAG_SEP
             )
         else:
             self.tags = None
+        self.note_type = Note.note_subs[self.lines[0]]
+        self.subs = Note.field_subs[self.note_type]
+        self.field_names = list(self.subs)
 
     @property
     def NOTE_DICT_TEMPLATE(self):
@@ -408,10 +409,11 @@ class App:
                     ]
             else:
                 self.files = [File(self.path)]
+            for file in self.files:
+                file.scan_file()
             self.parse_requests_1()
             for file in self.files:
                 file.get_cards()
-                print("Writing ids for file", file.filename)
                 file.write_ids()
                 print("Removing empty notes for file", file.filename)
                 file.remove_empties()
@@ -592,7 +594,6 @@ class File:
     def __init__(self, filepath):
         """Perform initial file reading and attribute setting."""
         self.filename = filepath
-        print("Reading file", self.filename, "into memory...")
         with open(self.filename) as f:
             self.file = f.read()
         self.target_deck = App.DECK_REGEXP.search(self.file)
@@ -602,7 +603,6 @@ class File:
             "Identified target deck for", self.filename,
             "as", Note.TARGET_DECK
         )
-        self.scan_file()
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
@@ -642,7 +642,7 @@ class File:
     def remove_empties(self):
         """Remove empty notes from self.file."""
         self.file = App.EMPTY_REGEXP.sub(
-            "\n", self.file
+            "", self.file
         )
 
     def write_file(self):
