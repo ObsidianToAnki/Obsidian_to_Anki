@@ -1,11 +1,11 @@
 # Obsidian_to_Anki
-Script to add flashcards from an Obsidian markdown file to Anki.
+Script to add flashcards from a properly-formatted file to Anki. Run from the command line. Built with Obsidian markdown syntax in mind.
 
 ## Setup
 1. Install [Python](https://www.python.org/downloads/)
 2. Download the desired release.
 3. Place the script "obsidian_to_anki.py" in a convenient folder. You may wish to consider placing it in a Scripts folder, and adding the folder to your PATH
-4. Start up Anki, and navigate to your desired profile
+4. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile
 5. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
 6. Install the `python-markdown` library - see installation instructions [here](https://github.com/Python-Markdown/markdown). `pip install markdown` should work.
 7. Check the Permissions tab below to ensure the script is able to run.
@@ -19,16 +19,35 @@ The script needs to be able to:
 * Make a backup file in the directory the script is used
 * Rename files in the directory the script is used
 
+## Features
+
+Current features:
+* [Custom note types](#note-formatting)
+* Updating notes from file
+* Substitutions - see [Config](#config)
+* [Tags](#tag-formatting)
+* Adding to user-specified [decks](#deck-formatting), on a *per-file* basis
+* [Markdown](https://www.markdownguide.org/getting-started/) formatting - see [this](#markdown-formatting) for examples
+* [Embedded images](#image-formatting) (GIFs should work too)
+* [Auto-deleting notes](#deleting-notes) from the file
+* Reading from all files in a directory automatically - not recursively however.
+
+Not available:
+* Audio
+
+
 ## Usage
 For simple documentation, run the script with the `-h` flag.
 
+**Apart from editing the config file, all operations of the script require Anki to be running.**
+
+To add notes to Anki from a properly-formatted file, or a directory of files, run `obsidian_to_anki.py [path]`, replacing `[path]` with the path to the file or directory.  
+For example, running `obsidian_to_anki.py .` should add notes from all properly-formatted files in the current directory.  
+To avoid unexpected behaviour, the script will only scan files from a directory if they have either a `.md` or `.txt` extension. If you feel like this will be a major issue, please let me know, and I can add this as something to be configured.
+
 To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open the config file for editing, but isn't guaranteed to work. If it doesn't work, you'll have to navigate to the config file and edit it manually. For more information, see [Config](#config)
 
-**All other operations of the script require Anki to be running.**
-
-To update the config file with new note types from Anki, run `obsidian_to_anki -u`
-
-To add appropriately-formatted notes from a file, run `obsidian_to_anki -f {FILENAME}`
+To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`
 
 ## Deck formatting
 Anywhere within the file, format the deck that you want the notes to go into as follows:
@@ -39,7 +58,7 @@ For example:
 > TARGET DECK  
 > Mathematics  
 
-You may place more than one TARGET DECK, but only the first instance will be read and used.
+You may place more than one TARGET DECK in the same file, but only the first instance will be read and used.
 
 ## Note formatting
 
@@ -63,6 +82,14 @@ Embedded images are supported if the following criteria are met:
 
 ### Tag formatting
 
+For reference, the note formatting style is:
+
+> START  
+> {Note Type}  
+> {Note Fields}  
+> Tags:   
+> END  
+
 Note that the Tags: line is optional - if you don't want tags, you may leave out the line.
 
 Tags should be formatted as such:
@@ -81,7 +108,7 @@ Apart from the first field, each field must have a prefix to indicate to the pro
 > Back: Test successful!  
 > END  
 
-When the script successfully adds a note, it will append an ID to the Note Data. This allows you to update existing notes by running the script again.
+When the script successfully adds a note, it will append an ID to the Note Data. This allows you to *update existing notes by running the script again*.
 
 Example output:
 
@@ -91,6 +118,21 @@ Example output:
 > Back: Test successful!  
 > ID: 1566052191670  
 > END  
+
+### Deleting notes
+
+The script can delete notes that *it has added* automatically. To do this:
+1. Find the formatted note in your file:
+> START  
+> {Note Type}  
+> {Note Data}  
+> ID: {Identifier}  
+> END  
+2. Change this to read:
+> START  
+> ID: {Identifier}  
+> END  
+3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary START END block from the file.
 
 ### Default
 By default, the script:
@@ -136,20 +178,3 @@ Then you now format your notes like this:
 > B  
 > {Note Data}  
 > END  
-
-## Features
-
-Current features:
-* Custom note types
-* Updating notes from Obsidian
-* Substitutions (see above)
-* Auto-convert math formatting
-* Tags
-* Adding to decks other than Default
-* Markdown formatting
-* Embedded images (GIFs should work too)
-
-Not available:
-* Audio
-* Deleting notes from Obsidian
-* Reading from all files in a directory automatically - script works on a per-file basis
