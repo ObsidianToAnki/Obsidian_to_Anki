@@ -58,7 +58,7 @@ For example:
 > TARGET DECK  
 > Mathematics  
 
-You may place more than one TARGET DECK, but only the first instance will be read and used.
+You may place more than one TARGET DECK in the same file, but only the first instance will be read and used.
 
 ## Note formatting
 
