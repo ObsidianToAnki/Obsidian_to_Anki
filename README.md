@@ -82,6 +82,14 @@ Embedded images are supported if the following criteria are met:
 
 ### Tag formatting
 
+For reference, the note formatting style is:
+
+> START  
+> {Note Type}  
+> {Note Fields}  
+> Tags:   
+> END  
+
 Note that the Tags: line is optional - if you don't want tags, you may leave out the line.
 
 Tags should be formatted as such:
