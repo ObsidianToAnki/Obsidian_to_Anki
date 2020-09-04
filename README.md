@@ -112,12 +112,12 @@ v1.1 now allows you to specify 'global tags' for a file - these tags will be add
 
 To do this:
 Anywhere within the file, format the global tags as follows:
-> GLOBAL TAGS
-> {Tag_list}
+> GLOBAL TAGS  
+> {Tag_list}  
 
 So, for example:
-> GLOBAL TAGS
-> Maths School Physics
+> GLOBAL TAGS  
+> Maths School Physics  
 
 Like with tag-line formatting, you need a space between tags - however, do not include the "Tags: " prefix.
 
