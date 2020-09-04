@@ -106,6 +106,21 @@ Tags should be formatted as such:
 
 So, a space between the colon and the first tag, and a space between tags.
 
+*v1.1 Feature*:
+
+v1.1 now allows you to specify 'global tags' for a file - these tags will be added to every note in the file.
+
+To do this:
+Anywhere within the file, format the global tags as follows:
+> GLOBAL TAGS
+> {Tag_list}
+
+So, for example:
+> GLOBAL TAGS
+> Maths School Physics
+
+Like with tag-line formatting, you need a space between tags - however, do not include the "Tags: " prefix.
+
 ### Field formatting
 
 Apart from the first field, each field must have a prefix to indicate to the program when to move on to the next field. For example:
