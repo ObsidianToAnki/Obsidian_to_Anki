@@ -172,13 +172,13 @@ Then you now format your notes like this:
 2. The substitutions for notes. These are under the section ['Note Substitutions']. Similar to the above, you'll see something like this:
 > ...  
 > Basic = Basic  
-> Basic (and reversed) = Basic (and reversed)  
+> Basic (and reversed card) = Basic (and reversed card)  
 > ...  
 
 If you edit and save this to say  
 > ...  
 > Basic = B  
-> Basic (and reversed) = Basic (and reversed)  
+> Basic (and reversed card) = Basic (and reversed card)  
 > ...  
 
 Then you now format your notes like this:  
