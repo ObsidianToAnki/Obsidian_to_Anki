@@ -383,6 +383,7 @@ class App:
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
     EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
+    TAG_REGEXP = re.compile(r"GLOBAL TAGS\n([\s\S]*?)\n")
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
@@ -603,6 +604,11 @@ class File:
             "Identified target deck for", self.filename,
             "as", Note.TARGET_DECK
         )
+        self.global_tags = App.TAG_REGEXP.search(self.file)
+        if self.global_tags is not None:
+            self.global_tags = self.global_tags.group(1)
+        else:
+            self.global_tags = ""
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
@@ -719,10 +725,9 @@ class File:
                 AnkiConnect.request(
                     "addTags",
                     notes=[parsed.id],
-                    tags=" ".join(parsed.note["tags"])
+                    tags=" ".join(parsed.note["tags"]) + " " + self.global_tags
                 )
                 for parsed in self.notes_to_edit
-                if parsed.note["tags"]
             ]
         )
 
