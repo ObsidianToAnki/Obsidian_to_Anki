@@ -12,6 +12,8 @@ Script to add flashcards from a properly-formatted file to Anki. Run from the co
 8. From the command line, run the script once with no arguments - `{Path to script}/obsidian_to_anki.py`
 This will make a configuration file in the same directory as the script, "obsidian_to_anki_config.ini".
 
+See [Troubleshooting](#Troubleshooting) if you have problems.
+
 ## Permissions
 The script needs to be able to:
 * Make a config file in the directory the script is installed
@@ -184,3 +186,17 @@ Then you now format your notes like this:
 > B  
 > {Note Data}  
 > END  
+
+## Troubleshooting
+
+If the script itself is not able to run, try running `python3 {PATH_TO_SCRIPT}`.
+
+You may also want to prepend the following shebang to the start of the file:
+
+`#!/usr/bin/env python`
+
+For more information, see [this pull request](https://github.com/Pseudonium/Obsidian_to_Anki/pull/13)
+
+If you are getting a `KeyError`, you may have typed one of the [substitutions](#Config) wrong - double check the config file and what you actually wrote.
+Examples:
+* Anki actually stores "Basic (and reversed)" as "Basic (and reversed card)" - hence, without changing the config file, formatting "Basic (and reversed)" for the note type will throw a `KeyError`
