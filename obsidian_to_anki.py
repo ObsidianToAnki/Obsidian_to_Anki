@@ -309,7 +309,8 @@ class Note:
 class InlineNote(Note):
 
     ID_REGEXP = re.compile(r"ID: (\d+)")
-    TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"([\s\S]*?)")
+    TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*?)")
+    TYPE_REGEXP = re.compile(r"\[(.*?)\]")
 
     def __init__(self, note_text):
         self.text = note_text.strip()
@@ -330,7 +331,29 @@ class InlineNote(Note):
             self.tags = TAGS.group(1)
             self.text = self.text[:TAGS.start()]
         else:
-            self.tags = None
+            self.tags = list()
+        TYPE = InlineNote.TYPE_REGEXP.search(self.text)
+        self.note_type = Note.note_subs[TYPE.group(1)]
+        self.text = self.text[TYPE.end():]
+        self.subs = Note.field_subs[self.note_type]
+        self.field_names = list(self.subs)
+        self.text = self.text.strip()
+
+    @property
+    def fields(self):
+        """Get the fields of the note into a dictionary."""
+        fields = dict.fromkeys(self.field_names, "")
+        while self.next_sub:
+            # So, we're expecting a new field
+            end = self.text.find(self.next_sub)
+            fields[self.current_field] += self.text[:end]
+            self.text = self.text[end + len(self.next_sub):]
+            self.current_field_num += 1
+        fields = {
+            key: FormatConverter.format(value)
+            for key, value in fields.items()
+        }
+        return {key: value.strip() for key, value in fields.items()}
 
 
 class Config:
