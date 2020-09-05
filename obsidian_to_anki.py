@@ -672,6 +672,8 @@ class File:
         self.id_indexes = list()
         self.notes_to_edit = list()
         self.notes_to_delete = list()
+        self.inline_notes_to_add = list()
+        self.inline_id_indexes = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
             note, position = note_match.group(0), note_match.end()
             parsed = Note(note).parse()
@@ -685,20 +687,46 @@ class File:
                 self.notes_to_delete.append(parsed.id)
             else:
                 self.notes_to_edit.append(parsed)
+        for inline_note_match in App.INLINE_REGEXP.finditer(self.file):
+            note = inline_note_match.group(1)
+            position = inline_note_match.end()
+            parsed = InlineNote(note).parse()
+            if parsed.id is None:
+                # Need to make sure global_tags get added.
+                parsed.note["tags"] += self.global_tags.split(" ")
+                self.inline_notes_to_add.append(parsed.note)
+                self.inline_id_indexes.append(position)
+            elif not parsed.note:
+                # This indicates a delete action
+                self.notes_to_delete.append(parsed.id)
+            else:
+                self.notes_to_edit.append(parsed)
 
     @staticmethod
-    def id_to_str(id):
+    def id_to_str(id, inline=False):
         """Get the string repr of id."""
-        return "ID: " + str(id) + "\n"
+        if inline:
+            return "ID: " + str(id) + " "
+        else:
+            return "ID: " + str(id) + "\n"
 
     def write_ids(self):
         """Write the identifiers to self.file."""
         print("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
             self.file, zip(
-                self.id_indexes, map(
-                    self.id_to_str, self.note_ids
-                )
+                self.id_indexes, [
+                    self.id_to_str(id)
+                    for id in self.note_ids[:len(self.notes_to_add)]
+                ]
+            )
+        )
+        self.file = string_insert(
+            self.file, zip(
+                self.inline_id_indexes, [
+                    self.id_to_str(id, inline=True)
+                    for id in self.note_ids[len(self.notes_to_add):]
+                ]
             )
         )
 
@@ -716,7 +744,7 @@ class File:
         """Get the AnkiConnect-formatted request to add notes."""
         return AnkiConnect.request(
             "addNotes",
-            notes=self.notes_to_add
+            notes=self.notes_to_add + self.inline_notes_to_add
         )
 
     def get_delete_notes(self):
