@@ -106,17 +106,17 @@ Tags should be formatted as such:
 
 So, a space between the colon and the first tag, and a space between tags.
 
-*v1.1 Feature*:
+*v1.1.1 Feature*:
 
-v1.1 now allows you to specify 'global tags' for a file - these tags will be added to every note in the file.
+v1.1.1 now allows you to specify 'file tags' for a file - these tags will be added to every card in the file.
 
 To do this:
-Anywhere within the file, format the global tags as follows:
-> GLOBAL TAGS  
+Anywhere within the file, format the file tags as follows:
+> FILE TAGS  
 > {Tag_list}  
 
 So, for example:
-> GLOBAL TAGS  
+> FILE TAGS  
 > Maths School Physics  
 
 Like with tag-line formatting, you need a space between tags - however, do not include the "Tags: " prefix.
