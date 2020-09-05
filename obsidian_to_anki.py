@@ -621,6 +621,8 @@ class File:
             note, position = note_match.group(0), note_match.end()
             parsed = Note(note).parse()
             if parsed.id is None:
+                # Need to make sure global_tags get added.
+                parsed.note["tags"] += self.global_tags.split(" ")
                 self.notes_to_add.append(parsed.note)
                 self.id_indexes.append(position)
             elif not parsed.note:
