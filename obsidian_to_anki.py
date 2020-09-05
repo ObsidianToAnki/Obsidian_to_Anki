@@ -230,7 +230,7 @@ class Note:
                 Note.TAG_SEP
             )
         else:
-            self.tags = None
+            self.tags = list()
         self.note_type = Note.note_subs[self.lines[0]]
         self.subs = Note.field_subs[self.note_type]
         self.field_names = list(self.subs)
@@ -300,11 +300,37 @@ class Note:
         if not self.delete:
             template["modelName"] = self.note_type
             template["fields"] = self.fields
-            if self.tags:
-                template["tags"] = template["tags"] + self.tags
+            template["tags"] = template["tags"] + self.tags
             return Note.Note_and_id(note=template, id=self.identifier)
         else:
             return Note.Note_and_id(note=False, id=self.identifier)
+
+
+class InlineNote(Note):
+
+    ID_REGEXP = re.compile(r"ID: (\d+)")
+    TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"([\s\S]*?)")
+
+    def __init__(self, note_text):
+        self.text = note_text.strip()
+        self.current_field_num = 0
+        self.delete = False
+        ID = InlineNote.ID_REGEXP.search(self.text)
+        if ID is not None:
+            self.identifier = int(ID.group(1))
+            self.text = self.text[:ID.start()]  # Removes identifier
+        else:
+            self.identifier = None
+        if not self.text:
+            # This indicates a delete action
+            self.delete = True
+            return
+        TAGS = InlineNote.TAG_REGEXP.search(self.text)
+        if TAGS is not None:
+            self.tags = TAGS.group(1)
+            self.text = self.text[:TAGS.start()]
+        else:
+            self.tags = None
 
 
 class Config:
@@ -735,6 +761,8 @@ class File:
 
 
 if __name__ == "__main__":
+    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App()
+    """
