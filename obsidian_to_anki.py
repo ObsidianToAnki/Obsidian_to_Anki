@@ -312,6 +312,9 @@ class InlineNote(Note):
     TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*?)")
     TYPE_REGEXP = re.compile(r"\[(.*?)\]")
 
+    INLINE_PREFIX = "STARTI"
+    INLINE_SUFFIX = "ENDI"
+
     def __init__(self, note_text):
         self.text = note_text.strip()
         self.current_field_num = 0
@@ -433,6 +436,9 @@ class App:
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
     EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
     TAG_REGEXP = re.compile(r"FILE TAGS\n([\s\S]*?)\n")
+    INLINE_REGEXP = re.compile(
+        InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
+    )
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
