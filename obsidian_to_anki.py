@@ -383,7 +383,7 @@ class App:
     NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
     EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
-    TAG_REGEXP = re.compile(r"GLOBAL TAGS\n([\s\S]*?)\n")
+    TAG_REGEXP = re.compile(r"FILE TAGS\n([\s\S]*?)\n")
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
