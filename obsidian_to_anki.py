@@ -309,7 +309,7 @@ class Note:
 class InlineNote(Note):
 
     ID_REGEXP = re.compile(r"ID: (\d+)")
-    TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*?)")
+    TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*)")
     TYPE_REGEXP = re.compile(r"\[(.*?)\]")
 
     INLINE_PREFIX = "STARTI"
@@ -329,9 +329,10 @@ class InlineNote(Note):
             # This indicates a delete action
             self.delete = True
             return
+        print(self.text)
         TAGS = InlineNote.TAG_REGEXP.search(self.text)
         if TAGS is not None:
-            self.tags = TAGS.group(1)
+            self.tags = TAGS.group(1).split(Note.TAG_SEP)
             self.text = self.text[:TAGS.start()]
         else:
             self.tags = list()
@@ -352,6 +353,8 @@ class InlineNote(Note):
             fields[self.current_field] += self.text[:end]
             self.text = self.text[end + len(self.next_sub):]
             self.current_field_num += 1
+        # For last field:
+        fields[self.current_field] += self.text
         fields = {
             key: FormatConverter.format(value)
             for key, value in fields.items()
@@ -438,6 +441,9 @@ class App:
     TAG_REGEXP = re.compile(r"FILE TAGS\n([\s\S]*?)\n")
     INLINE_REGEXP = re.compile(
         InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
+    )
+    INLINE_EMPTY_REGEXP = re.compile(
+        InlineNote.INLINE_PREFIX + r"ID: (.*?)" + InlineNote.INLINE_SUFFIX
     )
 
     SUPPORTED_EXTS = [".md", ".txt"]
@@ -689,7 +695,7 @@ class File:
                 self.notes_to_edit.append(parsed)
         for inline_note_match in App.INLINE_REGEXP.finditer(self.file):
             note = inline_note_match.group(1)
-            position = inline_note_match.end()
+            position = inline_note_match.end(1)
             parsed = InlineNote(note).parse()
             if parsed.id is None:
                 # Need to make sure global_tags get added.
@@ -714,25 +720,29 @@ class File:
         """Write the identifiers to self.file."""
         print("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
-            self.file, zip(
-                self.id_indexes, [
-                    self.id_to_str(id)
-                    for id in self.note_ids[:len(self.notes_to_add)]
-                ]
-            )
-        )
-        self.file = string_insert(
-            self.file, zip(
-                self.inline_id_indexes, [
-                    self.id_to_str(id, inline=True)
-                    for id in self.note_ids[len(self.notes_to_add):]
-                ]
+            self.file, list(
+                zip(
+                    self.id_indexes, [
+                        self.id_to_str(id)
+                        for id in self.note_ids[:len(self.notes_to_add)]
+                    ]
+                )
+            ) + list(
+                zip(
+                    self.inline_id_indexes, [
+                        self.id_to_str(id, inline=True)
+                        for id in self.note_ids[len(self.notes_to_add):]
+                    ]
+                )
             )
         )
 
     def remove_empties(self):
         """Remove empty notes from self.file."""
         self.file = App.EMPTY_REGEXP.sub(
+            "", self.file
+        )
+        self.file = App.INLINE_EMPTY_REGEXP.sub(
             "", self.file
         )
 
@@ -818,8 +828,6 @@ class File:
 
 
 if __name__ == "__main__":
-    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App()
-    """
