@@ -329,7 +329,6 @@ class InlineNote(Note):
             # This indicates a delete action
             self.delete = True
             return
-        print(self.text)
         TAGS = InlineNote.TAG_REGEXP.search(self.text)
         if TAGS is not None:
             self.tags = TAGS.group(1).split(Note.TAG_SEP)
@@ -443,7 +442,7 @@ class App:
         InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
     )
     INLINE_EMPTY_REGEXP = re.compile(
-        InlineNote.INLINE_PREFIX + r"ID: (.*?)" + InlineNote.INLINE_SUFFIX
+        InlineNote.INLINE_PREFIX + r"\s+ID: .*?" + InlineNote.INLINE_SUFFIX
     )
 
     SUPPORTED_EXTS = [".md", ".txt"]
