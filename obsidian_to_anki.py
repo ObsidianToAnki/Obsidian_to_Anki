@@ -522,6 +522,7 @@ class App:
         if args.update:
             Config.update_config()
         Config.load_config()
+        self.gen_regexp()
         if args.config:
             webbrowser.open(Config.CONFIG_PATH)
             return
@@ -585,15 +586,15 @@ class App:
         setattr(
             App, "NOTE_REGEXP",
             re.compile(
-                "".join(
+                r"".join(
                     [
-                        r"(?<=",
+                        r"^",
                         Note.NOTE_PREFIX,
-                        r"\n)[\s\S]*?(?=",
+                        r"\n([\s\S]*?\n)",
                         Note.NOTE_SUFFIX,
-                        r"\n?)"
+                        r"\n?"
                     ]
-                )
+                ), flags=re.MULTILINE
             )
         )
         setattr(
@@ -601,11 +602,11 @@ class App:
             re.compile(
                 "".join(
                     [
-                        r"(?<=",
+                        r"^",
                         App.DECK_LINE,
-                        r"\n).*",
+                        r"\n(.*)",
                     ]
-                )
+                ), flags=re.MULTILINE
             )
         )
         setattr(
@@ -613,19 +614,20 @@ class App:
             re.compile(
                 "".join(
                     [
+                        r"^",
                         Note.NOTE_PREFIX,
                         r"\n",
                         Note.ID_PREFIX,
                         r"[\s\S]*?\n",
                         Note.NOTE_SUFFIX
                     ]
-                )
+                ), flags=re.MULTILINE
             )
         )
         setattr(
             App, "TAG_REGEXP",
             re.compile(
-                App.TAG_LINE + r"\n(.*)\n"
+                r"^" + App.TAG_LINE + r"\n(.*)\n", flags=re.MULTILINE
             )
         )
         setattr(
@@ -794,7 +796,7 @@ class File:
             self.file = f.read()
         self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
-            Note.TARGET_DECK = self.target_deck.group(0)
+            Note.TARGET_DECK = self.target_deck.group(1)
         print(
             "Identified target deck for", self.filename,
             "as", Note.TARGET_DECK
@@ -815,7 +817,7 @@ class File:
         self.inline_notes_to_add = list()
         self.inline_id_indexes = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
-            note, position = note_match.group(0), note_match.end()
+            note, position = note_match.group(1), note_match.end(1)
             parsed = Note(note).parse()
             if parsed.id is None:
                 # Need to make sure global_tags get added.
