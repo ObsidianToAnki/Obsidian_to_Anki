@@ -106,6 +106,9 @@ class FormatConverter:
     IMAGE_PATHS = set()
     IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
 
+    PARA_OPEN = "<p>"
+    PARA_CLOSE = "</p>"
+
     @staticmethod
     def inline_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted inline math."""
@@ -170,6 +173,11 @@ class FormatConverter:
             )
         FormatConverter.get_images(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
+        note_text = note_text.strip()
+        # Remove unnecessary paragraph tag
+        if note_text.startswith(FormatConverter.PARA_OPEN):
+            note_text = note_text[len(FormatConverter.PARA_OPEN):]
+            note_text = note_text[:-len(FormatConverter.PARA_CLOSE)]
         return note_text
 
     @staticmethod
@@ -209,6 +217,8 @@ class Note:
     TAG_PREFIX = "Tags: "
     TAG_SEP = " "
     Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
+    NOTE_PREFIX = "START"
+    NOTE_SUFFIX = "END"
 
     def __init__(self, note_text):
         """Set up useful variables."""
@@ -310,7 +320,7 @@ class InlineNote(Note):
 
     ID_REGEXP = re.compile(r"ID: (\d+)")
     TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*)")
-    TYPE_REGEXP = re.compile(r"\[(.*?)\]")
+    TYPE_REGEXP = re.compile(r"\[(.*?)\]")  # So e.g. [Basic]
 
     INLINE_PREFIX = "STARTI"
     INLINE_SUFFIX = "ENDI"
@@ -388,7 +398,7 @@ class Config:
         ]
         subs = {
             note: {
-                field: field + ": "
+                field: field + ":"
                 for field in fields["result"]
             }
             for note, fields in zip(
@@ -411,6 +421,16 @@ class Config:
             config["Note Substitutions"].setdefault(note, note)
             # Similar to above - if there's already a substitution present,
             # it isn't overwritten
+        # Now for syntax stuff
+        if "Syntax" not in config:
+            config["Syntax"] = {
+                "Begin Note": Note.NOTE_PREFIX,
+                "End Note": Note.NOTE_SUFFIX,
+                "Begin Inline Note": InlineNote.INLINE_PREFIX,
+                "End Inline Note": InlineNote.INLINE_SUFFIX,
+                "Target Deck Line": App.DECK_LINE,
+                "File Tags Line": App.TAG_LINE
+            }
         with open(Config.CONFIG_PATH, "w") as configfile:
             config.write(configfile)
         print("Configuration file updated!")
@@ -427,23 +447,32 @@ class Config:
             note: dict(config[note]) for note in config
             if note != "Note Substitutions" and note != "DEFAULT"
         }
+        Note.NOTE_PREFIX = re.escape(
+            config["Syntax"]["Begin Note"]
+        )
+        Note.NOTE_SUFFIX = re.escape(
+            config["Syntax"]["End Note"]
+        )
+        InlineNote.INLINE_PREFIX = re.escape(
+            config["Syntax"]["Begin Inline Note"]
+        )
+        InlineNote.INLINE_SUFFIX = re.escape(
+            config["Syntax"]["End Inline Note"]
+        )
+        App.DECK_LINE = re.escape(
+            config["Syntax"]["Target Deck Line"]
+        )
+        App.TAG_LINE = re.escape(
+            config["Syntax"]["File Tags Line"]
+        )
         print("Loaded successfully!")
 
 
 class App:
     """Master class that manages the application."""
 
-    # Useful REGEXPs
-    NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
-    DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
-    EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
-    TAG_REGEXP = re.compile(r"FILE TAGS\n([\s\S]*?)\n")
-    INLINE_REGEXP = re.compile(
-        InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
-    )
-    INLINE_EMPTY_REGEXP = re.compile(
-        InlineNote.INLINE_PREFIX + r"\s+ID: .*?" + InlineNote.INLINE_SUFFIX
-    )
+    DECK_LINE = "TARGET DECK"
+    TAG_LINE = "FILE TAGS"
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
@@ -454,6 +483,7 @@ class App:
         if args.update:
             Config.update_config()
         Config.load_config()
+        self.gen_regexp()
         if args.config:
             webbrowser.open(Config.CONFIG_PATH)
             return
@@ -510,6 +540,74 @@ class App:
                 Note that this does NOT open the config file for editing,
                 use -c for that.
             """,
+        )
+
+    def gen_regexp(self):
+        """Generate the regular expressions used by the app."""
+        setattr(
+            App, "NOTE_REGEXP",
+            re.compile(
+                r"".join(
+                    [
+                        r"^",
+                        Note.NOTE_PREFIX,
+                        r"\n([\s\S]*?\n)",
+                        Note.NOTE_SUFFIX,
+                        r"\n?"
+                    ]
+                ), flags=re.MULTILINE
+            )
+        )
+        setattr(
+            App, "DECK_REGEXP",
+            re.compile(
+                "".join(
+                    [
+                        r"^",
+                        App.DECK_LINE,
+                        r"\n(.*)",
+                    ]
+                ), flags=re.MULTILINE
+            )
+        )
+        setattr(
+            App, "EMPTY_REGEXP",
+            re.compile(
+                "".join(
+                    [
+                        r"^",
+                        Note.NOTE_PREFIX,
+                        r"\n",
+                        Note.ID_PREFIX,
+                        r"[\s\S]*?\n",
+                        Note.NOTE_SUFFIX
+                    ]
+                ), flags=re.MULTILINE
+            )
+        )
+        setattr(
+            App, "TAG_REGEXP",
+            re.compile(
+                r"^" + App.TAG_LINE + r"\n(.*)\n", flags=re.MULTILINE
+            )
+        )
+        setattr(
+            App, "INLINE_REGEXP",
+            re.compile(
+                InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
+            )
+        )
+        setattr(
+            App, "INLINE_EMPTY_REGEXP",
+            re.compile(
+                "".join(
+                    [
+                        InlineNote.INLINE_PREFIX,
+                        r"\s+ID: .*?",
+                        InlineNote.INLINE_SUFFIX
+                    ]
+                )
+            )
         )
 
     def get_tags(self):
@@ -659,7 +757,7 @@ class File:
             self.file = f.read()
         self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
-            Note.TARGET_DECK = self.target_deck.group(0)
+            Note.TARGET_DECK = self.target_deck.group(1)
         print(
             "Identified target deck for", self.filename,
             "as", Note.TARGET_DECK
@@ -680,7 +778,7 @@ class File:
         self.inline_notes_to_add = list()
         self.inline_id_indexes = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
-            note, position = note_match.group(0), note_match.end()
+            note, position = note_match.group(1), note_match.end(1)
             parsed = Note(note).parse()
             if parsed.id is None:
                 # Need to make sure global_tags get added.
