@@ -106,6 +106,9 @@ class FormatConverter:
     IMAGE_PATHS = set()
     IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
 
+    PARA_OPEN = "<p>"
+    PARA_CLOSE = "</p>"
+
     @staticmethod
     def inline_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted inline math."""
@@ -170,6 +173,11 @@ class FormatConverter:
             )
         FormatConverter.get_images(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
+        note_text = note_text.strip()
+        # Remove unnecessary paragraph tag
+        if note_text.startswith(FormatConverter.PARA_OPEN):
+            note_text = note_text[len(FormatConverter.PARA_OPEN):]
+            note_text = note_text[:-len(FormatConverter.PARA_CLOSE)]
         return note_text
 
     @staticmethod
