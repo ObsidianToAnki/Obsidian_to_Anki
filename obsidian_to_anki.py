@@ -230,7 +230,7 @@ class Note:
                 Note.TAG_SEP
             )
         else:
-            self.tags = None
+            self.tags = list()
         self.note_type = Note.note_subs[self.lines[0]]
         self.subs = Note.field_subs[self.note_type]
         self.field_names = list(self.subs)
@@ -300,11 +300,65 @@ class Note:
         if not self.delete:
             template["modelName"] = self.note_type
             template["fields"] = self.fields
-            if self.tags:
-                template["tags"] = template["tags"] + self.tags
+            template["tags"] = template["tags"] + self.tags
             return Note.Note_and_id(note=template, id=self.identifier)
         else:
             return Note.Note_and_id(note=False, id=self.identifier)
+
+
+class InlineNote(Note):
+
+    ID_REGEXP = re.compile(r"ID: (\d+)")
+    TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*)")
+    TYPE_REGEXP = re.compile(r"\[(.*?)\]")
+
+    INLINE_PREFIX = "STARTI"
+    INLINE_SUFFIX = "ENDI"
+
+    def __init__(self, note_text):
+        self.text = note_text.strip()
+        self.current_field_num = 0
+        self.delete = False
+        ID = InlineNote.ID_REGEXP.search(self.text)
+        if ID is not None:
+            self.identifier = int(ID.group(1))
+            self.text = self.text[:ID.start()]  # Removes identifier
+        else:
+            self.identifier = None
+        if not self.text:
+            # This indicates a delete action
+            self.delete = True
+            return
+        TAGS = InlineNote.TAG_REGEXP.search(self.text)
+        if TAGS is not None:
+            self.tags = TAGS.group(1).split(Note.TAG_SEP)
+            self.text = self.text[:TAGS.start()]
+        else:
+            self.tags = list()
+        TYPE = InlineNote.TYPE_REGEXP.search(self.text)
+        self.note_type = Note.note_subs[TYPE.group(1)]
+        self.text = self.text[TYPE.end():]
+        self.subs = Note.field_subs[self.note_type]
+        self.field_names = list(self.subs)
+        self.text = self.text.strip()
+
+    @property
+    def fields(self):
+        """Get the fields of the note into a dictionary."""
+        fields = dict.fromkeys(self.field_names, "")
+        while self.next_sub:
+            # So, we're expecting a new field
+            end = self.text.find(self.next_sub)
+            fields[self.current_field] += self.text[:end]
+            self.text = self.text[end + len(self.next_sub):]
+            self.current_field_num += 1
+        # For last field:
+        fields[self.current_field] += self.text
+        fields = {
+            key: FormatConverter.format(value)
+            for key, value in fields.items()
+        }
+        return {key: value.strip() for key, value in fields.items()}
 
 
 class Config:
@@ -384,6 +438,12 @@ class App:
     DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
     EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
     TAG_REGEXP = re.compile(r"FILE TAGS\n([\s\S]*?)\n")
+    INLINE_REGEXP = re.compile(
+        InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
+    )
+    INLINE_EMPTY_REGEXP = re.compile(
+        InlineNote.INLINE_PREFIX + r"\s+ID: .*?" + InlineNote.INLINE_SUFFIX
+    )
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
@@ -617,6 +677,8 @@ class File:
         self.id_indexes = list()
         self.notes_to_edit = list()
         self.notes_to_delete = list()
+        self.inline_notes_to_add = list()
+        self.inline_id_indexes = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
             note, position = note_match.group(0), note_match.end()
             parsed = Note(note).parse()
@@ -630,19 +692,46 @@ class File:
                 self.notes_to_delete.append(parsed.id)
             else:
                 self.notes_to_edit.append(parsed)
+        for inline_note_match in App.INLINE_REGEXP.finditer(self.file):
+            note = inline_note_match.group(1)
+            position = inline_note_match.end(1)
+            parsed = InlineNote(note).parse()
+            if parsed.id is None:
+                # Need to make sure global_tags get added.
+                parsed.note["tags"] += self.global_tags.split(" ")
+                self.inline_notes_to_add.append(parsed.note)
+                self.inline_id_indexes.append(position)
+            elif not parsed.note:
+                # This indicates a delete action
+                self.notes_to_delete.append(parsed.id)
+            else:
+                self.notes_to_edit.append(parsed)
 
     @staticmethod
-    def id_to_str(id):
+    def id_to_str(id, inline=False):
         """Get the string repr of id."""
-        return "ID: " + str(id) + "\n"
+        if inline:
+            return "ID: " + str(id) + " "
+        else:
+            return "ID: " + str(id) + "\n"
 
     def write_ids(self):
         """Write the identifiers to self.file."""
         print("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
-            self.file, zip(
-                self.id_indexes, map(
-                    self.id_to_str, self.note_ids
+            self.file, list(
+                zip(
+                    self.id_indexes, [
+                        self.id_to_str(id)
+                        for id in self.note_ids[:len(self.notes_to_add)]
+                    ]
+                )
+            ) + list(
+                zip(
+                    self.inline_id_indexes, [
+                        self.id_to_str(id, inline=True)
+                        for id in self.note_ids[len(self.notes_to_add):]
+                    ]
                 )
             )
         )
@@ -650,6 +739,9 @@ class File:
     def remove_empties(self):
         """Remove empty notes from self.file."""
         self.file = App.EMPTY_REGEXP.sub(
+            "", self.file
+        )
+        self.file = App.INLINE_EMPTY_REGEXP.sub(
             "", self.file
         )
 
@@ -661,7 +753,7 @@ class File:
         """Get the AnkiConnect-formatted request to add notes."""
         return AnkiConnect.request(
             "addNotes",
-            notes=self.notes_to_add
+            notes=self.notes_to_add + self.inline_notes_to_add
         )
 
     def get_delete_notes(self):
