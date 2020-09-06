@@ -209,6 +209,8 @@ class Note:
     TAG_PREFIX = "Tags: "
     TAG_SEP = " "
     Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
+    NOTE_PREFIX = "START"
+    NOTE_SUFFIX = "END"
 
     def __init__(self, note_text):
         """Set up useful variables."""
@@ -310,7 +312,7 @@ class InlineNote(Note):
 
     ID_REGEXP = re.compile(r"ID: (\d+)")
     TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*)")
-    TYPE_REGEXP = re.compile(r"\[(.*?)\]")
+    TYPE_REGEXP = re.compile(r"\[(.*?)\]")  # So e.g. [Basic]
 
     INLINE_PREFIX = "STARTI"
     INLINE_SUFFIX = "ENDI"
@@ -433,11 +435,47 @@ class Config:
 class App:
     """Master class that manages the application."""
 
+    DECK_LINE = "TARGET DECK"
+    TAG_LINE = "FILE TAGS"
     # Useful REGEXPs
-    NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
-    DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
-    EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
-    TAG_REGEXP = re.compile(r"FILE TAGS\n([\s\S]*?)\n")
+    #NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
+    NOTE_REGEXP = re.compile(
+        "".join(
+            [
+                r"(?<=",
+                Note.NOTE_PREFIX,
+                r"\n)[\s\S]*?(?=",
+                Note.NOTE_SUFFIX,
+                r"\n?)"
+            ]
+        )
+    )
+    #DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
+    DECK_REGEXP = re.compile(
+        "".join(
+            [
+                r"(?<=",
+                DECK_LINE,
+                r"\n).*",
+            ]
+        )
+    )
+    #EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
+    EMPTY_REGEXP = re.compile(
+        "".join(
+            [
+                Note.NOTE_PREFIX,
+                r"\n",
+                Note.ID_PREFIX,
+                r"[\s\S]*?\n",
+                Note.NOTE_SUFFIX
+            ]
+        )
+    )
+    #TAG_REGEXP = re.compile(r"FILE TAGS\n([\s\S]*?)\n")
+    TAG_REGEXP = re.compile(
+        TAG_LINE + r"\n(.*)\n"
+    )
     INLINE_REGEXP = re.compile(
         InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
     )
