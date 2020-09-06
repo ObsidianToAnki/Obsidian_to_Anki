@@ -390,7 +390,7 @@ class Config:
         ]
         subs = {
             note: {
-                field: field + ": "
+                field: field + ":"
                 for field in fields["result"]
             }
             for note, fields in zip(
@@ -413,6 +413,15 @@ class Config:
             config["Note Substitutions"].setdefault(note, note)
             # Similar to above - if there's already a substitution present,
             # it isn't overwritten
+        # Now for syntax stuff
+        config["Syntax"] = {
+            "Begin Note": Note.NOTE_PREFIX,
+            "End Note": Note.NOTE_SUFFIX,
+            "Begin Inline Note": InlineNote.INLINE_PREFIX,
+            "End Inline Note": InlineNote.INLINE_SUFFIX,
+            "Target Deck Line": App.DECK_LINE,
+            "File Tags Line": App.TAG_LINE
+        }
         with open(Config.CONFIG_PATH, "w") as configfile:
             config.write(configfile)
         print("Configuration file updated!")
@@ -429,6 +438,24 @@ class Config:
             note: dict(config[note]) for note in config
             if note != "Note Substitutions" and note != "DEFAULT"
         }
+        Note.NOTE_PREFIX = re.escape(
+            config["Syntax"]["Begin Note"]
+        )
+        Note.NOTE_SUFFIX = re.escape(
+            config["Syntax"]["End Note"]
+        )
+        InlineNote.INLINE_PREFIX = re.escape(
+            config["Syntax"]["Begin Inline Note"]
+        )
+        InlineNote.INLINE_SUFFIX = re.escape(
+            config["Syntax"]["End Inline Note"]
+        )
+        App.DECK_LINE = re.escape(
+            config["Syntax"]["Target Deck Line"]
+        )
+        App.TAG_LINE = re.escape(
+            config["Syntax"]["File Tags Line"]
+        )
         print("Loaded successfully!")
 
 
