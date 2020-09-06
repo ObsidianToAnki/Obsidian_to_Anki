@@ -34,6 +34,7 @@ Current features:
 * [Embedded images](#image-formatting) (GIFs should work too)
 * [Auto-deleting notes](#deleting-notes) from the file
 * Reading from all files in a directory automatically - not recursively however.
+* [Inline Notes](#inline-note-formatting)
 
 Not available:
 * Audio
@@ -52,26 +53,84 @@ To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open
 
 To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`
 
+## Config
+The configuration file allows you to change three things:
+
+### Syntax
+As of v1.2, the Config file now allows you to change the syntax of the script:
+* Begin Note - The string that signals the start of a [note](#note-formatting). Defaults to START
+* End Note - The string that signals the end of a note. Defaults to END
+* Begin Inline Note - The string that signals the start of an [inline note](#inline-note-formatting). Defaults to STARTI (Start-Inline)
+* End Inline Note - The string that signals the end of an inline note. Defaults to ENDI (End-Inline)
+* Target Deck Line - The string that signals "the line beneath me is the name of the target deck". Defaults to TARGET DECK
+* File Tags Line - The string that signals "the line beneath me is the set of tags that should be added to all notes from this file". Defaults to FILE TAGS
+
+### Field substitutions
+The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
+
+> Front = Front:  
+> Back = Back:  
+
+If you edit and save this to say
+
+> Front = Front:   
+> Back = A:  
+
+Then you now format your notes like this:
+
+> {Begin Note}  
+> Basic  
+> This is a test.  
+> A: Test successful!  
+> {End Note}  
+
+As an inline note:
+
+> {Begin Inline Note} [Basic] This is a test. A: Test successful! {End Inline Note}
+
+
+### Note Type Substitutions
+These are under the section ['Note Substitutions']. Similar to the above, you'll see something like this:
+> ...  
+> Basic = Basic  
+> Basic (and reversed card) = Basic (and reversed card)  
+> ...  
+
+If you edit and save this to say  
+> ...  
+> Basic = B  
+> Basic (and reversed card) = Basic (and reversed card)  
+> ...  
+
+Then you now format your notes like this:  
+> {Begin Note}  
+> B  
+> {Note Data}  
+> {End Note}
+
+As an inline note:
+> {Begin Inline Note} [B] {Note Data} {End Inline Note}
+
 ## Deck formatting
 Anywhere within the file, format the deck that you want the notes to go into as follows:
-> TARGET DECK  
+> {Target Deck Line}  
 > {Deck name}  
 
 For example:
-> TARGET DECK  
+> {Target Deck Line}  
 > Mathematics  
 
-You may place more than one TARGET DECK in the same file, but only the first instance will be read and used.
+You may place more than one target deck in the same file, but only the first instance will be read and used.
 
 ## Note formatting
 
-In the markdown file, you must format your notes as follows:
+In the markdown file, you must format your 'block' notes as follows (see [Inline notes](#inline-note-formatting) for notes on a single line):
 
-> START  
+> {Begin Note}  
 > {Note Type}  
 > {Note Fields}  
 > Tags:   
-> END  
+> {End Note}  
 
 ### Markdown formatting
 
@@ -92,11 +151,11 @@ Embedded images are supported if the following criteria are met:
 
 For reference, the note formatting style is:
 
-> START  
+> {Begin Note}  
 > {Note Type}  
 > {Note Fields}  
 > Tags:   
-> END  
+> {End Note}  
 
 Note that the Tags: line is optional - if you don't want tags, you may leave out the line.
 
@@ -112,11 +171,11 @@ v1.1.1 now allows you to specify 'file tags' for a file - these tags will be add
 
 To do this:
 Anywhere within the file, format the file tags as follows:
-> FILE TAGS  
+> {File Tags Line}  
 > {Tag_list}  
 
 So, for example:
-> FILE TAGS  
+> {File Tags Line}  
 > Maths School Physics  
 
 Like with tag-line formatting, you need a space between tags - however, do not include the "Tags: " prefix.
@@ -125,82 +184,68 @@ Like with tag-line formatting, you need a space between tags - however, do not i
 
 Apart from the first field, each field must have a prefix to indicate to the program when to move on to the next field. For example:
 
-> START  
+> {Begin Note}  
 > Basic  
 > This is a test.  
 > Back: Test successful!  
-> END  
+> {End Note}  
 
+Note that you must start new fields on a new line for non-inline notes.  
 When the script successfully adds a note, it will append an ID to the Note Data. This allows you to *update existing notes by running the script again*.
 
 Example output:
 
-> START  
+> {Begin Note}  
 > Basic  
 > This is a test.  
 > Back: Test successful!  
 > ID: 1566052191670  
-> END  
+> {End Note}  
 
 ### Deleting notes
 
 The script can delete notes that *it has added* automatically. To do this:
 1. Find the formatted note in your file:
-> START  
+> {Begin Note}  
 > {Note Type}  
 > {Note Data}  
 > ID: {Identifier}  
-> END  
+> {End Note}  
 2. Change this to read:
-> START  
+> {Begin Note}  
 > ID: {Identifier}  
-> END  
-3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary START END block from the file.
+> {End Note}  
+3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary {Begin Note} {End Note} block from the file.
 
-### Default
+See [Deleting inline notes](#deleting-inline-notes) for how to do this with inline notes.
+
+## Inline note formatting
+*v1.2 feature*
+v1.2 of the script introduces **inline notes** - notes which are entirely on a single line. They are formatted as such:  
+
+> {Begin Inline Note} [{Note Type}] {Note Data} {End Inline Note}  
+
+For example  
+
+> {Begin Inline Note} [Basic] This is a test. Back: Test successful! {End Inline Note}  
+
+Unlike regular 'block' notes, you can put inline notes anywhere on a line - for example, you could have a bulletpointed list of inline notes.  
+Also, unlike regular 'block' notes, the script identifies the note type through the string in square brackets. Hence, **note types with [ or ] in the name are not supported for inline notes**.
+
+### Deleting inline notes
+
+The instructions are quite similar to deleting normal notes:
+1. Find the formatted note in your file:
+> {Begin Inline Note} [{Note Type}] {Note Data} ID: {Identifier} {End Inline Note}
+2. Change this to read:
+> {Begin Inline Note} ID: {Identifier} {End Inline Note}
+3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary {Begin Inline Note} {End Inline Note} block from the file.
+
+## Default
 By default, the script:
 - Adds notes with the tag "Obsidian_to_Anki" (+ other specified tags, if applicable)
 - Adds to the Default deck (if TARGET DECK is not specified)
-- Adds to the current profile in Anki
-
-## Config
-The configuration file allows you to change two things:
-1. The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
-
-> Front = Front:  
-> Back = Back:  
-
-If you edit and save this to say
-
-> Front = Front:   
-> Back = A:  
-
-Then you now format your notes like this:
-
-> START  
-> Basic  
-> This is a test.  
-> A: Test successful!  
-> END  
-
-
-2. The substitutions for notes. These are under the section ['Note Substitutions']. Similar to the above, you'll see something like this:
-> ...  
-> Basic = Basic  
-> Basic (and reversed card) = Basic (and reversed card)  
-> ...  
-
-If you edit and save this to say  
-> ...  
-> Basic = B  
-> Basic (and reversed card) = Basic (and reversed card)  
-> ...  
-
-Then you now format your notes like this:  
-> START  
-> B  
-> {Note Data}  
-> END  
+- Adds to the current profile in Anki  
 
 ## Troubleshooting
 
