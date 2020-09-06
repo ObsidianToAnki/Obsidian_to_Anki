@@ -465,53 +465,6 @@ class App:
 
     DECK_LINE = "TARGET DECK"
     TAG_LINE = "FILE TAGS"
-    r"""
-    # Useful REGEXPs
-    #NOTE_REGEXP = re.compile(r"(?<=START\n)[\s\S]*?(?=END\n?)")
-    NOTE_REGEXP = re.compile(
-        "".join(
-            [
-                r"(?<=",
-                Note.NOTE_PREFIX,
-                r"\n)[\s\S]*?(?=",
-                Note.NOTE_SUFFIX,
-                r"\n?)"
-            ]
-        )
-    )
-    #DECK_REGEXP = re.compile(r"(?<=TARGET DECK\n)[\s\S]*?(?=\n)")
-    DECK_REGEXP = re.compile(
-        "".join(
-            [
-                r"(?<=",
-                DECK_LINE,
-                r"\n).*",
-            ]
-        )
-    )
-    #EMPTY_REGEXP = re.compile(r"START\nID: [\s\S]*?\nEND")
-    EMPTY_REGEXP = re.compile(
-        "".join(
-            [
-                Note.NOTE_PREFIX,
-                r"\n",
-                Note.ID_PREFIX,
-                r"[\s\S]*?\n",
-                Note.NOTE_SUFFIX
-            ]
-        )
-    )
-    #TAG_REGEXP = re.compile(r"FILE TAGS\n([\s\S]*?)\n")
-    TAG_REGEXP = re.compile(
-        TAG_LINE + r"\n(.*)\n"
-    )
-    INLINE_REGEXP = re.compile(
-        InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
-    )
-    INLINE_EMPTY_REGEXP = re.compile(
-        InlineNote.INLINE_PREFIX + r"\s+ID: .*?" + InlineNote.INLINE_SUFFIX
-    )
-    """
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
