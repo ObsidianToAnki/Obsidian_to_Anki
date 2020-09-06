@@ -2,7 +2,7 @@
 Script to add flashcards from a properly-formatted file to Anki. Run from the command line. Built with Obsidian markdown syntax in mind.
 
 ## Setup
-1. Install [Python](https://www.python.org/downloads/)
+1. Install [Python](https://www.python.org/downloads/). Note that the script was written in Python3.8 - I don't think it would work on older versions (confirmed that it doesn't work on Python2 via [this issue](https://github.com/Pseudonium/Obsidian_to_Anki/issues/6#issue-690905446))
 2. Download the desired release.
 3. Place the script "obsidian_to_anki.py" in a convenient folder. You may wish to consider placing it in a Scripts folder, and adding the folder to your PATH
 4. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile
@@ -12,12 +12,15 @@ Script to add flashcards from a properly-formatted file to Anki. Run from the co
 8. From the command line, run the script once with no arguments - `{Path to script}/obsidian_to_anki.py`
 This will make a configuration file in the same directory as the script, "obsidian_to_anki_config.ini".
 
+See [Troubleshooting](#Troubleshooting) if you have problems.
+
 ## Permissions
 The script needs to be able to:
 * Make a config file in the directory the script is installed
 * Read the file in the directory the script is used
 * Make a backup file in the directory the script is used
 * Rename files in the directory the script is used
+* Remove a backup file in the directory the script is used
 
 ## Features
 
@@ -103,6 +106,21 @@ Tags should be formatted as such:
 
 So, a space between the colon and the first tag, and a space between tags.
 
+*v1.1.1 Feature*:
+
+v1.1.1 now allows you to specify 'file tags' for a file - these tags will be added to every card in the file.
+
+To do this:
+Anywhere within the file, format the file tags as follows:
+> FILE TAGS  
+> {Tag_list}  
+
+So, for example:
+> FILE TAGS  
+> Maths School Physics  
+
+Like with tag-line formatting, you need a space between tags - however, do not include the "Tags: " prefix.
+
 ### Field formatting
 
 Apart from the first field, each field must have a prefix to indicate to the program when to move on to the next field. For example:
@@ -169,13 +187,13 @@ Then you now format your notes like this:
 2. The substitutions for notes. These are under the section ['Note Substitutions']. Similar to the above, you'll see something like this:
 > ...  
 > Basic = Basic  
-> Basic (and reversed) = Basic (and reversed)  
+> Basic (and reversed card) = Basic (and reversed card)  
 > ...  
 
 If you edit and save this to say  
 > ...  
 > Basic = B  
-> Basic (and reversed) = Basic (and reversed)  
+> Basic (and reversed card) = Basic (and reversed card)  
 > ...  
 
 Then you now format your notes like this:  
@@ -183,3 +201,19 @@ Then you now format your notes like this:
 > B  
 > {Note Data}  
 > END  
+
+## Troubleshooting
+
+If the script itself is not able to run, try running `python3 {PATH_TO_SCRIPT}`.
+
+You may also want to prepend the following shebang to the start of the file:
+
+`#!/usr/bin/env python`
+
+For more information, see [this pull request](https://github.com/Pseudonium/Obsidian_to_Anki/pull/13)
+
+If you are getting a `KeyError`, you may have typed one of the [substitutions](#Config) wrong - double check the config file and what you actually wrote.
+Examples:
+* Anki actually stores "Basic (and reversed)" as "Basic (and reversed card)" - hence, without changing the config file, formatting "Basic (and reversed)" for the note type will throw a `KeyError`
+
+The script seems to have unexpected behaviour when reading from a file for the first time, while the file is open in another program (though this doesn't always happen!). So, be wary of doing this. Removing the ID: None line and running the script again seems to fix it.
