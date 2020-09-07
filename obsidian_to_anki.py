@@ -431,6 +431,10 @@ class Config:
                 "Target Deck Line": App.DECK_LINE,
                 "File Tags Line": App.TAG_LINE
             }
+        if "Custom Regexps" not in config:
+            config["Custom Regexps"] = dict()
+            for note in note_types:
+                config["Custom Regexps"].setdefault(note, "")
         with open(Config.CONFIG_PATH, "w") as configfile:
             config.write(configfile)
         print("Configuration file updated!")
