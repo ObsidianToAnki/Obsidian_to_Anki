@@ -385,7 +385,47 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    pass
+    ID_REGEXP_STR = r"(ID: \d+)"
+    TAG_REGEXP_STR = r"(Tags: .+)"
+
+    def __init__(self, matchobject, note_type, tags=False, id=False):
+        self.match = matchobject
+        self.note_type = note_type
+        self.groups = list(self.match.groups())
+        self.group_num = len(self.groups)
+        if id:
+            # This means id is last group
+            self.identifier = int(self.groups.pop()[len(Note.ID_PREFIX):])
+        else:
+            self.identifier = None
+        if tags:
+            # Even if id were present, tags is now last group
+            self.tags = self.groups.pop()[len(Note.TAG_PREFIX):].split(
+                Note.TAG_SEP
+            )
+        else:
+            self.tags = list()
+        self.field_names = list(Note.field_subs[self.note_type])
+
+    @property
+    def fields(self):
+        fields = dict.fromkeys(self.field_names, "")
+        for name, match in zip(self.field_names, self.groups):
+            if match:
+                fields[name] = self.match
+        fields = {
+            key: FormatConverter.format(value)
+            for key, value in fields.items()
+        }
+        return {key: value.strip() for key, value in fields.items()}
+
+    def parse(self):
+        """Get a properly formatted dictionary of the note."""
+        template = self.NOTE_DICT_TEMPLATE.copy()
+        template["modelName"] = self.note_type
+        template["fields"] = self.fields
+        template["tags"] = template["tags"] + self.tags
+        return Note.Note_and_id(note=template, id=self.identifier)
 
 
 class Config:
