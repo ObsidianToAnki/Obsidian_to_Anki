@@ -359,6 +359,9 @@ class InlineNote(Note):
         while self.next_sub:
             # So, we're expecting a new field
             end = self.text.find(self.next_sub)
+            if end == -1:
+                # Sub not found
+                break
             fields[self.current_field] += self.text[:end]
             self.text = self.text[end + len(self.next_sub):]
             self.current_field_num += 1
