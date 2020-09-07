@@ -384,6 +384,10 @@ class InlineNote(Note):
         return {key: value.strip() for key, value in fields.items()}
 
 
+class RegexNote:
+    pass
+
+
 class Config:
     """Deals with saving and loading the configuration file."""
 
@@ -940,6 +944,10 @@ class File:
                 for parsed in self.notes_to_edit
             ]
         )
+
+
+class RegexFile:
+    pass
 
 
 if __name__ == "__main__":
