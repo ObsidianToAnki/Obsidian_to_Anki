@@ -60,6 +60,19 @@ def file_encode(filepath):
         return base64.b64encode(f.read()).decode('utf-8')
 
 
+def spans(pattern, string):
+    """Return a list of span-tuples for matches of pattern in string."""
+    return [match.span() for match in pattern.finditer(string)]
+
+
+def contained(spans, span):
+    """Determine whether span is contained within spans."""
+    return any(
+        span[0] >= start and span[1] <= end
+        for start, end in spans
+    )
+
+
 class AnkiConnect:
     """Namespace for AnkiConnect functions."""
 
