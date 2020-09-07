@@ -482,6 +482,7 @@ class Config:
         App.TAG_LINE = re.escape(
             config["Syntax"]["File Tags Line"]
         )
+        Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
 
