@@ -7,9 +7,9 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 * [Neuracache #flashcard style](#neuracache-flashcard-style)
 * [Ruled style](#ruled-style)  
 
-* [Custom styles?](#custom-styles)
-* [Tagging notes](#tagging-notes)
-* [Deleting notes](#deleting-notes)
+- [Custom styles?](#custom-styles)
+- [Tagging notes](#tagging-notes)
+- [Deleting notes](#deleting-notes)
 
 ## Remnote single line #style
 
