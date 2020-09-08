@@ -177,4 +177,5 @@ to
 6. Save the config file
 7. Run `obsidian_to_anki.py --regex test.md`
 8. You should see these cards in Anki:  
-
+![ruled_1](/Images/Ruled_1.png)  
+![ruled_2](/Images/Ruled_2.png)
