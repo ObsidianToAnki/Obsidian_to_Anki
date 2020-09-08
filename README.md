@@ -157,9 +157,8 @@ Tags:
 
 Standard markdown formatting is supported.
 You can check [test.md](./test.md) as an example.
-Front produced:
+Card produced:
 ![front](/Images/Markdown_1.png)
-Back produced:
 ![back](/Images/Markdown_2.png)
 
 ### Image formatting
