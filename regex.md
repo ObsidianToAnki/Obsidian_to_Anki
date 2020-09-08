@@ -141,4 +141,7 @@ to
 > Basic = `((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)`
 6. Save the config file
 7. Run `obsidian_to_anki.py --regex test.md`
-8. You should see these cards in Anki:
+8. You should see these cards in Anki:  
+![neuracache_1](Images/Neuracache_1.png)  
+![neuracache_2](Images/Neuracache_2.png)  
+![neuracache_3](Images/Neuracache_3.png)  
