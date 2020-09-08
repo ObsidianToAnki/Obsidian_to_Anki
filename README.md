@@ -28,7 +28,7 @@ Current features:
 * **[Custom note types](#note-formatting)** - You're not limited to the 6 built-in note types of Anki
 * **Updating notes from file** - Your text files are the canonical source of the notes.
 * **Substitutions** - see [Config](#config). Makes typing out long names easier.
-* **[Tags](#tag-formatting)**
+* **[Tags](#tag-formatting)**, including **[tags for an entire file](#file-tag-formatting)**
 * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis
 * **[Markdown formatting](#markdown-formatting)**
 * **[Embedded images](#image-formatting)** (GIFs should work too)
@@ -63,6 +63,7 @@ If you are a **new user**, these steps are recommended:
  * **[Markdown formatting](#markdown-formatting)**
  * **[Embedded images](#image-formatting)** (GIFs should work too)
  * **[Auto-deleting notes](#deleting-notes) from the file**
+ * **[File tag formatting](#file-tag-formatting)**
  * [Defaults](#default)
 3. You should be good to go simply running the script in `-r` mode.
 
