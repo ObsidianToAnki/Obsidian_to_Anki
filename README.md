@@ -25,16 +25,17 @@ The script needs to be able to:
 ## Features
 
 Current features:
-* [Custom note types](#note-formatting)
-* Updating notes from file
-* Substitutions - see [Config](#config)
+* [Custom note types](#note-formatting) - You're not limited to the 6 built-in note types of Anki
+* Updating notes from file - Your text files are the canonical source of the notes.
+* Substitutions - see [Config](#config). Makes typing out long names easier.
 * [Tags](#tag-formatting)
 * Adding to user-specified [decks](#deck-formatting), on a *per-file* basis
 * [Markdown](https://www.markdownguide.org/getting-started/) formatting - see [this](#markdown-formatting) for examples
 * [Embedded images](#image-formatting) (GIFs should work too)
 * [Auto-deleting notes](#deleting-notes) from the file
 * Reading from all files in a directory automatically - not recursively however.
-* [Inline Notes](#inline-note-formatting)
+* [Inline Notes](#inline-note-formatting) - Shorter syntax for typing out notes on a single line
+* [Custom syntax](#custom-syntax) - Using regular expressions, add custom syntax to generate notes that make sense for you.
 
 Not available:
 * Audio
@@ -64,6 +65,7 @@ As of v1.2, the Config file now allows you to change the syntax of the script:
 * End Inline Note - The string that signals the end of an inline note. Defaults to ENDI (End-Inline)
 * Target Deck Line - The string that signals "the line beneath me is the name of the target deck". Defaults to TARGET DECK
 * File Tags Line - The string that signals "the line beneath me is the set of tags that should be added to all notes from this file". Defaults to FILE TAGS
+* Delete Regex Note Line - The string that signals "the line beneath me is an id string for a regex note that should be deleted." Defaults to DELETE
 
 ### Field substitutions
 The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
