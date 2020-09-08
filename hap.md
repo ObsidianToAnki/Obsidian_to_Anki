@@ -1,14 +1,15 @@
-# Style  
-This style is suitable for having the header as the front, and the answer as the back
-# Overall heading  
-## Subheading 1  
-You're allowed to nest headers within each other
-## Subheading 2
-It'll take the deepest level for the question
-## Subheading 3
+Q: How do you use this style?
+A: Just like this.
+
+Q: Can the question
+run over multiple lines?
+A: Yes, and
+So can the answer
+
+Q: Does the answer need to be immediately after the question?
 
 
+A: No, and preceding whitespace will be ignored.
 
-It'll even  
-Span over  
-Multiple lines, and ignore preceding whitespace
+Q: How is this possible?
+A: The 'magic' of regular expressions!
