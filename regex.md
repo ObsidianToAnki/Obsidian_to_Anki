@@ -20,6 +20,6 @@ to
 > Basic = `^(.*[^\n:]{1}):{2}([^\n:]{1}.*)`
 6. Save the config file
 7. Run `obsidian_to_anki.py --regex test.md`
-8. You should see these cards in Anki:
-![remnote_1](Images/Remnote_1.png)
+8. You should see these cards in Anki:  
+![remnote_1](Images/Remnote_1.png)  
 ![remnote_2](Images/Remnote_2.png)
