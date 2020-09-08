@@ -30,7 +30,7 @@ Current features:
 * **Substitutions** - see [Config](#config). Makes typing out long names easier.
 * **[Tags](#tag-formatting)**
 * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis
-* **[Markdown](#markdown-formatting)formatting**
+* **[Markdown formatting](#markdown-formatting)**
 * **[Embedded images](#image-formatting)** (GIFs should work too)
 * **[Auto-deleting notes](#deleting-notes) from the file**
 * **Reading from all files in a directory automatically** - not recursively however.
