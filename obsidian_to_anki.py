@@ -1124,7 +1124,7 @@ class RegexFile(File):
             parsed = RegexNote(match, note_type, tags=False, id=False).parse(
                 self.target_deck
             )
-            parsed.note["tags"] == self.global_tags.split(" ")
+            parsed.note["tags"] += self.global_tags.split(" ")
             self.notes_to_add.append(
                 parsed.note
             )
