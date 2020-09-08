@@ -54,8 +54,9 @@ To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open
 
 To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`
 
+To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py --regex [path]`
+
 ## Config
-The configuration file allows you to change three things:
 
 ### Syntax
 As of v1.2, the Config file now allows you to change the syntax of the script:
@@ -66,6 +67,9 @@ As of v1.2, the Config file now allows you to change the syntax of the script:
 * Target Deck Line - The string that signals "the line beneath me is the name of the target deck". Defaults to TARGET DECK
 * File Tags Line - The string that signals "the line beneath me is the set of tags that should be added to all notes from this file". Defaults to FILE TAGS
 * Delete Regex Note Line - The string that signals "the line beneath me is an id string for a regex note that should be deleted." Defaults to DELETE
+
+### Custom syntax
+As of v1.3, the section "Custom Regexps" allows you to add, for each note type, a single regexp that will add matches to Anki with that note type. For more information and some example templates, see [Regex](regex.md)
 
 ### Field substitutions
 The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
