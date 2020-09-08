@@ -55,7 +55,7 @@ To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open
 
 To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`
 
-To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py --regex [path]`
+To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py -r [path]`
 
 If you are a **new user**, these steps are recommended:
 1. Check [Custom syntax](regex.md) to see if there is a template that works for you.
