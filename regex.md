@@ -199,6 +199,8 @@ Cards made using this format support tags - simply append a "Tags: {tag_list}" t
 To delete notes made using this format, remove the content before the ID and make it look like:
 > {Delete Regex Note Line}  
 > ID: 129840142123  
+
 With the default settings:
+
 > DELETE  
 > ID: 129414201900  
