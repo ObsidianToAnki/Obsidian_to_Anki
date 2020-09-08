@@ -1,15 +1,15 @@
-Q: How do you use this style?
-A: Just like this.
+In Neuracache style, to make a flashcard you do #flashcard
+The next lines then become the back of the flashcard
+ID: 1599570944350
 
-Q: Can the question
-run over multiple lines?
-A: Yes, and
-So can the answer
+If you want, it's certainly possible to
+do a multi-line question #flashcard
+You just need to make sure both
+the question and answer are one paragraph.
+ID: 1599570944360
 
-Q: Does the answer need to be immediately after the question?
+And, of course #flashcard
 
 
-A: No, and preceding whitespace will be ignored.
-
-Q: How is this possible?
-A: The 'magic' of regular expressions!
+Whitespace is ignored!
+ID: 1599570944369
