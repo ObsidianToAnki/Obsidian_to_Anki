@@ -4,7 +4,7 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 * [Remnote single-line style](#remnote-single-line-style)
 * [Header paragraph style](#header-paragraph-style)
 * [Question answer style](#question-answer-style)
-* [Neuracache #flashcard style](#neuracahce-\#flashcard-style)
+* [Neuracache #flashcard style](#neuracahce-flashcard-style)
 
 ## Remnote single line #style
 
@@ -109,7 +109,7 @@ to
 ![question_3](Images/Question_3.png)  
 ![question_4](Images/Question_4.png)  
 
-## Neuracache #flashcard style
+## Neuracache flashcard style
 
 Regex line: `((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)`
 
