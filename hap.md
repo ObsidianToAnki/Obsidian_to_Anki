@@ -1,7 +1,4 @@
-How do you use ruled style?
----
-You need at least three '-' between the front and back of the card.
-ID: 1599572265031
+
 
 
 Are paragraphs

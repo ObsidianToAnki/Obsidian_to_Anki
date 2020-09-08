@@ -556,7 +556,7 @@ class Config:
         RegexFile.EMPTY_REGEXP = re.compile(
             re.escape(
                 config["Syntax"]["Delete Regex Note Line"]
-            ) + r"\n" + RegexNote.ID_REGEXP_STR
+            ) + RegexNote.ID_REGEXP_STR
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
