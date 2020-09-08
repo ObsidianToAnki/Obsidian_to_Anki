@@ -59,10 +59,11 @@ To run the script in 'regex' mode (recognises user-defined syntax instead of sta
 If you are a **new user**, these steps are recommended:
 1. Check [Custom syntax](regex.md) to see if there is a template that works for you.
 2. Then, check the information on the following topics:
-  * Adding to user-specified [decks](#deck-formatting), on a *per-file* basis
-  * [Markdown](https://www.markdownguide.org/getting-started/) formatting - see [this](#markdown-formatting) for examples
-  * [Embedded images](#image-formatting) (GIFs should work too)
-  * [Defaults](#default)
+ * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis
+ * **[Markdown formatting](#markdown-formatting)**
+ * **[Embedded images](#image-formatting)** (GIFs should work too)
+ * **[Auto-deleting notes](#deleting-notes) from the file**
+ * [Defaults](#default)
 3. You should be good to go simply running the script in `-r` mode.
 
 The sections below describe the default syntax of the script (when not in regex mode).
