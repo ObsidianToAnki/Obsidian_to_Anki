@@ -42,6 +42,7 @@ def string_insert(string, position_inserts):
     [(0, "hi"), (3, "hello"), (5, "beep")]
     """
     offset = 0
+    position_inserts = sorted(position_inserts)
     for position, insert_str in position_inserts:
         string = "".join(
             [
@@ -58,6 +59,26 @@ def file_encode(filepath):
     """Encode the file as base 64."""
     with open(filepath, 'rb') as f:
         return base64.b64encode(f.read()).decode('utf-8')
+
+
+def spans(pattern, string):
+    """Return a list of span-tuples for matches of pattern in string."""
+    return [match.span() for match in pattern.finditer(string)]
+
+
+def contained(span, spans):
+    """Determine whether span is contained within spans."""
+    return any(
+        span[0] >= start and span[1] <= end
+        for start, end in spans
+    )
+
+
+def findignore(pattern, string, ignore_spans):
+    """Yield all matches for pattern in string not in ignore_spans."""
+    for match in pattern.finditer(string):
+        if not contained(match.span(), ignore_spans):
+            yield match
 
 
 class AnkiConnect:
@@ -212,7 +233,6 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
-    TARGET_DECK = "Default"
     ID_PREFIX = "ID: "
     TAG_PREFIX = "Tags: "
     TAG_SEP = " "
@@ -249,7 +269,7 @@ class Note:
     def NOTE_DICT_TEMPLATE(self):
         """Template for making notes."""
         return {
-            "deckName": Note.TARGET_DECK,
+            "deckName": "",
             "modelName": "",
             "fields": dict(),
             "options": {
@@ -304,13 +324,14 @@ class Note:
         }
         return {key: value.strip() for key, value in fields.items()}
 
-    def parse(self):
+    def parse(self, deck):
         """Get a properly formatted dictionary of the note."""
         template = self.NOTE_DICT_TEMPLATE.copy()
         if not self.delete:
             template["modelName"] = self.note_type
             template["fields"] = self.fields
             template["tags"] = template["tags"] + self.tags
+            template["deckName"] = deck
             return Note.Note_and_id(note=template, id=self.identifier)
         else:
             return Note.Note_and_id(note=False, id=self.identifier)
@@ -371,6 +392,67 @@ class InlineNote(Note):
         return {key: value.strip() for key, value in fields.items()}
 
 
+class RegexNote:
+    ID_REGEXP_STR = r"(ID: \d+)"
+    TAG_REGEXP_STR = r"(Tags: .+)"
+
+    def __init__(self, matchobject, note_type, tags=False, id=False):
+        self.match = matchobject
+        self.note_type = note_type
+        self.groups = list(self.match.groups())
+        self.group_num = len(self.groups)
+        if id:
+            # This means id is last group
+            self.identifier = int(self.groups.pop()[len(Note.ID_PREFIX):])
+        else:
+            self.identifier = None
+        if tags:
+            # Even if id were present, tags is now last group
+            self.tags = self.groups.pop()[len(Note.TAG_PREFIX):].split(
+                Note.TAG_SEP
+            )
+        else:
+            self.tags = list()
+        self.field_names = list(Note.field_subs[self.note_type])
+
+    @property
+    def NOTE_DICT_TEMPLATE(self):
+        """Template for making notes."""
+        return {
+            "deckName": "",
+            "modelName": "",
+            "fields": dict(),
+            "options": {
+                "allowDuplicate": False,
+                "duplicateScope": "deck"
+            },
+            "tags": ["Obsidian_to_Anki"],
+            # ^So that you can see what was added automatically.
+            "audio": list()
+        }
+
+    @property
+    def fields(self):
+        fields = dict.fromkeys(self.field_names, "")
+        for name, match in zip(self.field_names, self.groups):
+            if match:
+                fields[name] = match
+        fields = {
+            key: FormatConverter.format(value)
+            for key, value in fields.items()
+        }
+        return {key: value.strip() for key, value in fields.items()}
+
+    def parse(self, deck):
+        """Get a properly formatted dictionary of the note."""
+        template = self.NOTE_DICT_TEMPLATE.copy()
+        template["modelName"] = self.note_type
+        template["fields"] = self.fields
+        template["tags"] = template["tags"] + self.tags
+        template["deckName"] = deck
+        return Note.Note_and_id(note=template, id=self.identifier)
+
+
 class Config:
     """Deals with saving and loading the configuration file."""
 
@@ -429,8 +511,14 @@ class Config:
                 "Begin Inline Note": InlineNote.INLINE_PREFIX,
                 "End Inline Note": InlineNote.INLINE_SUFFIX,
                 "Target Deck Line": App.DECK_LINE,
-                "File Tags Line": App.TAG_LINE
+                "File Tags Line": App.TAG_LINE,
             }
+        if "Delete Regex Note Line" not in config["Syntax"]:
+            config["Syntax"]["Delete Regex Note Line"] = App.DELETE_LINE
+        if "Custom Regexps" not in config:
+            config["Custom Regexps"] = dict()
+            for note in note_types:
+                config["Custom Regexps"].setdefault(note, "")
         with open(Config.CONFIG_PATH, "w") as configfile:
             config.write(configfile)
         print("Configuration file updated!")
@@ -465,6 +553,12 @@ class Config:
         App.TAG_LINE = re.escape(
             config["Syntax"]["File Tags Line"]
         )
+        RegexFile.EMPTY_REGEXP = re.compile(
+            re.escape(
+                config["Syntax"]["Delete Regex Note Line"]
+            ) + r"\n" + RegexNote.ID_REGEXP_STR
+        )
+        Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
 
@@ -473,6 +567,7 @@ class App:
 
     DECK_LINE = "TARGET DECK"
     TAG_LINE = "FILE TAGS"
+    DELETE_LINE = "DELETE"
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
@@ -491,15 +586,27 @@ class App:
             self.path = args.path
             if os.path.isdir(self.path):
                 with os.scandir(self.path) as it:
-                    self.files = [
-                        File(entry.path)
-                        for entry in it
-                        if entry.is_file() and os.path.splitext(
-                            entry.path
-                        )[1] in App.SUPPORTED_EXTS
-                    ]
+                    if args.regex:
+                        self.files = [
+                            RegexFile(entry.path)
+                            for entry in it
+                            if entry.is_file() and os.path.splitext(
+                                entry.path
+                            )[1] in App.SUPPORTED_EXTS
+                        ]
+                    else:
+                        self.files = [
+                            File(entry.path)
+                            for entry in it
+                            if entry.is_file() and os.path.splitext(
+                                entry.path
+                            )[1] in App.SUPPORTED_EXTS
+                        ]
             else:
-                self.files = [File(self.path)]
+                if args.regex:
+                    self.files = [RegexFile(self.path)]
+                else:
+                    self.files = [File(self.path)]
             for file in self.files:
                 file.scan_file()
             self.parse_requests_1()
@@ -540,6 +647,16 @@ class App:
                 Note that this does NOT open the config file for editing,
                 use -c for that.
             """,
+        )
+        self.parser.add_argument(
+            "--regex",
+            action="store_true",
+            dest="regex",
+            help="""
+                Use this if you're using custom regex syntax.
+                This will ignore any script-formatted regular notes
+                or inline notes.
+            """
         )
 
     def gen_regexp(self):
@@ -757,10 +874,12 @@ class File:
             self.file = f.read()
         self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
-            Note.TARGET_DECK = self.target_deck.group(1)
+            self.target_deck = self.target_deck.group(1)
+        else:
+            self.target_deck = "Default"
         print(
             "Identified target deck for", self.filename,
-            "as", Note.TARGET_DECK
+            "as", self.target_deck
         )
         self.global_tags = App.TAG_REGEXP.search(self.file)
         if self.global_tags is not None:
@@ -779,7 +898,7 @@ class File:
         self.inline_id_indexes = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
             note, position = note_match.group(1), note_match.end(1)
-            parsed = Note(note).parse()
+            parsed = Note(note).parse(self.target_deck)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
                 parsed.note["tags"] += self.global_tags.split(" ")
@@ -793,7 +912,7 @@ class File:
         for inline_note_match in App.INLINE_REGEXP.finditer(self.file):
             note = inline_note_match.group(1)
             position = inline_note_match.end(1)
-            parsed = InlineNote(note).parse()
+            parsed = InlineNote(note).parse(self.target_deck)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
                 parsed.note["tags"] += self.global_tags.split(" ")
@@ -898,7 +1017,7 @@ class File:
         return AnkiConnect.request(
             "changeDeck",
             cards=self.cards,
-            deck=Note.TARGET_DECK
+            deck=self.target_deck
         )
 
     def get_clear_tags(self):
@@ -921,6 +1040,112 @@ class File:
                 )
                 for parsed in self.notes_to_edit
             ]
+        )
+
+
+class RegexFile(File):
+
+    def scan_file(self):
+        """Sort notes from file into adding vs editing."""
+        print("Scanning file", self.filename, " for notes...")
+        self.ignore_spans = list()
+        # The above ensures that the script won't match a RegexNote inside
+        # a Note or InlineNote
+        self.notes_to_add = list()
+        self.id_indexes = list()
+        self.notes_to_edit = list()
+        self.notes_to_delete = list()
+        self.inline_notes_to_add = list()  # To avoid overriding get_add_notes
+        self.ignore_spans += spans(App.NOTE_REGEXP, self.file)
+        self.ignore_spans += spans(App.INLINE_REGEXP, self.file)
+        for note_type, regexp in Config.config["Custom Regexps"].items():
+            if regexp:
+                self.search(note_type, regexp)
+        # Finally, scan for deleting notes
+        for match in RegexFile.EMPTY_REGEXP.finditer(self.file):
+            self.notes_to_delete.append(
+                int(match.group(1)[len(Note.ID_PREFIX):])
+            )
+
+    def search(self, note_type, regexp):
+        """
+        Search the file for regex matches of this type,
+        ignoring matches inside ignore_spans,
+        and adding any matches to ignore_spans.
+        """
+        regexp_tags_id = re.compile(
+            "".join(
+                [
+                    regexp,
+                    RegexNote.TAG_REGEXP_STR,
+                    RegexNote.ID_REGEXP_STR
+                ]
+            ), flags=re.MULTILINE
+        )
+        regexp_id = re.compile(
+            regexp + RegexNote.ID_REGEXP_STR, flags=re.MULTILINE
+        )
+        regexp_tags = re.compile(
+            regexp + RegexNote.TAG_REGEXP_STR, flags=re.MULTILINE
+        )
+        regexp = re.compile(
+            regexp, flags=re.MULTILINE
+        )
+        for match in findignore(regexp_tags_id, self.file, self.ignore_spans):
+            # This note has id, so we update it
+            self.ignore_spans.append(match.span())
+            self.notes_to_edit.append(
+                RegexNote(match, note_type, tags=True, id=True).parse(
+                    self.target_deck
+                )
+            )
+        for match in findignore(regexp_id, self.file, self.ignore_spans):
+            # This note has id, so we update it
+            self.ignore_spans.append(match.span())
+            self.notes_to_edit.append(
+                RegexNote(match, note_type, tags=False, id=True).parse(
+                    self.target_deck
+                )
+            )
+        for match in findignore(regexp_tags, self.file, self.ignore_spans):
+            # This note has no id, so we update it
+            self.ignore_spans.append(match.span())
+            parsed = RegexNote(match, note_type, tags=True, id=False).parse(
+                self.target_deck
+            )
+            parsed.note["tags"] += self.global_tags.split(" ")
+            self.notes_to_add.append(
+                parsed.note
+            )
+            self.id_indexes.append(match.end())
+        for match in findignore(regexp, self.file, self.ignore_spans):
+            # This note has no id, so we update it
+            self.ignore_spans.append(match.span())
+            parsed = RegexNote(match, note_type, tags=False, id=False).parse(
+                self.target_deck
+            )
+            parsed.note["tags"] += self.global_tags.split(" ")
+            self.notes_to_add.append(
+                parsed.note
+            )
+            self.id_indexes.append(match.end())
+
+    def write_ids(self):
+        """Write the identifiers to self.file."""
+        print("Writing new note IDs to file,", self.filename, "...")
+        self.file = string_insert(
+            self.file, zip(
+                self.id_indexes, [
+                    self.id_to_str(id, inline=True)
+                    for id in self.note_ids
+                ]
+            )
+        )
+
+    def remove_empties(self):
+        """Remove empty notes from self.file."""
+        self.file = RegexFile.EMPTY_REGEXP.sub(
+            "", self.file
         )
 
 
