@@ -16,30 +16,30 @@ See [Troubleshooting](#Troubleshooting) if you have problems.
 
 ## Permissions
 The script needs to be able to:
-* Make a config file in the directory the script is installed
-* Read the file in the directory the script is used
-* Make a backup file in the directory the script is used
-* Rename files in the directory the script is used
-* Remove a backup file in the directory the script is used
-* Change the current working directory temporarily (so that local image paths are resolved correctly)
+* Make a config file in the directory the script is installed.
+* Read the file in the directory the script is used.
+* Make a backup file in the directory the script is used.
+* Rename files in the directory the script is used.
+* Remove a backup file in the directory the script is used.
+* Change the current working directory temporarily (so that local image paths are resolved correctly).
 
 ## Features
 
 Current features:
-* **[Custom note types](#note-formatting)** - You're not limited to the 6 built-in note types of Anki
+* **[Custom note types](#note-formatting)** - You're not limited to the 6 built-in note types of Anki.
 * **Updating notes from file** - Your text files are the canonical source of the notes.
 * **Substitutions** - see [Config](#config). Makes typing out long names easier.
-* **[Tags](#tag-formatting)**, including **[tags for an entire file](#file-tag-formatting)**
-* **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis
-* **[Markdown formatting](#markdown-formatting)**
-* **[Embedded images](#image-formatting)** (GIFs should work too)
-* **[Auto-deleting notes](#deleting-notes) from the file**
+* **[Tags](#tag-formatting)**, including **[tags for an entire file](#file-tag-formatting)**.
+* **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis.
+* **[Markdown formatting](#markdown-formatting)**.
+* **[Embedded images](#image-formatting)**. GIFs should work too.
+* **[Auto-deleting notes](#deleting-notes) from the file**.
 * **Reading from all files in a directory automatically** - not recursively however.
-* **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line
+* **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
 * **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
 
 Not available:
-* Audio
+* Audio.
 
 
 ## Usage
@@ -51,21 +51,21 @@ To add notes to Anki from a properly-formatted file, or a directory of files, ru
 For example, running `obsidian_to_anki.py .` should add notes from all properly-formatted files in the current directory.  
 To avoid unexpected behaviour, the script will only scan files from a directory if they have either a `.md` or `.txt` extension. If you feel like this will be a major issue, please let me know, and I can add this as something to be configured.
 
-To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open the config file for editing, but isn't guaranteed to work. If it doesn't work, you'll have to navigate to the config file and edit it manually. For more information, see [Config](#config)
+To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open the config file for editing, but isn't guaranteed to work. If it doesn't work, you'll have to navigate to the config file and edit it manually. For more information, see [Config](#config).
 
-To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`
+To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`.
 
-To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py -r [path]`
+To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py -r [path]`.
 
 If you are a **new user**, these steps are recommended:
 1. Check [Custom syntax](regex.md) to see if there is a template that works for you.
 2. Then, check the information on the following topics:
- * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis
- * **[Markdown formatting](#markdown-formatting)**
- * **[Embedded images](#image-formatting)** (GIFs should work too)
- * **[Auto-deleting notes](#deleting-notes) from the file**
- * **[File tag formatting](#file-tag-formatting)**
- * [Defaults](#default)
+ * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis.
+ * **[Markdown formatting](#markdown-formatting)**.
+ * **[Embedded images](#image-formatting)**. GIFs should work too.
+ * **[Auto-deleting notes](#deleting-notes) from the file**.
+ * **[File tag formatting](#file-tag-formatting)**.
+ * [Defaults](#default).
 3. You should be good to go simply running the script in `-r` mode.
 
 The sections below describe the default syntax of the script (when not in regex mode).
@@ -74,13 +74,13 @@ The sections below describe the default syntax of the script (when not in regex 
 
 ### Syntax
 As of v1.2, the Config file now allows you to change the syntax of the script:
-* Begin Note - The string that signals the start of a [note](#note-formatting). Defaults to START
-* End Note - The string that signals the end of a note. Defaults to END
-* Begin Inline Note - The string that signals the start of an [inline note](#inline-note-formatting). Defaults to STARTI (Start-Inline)
-* End Inline Note - The string that signals the end of an inline note. Defaults to ENDI (End-Inline)
-* Target Deck Line - The string that signals "the line beneath me is the name of the target deck". Defaults to TARGET DECK
-* File Tags Line - The string that signals "the line beneath me is the set of tags that should be added to all notes from this file". Defaults to FILE TAGS
-* Delete Regex Note Line - The string that signals "the line beneath me is an id string for a regex note that should be deleted." Defaults to DELETE
+* Begin Note - The string that signals the start of a [note](#note-formatting). Defaults to START.
+* End Note - The string that signals the end of a note. Defaults to END.
+* Begin Inline Note - The string that signals the start of an [inline note](#inline-note-formatting). Defaults to STARTI (Start-Inline).
+* End Inline Note - The string that signals the end of an inline note. Defaults to ENDI (End-Inline).
+* Target Deck Line - The string that signals "the line beneath me is the name of the target deck". Defaults to TARGET DECK.
+* File Tags Line - The string that signals "the line beneath me is the set of tags that should be added to all notes from this file". Defaults to FILE TAGS.
+* Delete Regex Note Line - The string that signals "the line beneath me is an id string for a regex note that should be deleted." Defaults to DELETE.
 
 ### Field substitutions
 The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
@@ -260,7 +260,7 @@ For example
 {Begin Inline Note} [Basic] This is a test. Back: Test successful! {End Inline Note}  
 </pre>
 Unlike regular 'block' notes, you can put inline notes anywhere on a line - for example, you could have a bulletpointed list of inline notes.  
-Also, unlike regular 'block' notes, the script identifies the note type through the string in square brackets. Hence, **note types with [ or ] in the name are not supported for inline notes**.
+Also, unlike regular 'block' notes, the script identifies the note type through the string in square brackets. Hence, **note types with [ or ] in the name are not supported for inline notes.**
 
 ### Deleting inline notes
 
@@ -277,9 +277,9 @@ The instructions are quite similar to deleting normal notes:
 
 ## Default
 By default, the script:
-- Adds notes with the tag "Obsidian_to_Anki" (+ other specified tags, if applicable)
-- Adds to the Default deck (if `{Target Deck Line}` is not specified)
-- Adds to the current profile in Anki  
+- Adds notes with the tag "Obsidian_to_Anki" (+ other specified tags, if applicable).  
+- Adds to the Default deck (if `{Target Deck Line}` is not specified).  
+- Adds to the current profile in Anki.  
 
 ## Troubleshooting
 
@@ -287,7 +287,7 @@ If the script itself is not able to run, try running `python3 {PATH_TO_SCRIPT}`.
 
 If you are getting a `KeyError`, you may have typed one of the [substitutions](#Config) wrong - double check the config file and what you actually wrote.
 Examples:
-* Anki actually stores "Basic (and reversed)" as "Basic (and reversed card)" - hence, without changing the config file, formatting "Basic (and reversed)" for the note type will throw a `KeyError`
+* Anki actually stores "Basic (and reversed)" as "Basic (and reversed card)" - hence, without changing the config file, formatting "Basic (and reversed)" for the note type will throw a `KeyError`.
 
 The script seems to have unexpected behaviour when reading from a file for the first time, while the file is open in another program (though this doesn't always happen!).  
 The script was written in Python 3.8.5, and it uses `os` module features from Python 3.6+ [This issue](https://github.com/Pseudonium/Obsidian_to_Anki/issues/6#issue-690905446) confirms that the script does not run on Python 2.
