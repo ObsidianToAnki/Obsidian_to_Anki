@@ -5,6 +5,7 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 * [Header paragraph style](#header-paragraph-style)
 * [Question answer style](#question-answer-style)
 * [Neuracache #flashcard style](#neuracache-flashcard-style)
+* [Ruled style](#ruled-style)
 
 ## Remnote single line #style
 
@@ -145,3 +146,35 @@ to
 ![neuracache_1](Images/Neuracache_1.png)  
 ![neuracache_2](Images/Neuracache_2.png)  
 ![neuracache_3](Images/Neuracache_3.png)  
+
+## Ruled style
+
+Regex line: `((?:[^\n][\n]?)+)-{3,}\n((?:[^\n][\n]?)+)`
+
+Example usage:
+1. Create a file called `test.md`
+2. Paste the following contents into the file:
+<pre>
+How do you use ruled style?
+---
+You need at least three '-' between the front and back of the card.
+
+
+Are paragraphs
+supported?
+---------
+Yes, but you need the front and back
+directly before and after the ruler.
+</pre>
+3. Run `obsidian_to_anki.py -c` to open up the config file
+4. Navigate to the "Custom Regexps" section
+5. Change the line
+> Basic =  
+
+to  
+
+> Basic = `((?:[^\n][\n]?)+)-{3,}\n((?:[^\n][\n]?)+)`
+6. Save the config file
+7. Run `obsidian_to_anki.py --regex test.md`
+8. You should see these cards in Anki:  
+
