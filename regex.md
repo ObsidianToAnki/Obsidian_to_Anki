@@ -11,7 +11,7 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 - [Tagging notes](#tagging-notes)
 - [Deleting notes](#deleting-notes)
 
-## RemNote single line #style
+## RemNote single-line style
 
 **Regex line:** `^(.*[^\n:]{1}):{2}([^\n:]{1}.*)`
 
