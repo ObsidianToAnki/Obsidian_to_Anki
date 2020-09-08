@@ -225,7 +225,6 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
-    TARGET_DECK = "Default"
     ID_PREFIX = "ID: "
     TAG_PREFIX = "Tags: "
     TAG_SEP = " "
@@ -262,7 +261,7 @@ class Note:
     def NOTE_DICT_TEMPLATE(self):
         """Template for making notes."""
         return {
-            "deckName": Note.TARGET_DECK,
+            "deckName": "",
             "modelName": "",
             "fields": dict(),
             "options": {
@@ -317,13 +316,14 @@ class Note:
         }
         return {key: value.strip() for key, value in fields.items()}
 
-    def parse(self):
+    def parse(self, deck):
         """Get a properly formatted dictionary of the note."""
         template = self.NOTE_DICT_TEMPLATE.copy()
         if not self.delete:
             template["modelName"] = self.note_type
             template["fields"] = self.fields
             template["tags"] = template["tags"] + self.tags
+            template["deckName"] = deck
             return Note.Note_and_id(note=template, id=self.identifier)
         else:
             return Note.Note_and_id(note=False, id=self.identifier)
@@ -819,10 +819,12 @@ class File:
             self.file = f.read()
         self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
-            Note.TARGET_DECK = self.target_deck.group(1)
+            self.target_deck = self.target_deck.group(1)
+        else:
+            self.target_deck = "Default"
         print(
             "Identified target deck for", self.filename,
-            "as", Note.TARGET_DECK
+            "as", self.target_deck
         )
         self.global_tags = App.TAG_REGEXP.search(self.file)
         if self.global_tags is not None:
@@ -841,7 +843,7 @@ class File:
         self.inline_id_indexes = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
             note, position = note_match.group(1), note_match.end(1)
-            parsed = Note(note).parse()
+            parsed = Note(note).parse(self.target_deck)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
                 parsed.note["tags"] += self.global_tags.split(" ")
@@ -855,7 +857,7 @@ class File:
         for inline_note_match in App.INLINE_REGEXP.finditer(self.file):
             note = inline_note_match.group(1)
             position = inline_note_match.end(1)
-            parsed = InlineNote(note).parse()
+            parsed = InlineNote(note).parse(self.target_deck)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
                 parsed.note["tags"] += self.global_tags.split(" ")
@@ -960,7 +962,7 @@ class File:
         return AnkiConnect.request(
             "changeDeck",
             cards=self.cards,
-            deck=Note.TARGET_DECK
+            deck=self.target_deck
         )
 
     def get_clear_tags(self):
@@ -987,7 +989,6 @@ class File:
 
 
 class RegexFile(File):
-    pass
 
 
 if __name__ == "__main__":
