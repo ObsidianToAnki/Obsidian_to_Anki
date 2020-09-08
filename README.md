@@ -1,5 +1,5 @@
 # Obsidian_to_Anki
-Script to add flashcards from a text or markdown file to Anki. Run from the command line. Built with Obsidian markdown syntax in mind. Supports user-defined custom syntax for flashcards.
+Script to add flashcards from a text or markdown file to Anki. Run from the command line. Built with Obsidian markdown syntax in mind. Supports **user-defined custom syntax for flashcards.**
 
 ## Setup
 1. Install the latest version of [Python](https://www.python.org/downloads/).
@@ -25,17 +25,17 @@ The script needs to be able to:
 ## Features
 
 Current features:
-* [Custom note types](#note-formatting) - You're not limited to the 6 built-in note types of Anki
-* Updating notes from file - Your text files are the canonical source of the notes.
-* Substitutions - see [Config](#config). Makes typing out long names easier.
-* [Tags](#tag-formatting)
-* Adding to user-specified [decks](#deck-formatting), on a *per-file* basis
-* [Markdown](https://www.markdownguide.org/getting-started/) formatting - see [this](#markdown-formatting) for examples
-* [Embedded images](#image-formatting) (GIFs should work too)
-* [Auto-deleting notes](#deleting-notes) from the file
-* Reading from all files in a directory automatically - not recursively however.
-* [Inline Notes](#inline-note-formatting) - Shorter syntax for typing out notes on a single line
-* [Custom syntax](regex.md) - Using regular expressions, add custom syntax to generate notes that make sense for you.
+* **[Custom note types](#note-formatting)** - You're not limited to the 6 built-in note types of Anki
+* **Updating notes from file** - Your text files are the canonical source of the notes.
+* **Substitutions** - see [Config](#config). Makes typing out long names easier.
+* **[Tags](#tag-formatting)**
+* **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis
+* **[Markdown](https://www.markdownguide.org/getting-started/) formatting** - see [this](#markdown-formatting) for examples
+* **[Embedded images](#image-formatting)** (GIFs should work too)
+* **[Auto-deleting notes](#deleting-notes) from the file**
+* **Reading from all files in a directory automatically** - not recursively however.
+* **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line
+* **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
 
 Not available:
 * Audio
