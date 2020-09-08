@@ -26,11 +26,13 @@ You can have::multiple notes in the same file
 3. Run `obsidian_to_anki.py -c` to open up the config file
 4. Navigate to the "Custom Regexps" section
 5. Change the line
-> Basic =  
-
+<pre>
+Basic =  
+</pre>
 to  
-
-> Basic = `^(.*[^\n:]{1}):{2}([^\n:]{1}.*)`
+<pre>
+Basic = ^(.*[^\n:]{1}):{2}([^\n:]{1}.*)
+</pre>
 6. Save the config file
 7. Run `obsidian_to_anki.py -r test.md`
 8. You should see these cards in Anki:  
@@ -63,11 +65,13 @@ Multiple lines, and ignore preceding whitespace
 3. Run `obsidian_to_anki.py -c` to open up the config file
 4. Navigate to the "Custom Regexps" section
 5. Change the line
-> Basic =  
-
+<pre>
+Basic =  
+</pre>
 to  
-
-> Basic = `^#+(.+)\n+((?:[^\n#][\n]?)+)`
+<pre>
+Basic = ^#+(.+)\n+((?:[^\n#][\n]?)+)
+</pre>
 6. Save the config file
 7. Run `obsidian_to_anki.py -r test.md`
 8. You should see these cards in Anki:  
@@ -103,11 +107,13 @@ A: The 'magic' of regular expressions!
 3. Run `obsidian_to_anki.py -c` to open up the config file
 4. Navigate to the "Custom Regexps" section
 5. Change the line
-> Basic =  
-
+<pre>
+Basic =  
+</pre>
 to  
-
-> Basic = `^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)`
+<pre>
+Basic = ^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)
+</pre>
 6. Save the config file
 7. Run `obsidian_to_anki.py -r test.md`
 8. You should see these cards in Anki:  
@@ -141,11 +147,13 @@ Whitespace is ignored!
 3. Run `obsidian_to_anki.py -c` to open up the config file
 4. Navigate to the "Custom Regexps" section
 5. Change the line
-> Basic =  
-
+<pre>
+Basic =  
+</pre>
 to  
-
-> Basic = `((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)`
+<pre>
+Basic = ((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)
+</pre>
 6. Save the config file
 7. Run `obsidian_to_anki.py -r test.md`
 8. You should see these cards in Anki:  
@@ -175,11 +183,13 @@ directly before and after the ruler.
 3. Run `obsidian_to_anki.py -c` to open up the config file
 4. Navigate to the "Custom Regexps" section
 5. Change the line
-> Basic =  
-
+<pre>
+Basic =  
+</pre>
 to  
-
-> Basic = `((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)`
+<pre>
+Basic = ((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)
+</pre>
 6. Save the config file
 7. Run `obsidian_to_anki.py -r test.md`
 8. You should see these cards in Anki:  
@@ -199,14 +209,15 @@ Cards made using this format support tags - simply append a "Tags: {tag_list}" t
 
 ## Deleting notes
 To delete notes made using this format, remove the content before the ID and make it look like:
-> {Delete Regex Note Line}  
-> ID: 129840142123  
-
+<pre>
+{Delete Regex Note Line}  
+ID: 129840142123  
+</pre>
 With the default settings:
-
-> DELETE  
-> ID: 129414201900  
-
+<pre>
+DELETE  
+ID: 129414201900  
+</pre>
 ## Conflicts?
 Try to make sure your regex matches don't overlap with each other. The script is designed, however, to not recognise a match inside another match (for different note types).
 
