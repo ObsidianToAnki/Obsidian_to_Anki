@@ -30,7 +30,7 @@ Current features:
 * **Substitutions** - see [Config](#config). Makes typing out long names easier.
 * **[Tags](#tag-formatting)**
 * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis
-* **[Markdown](https://www.markdownguide.org/getting-started/) formatting** - see [this](#markdown-formatting) for examples
+* **[Markdown](#markdown-formatting)formatting**
 * **[Embedded images](#image-formatting)** (GIFs should work too)
 * **[Auto-deleting notes](#deleting-notes) from the file**
 * **Reading from all files in a directory automatically** - not recursively however.
@@ -157,9 +157,9 @@ Tags:
 Standard markdown formatting is supported.
 You can check [test.md](./test.md) as an example.
 Front produced:
-![front](./Markdown_example_front.png)
+![front](/Images/Markdown_1.png)
 Back produced:
-![back](./Markdown_example_back.png)
+![back](/Images/Markdown_2.png)
 
 ### Image formatting
 
