@@ -4,8 +4,9 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 * [Remnote single-line style](#remnote-single-line-style)
 * [Header paragraph style](#header-paragraph-style)
 * [Question answer style](#question-answer-style)
+* [Neuracache #flashcard style](#neuracahce-#flashcard-style)
 
-## Remnote single line style
+## Remnote single line #style
 
 Regex line: `^(.*[^\n:]{1}):{2}([^\n:]{1}.*)`
 
@@ -107,3 +108,37 @@ to
 ![question_2](Images/Question_2.png)  
 ![question_3](Images/Question_3.png)  
 ![question_4](Images/Question_4.png)  
+
+## Neuracache #flashcard style
+
+Regex line: `((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)`
+
+Example usage:
+1. Create a file called `test.md`
+2. Paste the following contents into the file:
+<pre>
+In Neuracache style, to make a flashcard you do #flashcard
+The next lines then become the back of the flashcard
+
+If you want, it's certainly possible to
+do a multi-line question #flashcard
+You just need to make sure both
+the question and answer are one paragraph.
+
+And, of course #flashcard
+
+
+Whitespace is ignored!
+
+</pre>
+3. Run `obsidian_to_anki.py -c` to open up the config file
+4. Navigate to the "Custom Regexps" section
+5. Change the line
+> Basic =  
+
+to  
+
+> Basic = `((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)`
+6. Save the config file
+7. Run `obsidian_to_anki.py --regex test.md`
+8. You should see these cards in Anki:
