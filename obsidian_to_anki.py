@@ -42,6 +42,7 @@ def string_insert(string, position_inserts):
     [(0, "hi"), (3, "hello"), (5, "beep")]
     """
     offset = 0
+    position_inserts = sorted(position_inserts)
     for position, insert_str in position_inserts:
         string = "".join(
             [
@@ -415,23 +416,40 @@ class RegexNote:
         self.field_names = list(Note.field_subs[self.note_type])
 
     @property
+    def NOTE_DICT_TEMPLATE(self):
+        """Template for making notes."""
+        return {
+            "deckName": "",
+            "modelName": "",
+            "fields": dict(),
+            "options": {
+                "allowDuplicate": False,
+                "duplicateScope": "deck"
+            },
+            "tags": ["Obsidian_to_Anki"],
+            # ^So that you can see what was added automatically.
+            "audio": list()
+        }
+
+    @property
     def fields(self):
         fields = dict.fromkeys(self.field_names, "")
         for name, match in zip(self.field_names, self.groups):
             if match:
-                fields[name] = self.match
+                fields[name] = match
         fields = {
             key: FormatConverter.format(value)
             for key, value in fields.items()
         }
         return {key: value.strip() for key, value in fields.items()}
 
-    def parse(self):
+    def parse(self, deck):
         """Get a properly formatted dictionary of the note."""
         template = self.NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
         template["tags"] = template["tags"] + self.tags
+        template["deckName"] = deck
         return Note.Note_and_id(note=template, id=self.identifier)
 
 
@@ -1043,6 +1061,11 @@ class RegexFile(File):
         for note_type, regexp in Config.config["Custom Regexps"].items():
             if regexp:
                 self.search(note_type, regexp)
+        # Finally, scan for deleting notes
+        for match in RegexFile.EMPTY_REGEXP.finditer(self.file):
+            self.notes_to_delete.append(
+                int(match.group(1)[len(Note.ID_PREFIX):])
+            )
 
     def search(self, note_type, regexp):
         """
@@ -1072,26 +1095,38 @@ class RegexFile(File):
             # This note has id, so we update it
             self.ignore_spans.append(match.span())
             self.notes_to_edit.append(
-                RegexNote(match, note_type, tags=True, id=True)
+                RegexNote(match, note_type, tags=True, id=True).parse(
+                    self.target_deck
+                )
             )
         for match in findignore(regexp_id, self.file, self.ignore_spans):
             # This note has id, so we update it
             self.ignore_spans.append(match.span())
             self.notes_to_edit.append(
-                RegexNote(match, note_type, tags=False, id=True)
+                RegexNote(match, note_type, tags=False, id=True).parse(
+                    self.target_deck
+                )
             )
         for match in findignore(regexp_tags, self.file, self.ignore_spans):
             # This note has no id, so we update it
             self.ignore_spans.append(match.span())
+            parsed = RegexNote(match, note_type, tags=True, id=False).parse(
+                self.target_deck
+            )
+            parsed.note["tags"] += self.global_tags.split(" ")
             self.notes_to_add.append(
-                RegexNote(match, note_type, tags=True, id=False)
+                parsed.note
             )
             self.id_indexes.append(match.end())
         for match in findignore(regexp, self.file, self.ignore_spans):
             # This note has no id, so we update it
             self.ignore_spans.append(match.span())
+            parsed = RegexNote(match, note_type, tags=False, id=False).parse(
+                self.target_deck
+            )
+            parsed.note["tags"] == self.global_tags.split(" ")
             self.notes_to_add.append(
-                RegexNote(match, note_type, tags=False, id=False)
+                parsed.note
             )
             self.id_indexes.append(match.end())
 
