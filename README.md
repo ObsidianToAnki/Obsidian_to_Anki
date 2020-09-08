@@ -1,5 +1,5 @@
 # Obsidian_to_Anki
-Script to add flashcards from a properly-formatted file to Anki. Run from the command line. Built with Obsidian markdown syntax in mind.
+Script to add flashcards from a properly-formatted file to Anki. Run from the command line. Built with Obsidian markdown syntax in mind. Supports user-defined custom syntax.
 
 ## Setup
 1. Install [Python](https://www.python.org/downloads/). Note that the script was written in Python3.8 - I don't think it would work on older versions (confirmed that it doesn't work on Python2 via [this issue](https://github.com/Pseudonium/Obsidian_to_Anki/issues/6#issue-690905446))
