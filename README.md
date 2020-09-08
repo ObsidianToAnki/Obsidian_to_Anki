@@ -4,12 +4,12 @@ Script to add flashcards from a properly-formatted file to Anki. Run from the co
 ## Setup
 1. Install [Python](https://www.python.org/downloads/). Note that the script was written in Python3.8 - I don't think it would work on older versions (confirmed that it doesn't work on Python2 via [this issue](https://github.com/Pseudonium/Obsidian_to_Anki/issues/6#issue-690905446))
 2. Download the desired release.
-3. Place the script "obsidian_to_anki.py" in a convenient folder. You may wish to consider placing it in a Scripts folder, and adding the folder to your PATH
+3. Place the script "obsidian_to_anki.py" in the same folder as your notes.
 4. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile
 5. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
 6. Install the `python-markdown` library - see installation instructions [here](https://github.com/Python-Markdown/markdown). `pip install markdown` should work.
 7. Check the Permissions tab below to ensure the script is able to run.
-8. From the command line, run the script once with no arguments - `{Path to script}/obsidian_to_anki.py`
+8. From the command line, run the script once with no arguments - `obsidian_to_anki.py` (or `python obsidian_to_anki.py`)
 This will make a configuration file in the same directory as the script, "obsidian_to_anki_config.ini".
 
 See [Troubleshooting](#Troubleshooting) if you have problems.
@@ -25,16 +25,17 @@ The script needs to be able to:
 ## Features
 
 Current features:
-* [Custom note types](#note-formatting)
-* Updating notes from file
-* Substitutions - see [Config](#config)
+* [Custom note types](#note-formatting) - You're not limited to the 6 built-in note types of Anki
+* Updating notes from file - Your text files are the canonical source of the notes.
+* Substitutions - see [Config](#config). Makes typing out long names easier.
 * [Tags](#tag-formatting)
 * Adding to user-specified [decks](#deck-formatting), on a *per-file* basis
 * [Markdown](https://www.markdownguide.org/getting-started/) formatting - see [this](#markdown-formatting) for examples
 * [Embedded images](#image-formatting) (GIFs should work too)
 * [Auto-deleting notes](#deleting-notes) from the file
 * Reading from all files in a directory automatically - not recursively however.
-* [Inline Notes](#inline-note-formatting)
+* [Inline Notes](#inline-note-formatting) - Shorter syntax for typing out notes on a single line
+* [Custom syntax](#custom-syntax) - Using regular expressions, add custom syntax to generate notes that make sense for you.
 
 Not available:
 * Audio
@@ -53,8 +54,9 @@ To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open
 
 To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`
 
+To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py --regex [path]`
+
 ## Config
-The configuration file allows you to change three things:
 
 ### Syntax
 As of v1.2, the Config file now allows you to change the syntax of the script:
@@ -64,6 +66,10 @@ As of v1.2, the Config file now allows you to change the syntax of the script:
 * End Inline Note - The string that signals the end of an inline note. Defaults to ENDI (End-Inline)
 * Target Deck Line - The string that signals "the line beneath me is the name of the target deck". Defaults to TARGET DECK
 * File Tags Line - The string that signals "the line beneath me is the set of tags that should be added to all notes from this file". Defaults to FILE TAGS
+* Delete Regex Note Line - The string that signals "the line beneath me is an id string for a regex note that should be deleted." Defaults to DELETE
+
+### Custom syntax
+As of v1.3, the section "Custom Regexps" allows you to add, for each note type, a single regexp that will add matches to Anki with that note type. For more information and some example templates, see [Regex](regex.md)
 
 ### Field substitutions
 The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
@@ -262,3 +268,6 @@ Examples:
 * Anki actually stores "Basic (and reversed)" as "Basic (and reversed card)" - hence, without changing the config file, formatting "Basic (and reversed)" for the note type will throw a `KeyError`
 
 The script seems to have unexpected behaviour when reading from a file for the first time, while the file is open in another program (though this doesn't always happen!). So, be wary of doing this. Removing the ID: None line and running the script again seems to fix it.
+
+## Technical
+The script doesn't need to be in the same folder as your notes - you can put it in a Scripts folder if you have the means to run it remotely. Just ensure that the config file ends up in the same folder as the script.
