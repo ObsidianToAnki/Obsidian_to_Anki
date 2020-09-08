@@ -298,4 +298,4 @@ You may also want to prepend the following shebang to the start of the file:
 
 `#!/usr/bin/env python`
 
-For more information, see [this pull request](https://github.com/Pseudonium/Obsidian_to_Anki/pull/13)
+For more information, see [this pull request](https://github.com/Pseudonium/Obsidian_to_Anki/pull/13).
