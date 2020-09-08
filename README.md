@@ -81,71 +81,77 @@ As of v1.2, the Config file now allows you to change the syntax of the script:
 
 ### Field substitutions
 The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
-
-> Front = Front:  
-> Back = Back:  
-
+<pre>
+Front = Front:  
+Back = Back:  
+</pre>
 If you edit and save this to say
-
-> Front = Front:   
-> Back = A:  
-
+<pre>
+Front = Front:   
+Back = A:  
+</pre>
 Then you now format your notes like this:
-
-> {Begin Note}  
-> Basic  
-> This is a test.  
-> A: Test successful!  
-> {End Note}  
-
+<pre>
+{Begin Note}  
+Basic  
+This is a test.  
+A: Test successful!  
+{End Note}  
+</pre>
 As an inline note:
-
-> {Begin Inline Note} [Basic] This is a test. A: Test successful! {End Inline Note}
-
+<pre>
+{Begin Inline Note} [Basic] This is a test. A: Test successful! {End Inline Note}
+</pre>
 
 ### Note Type Substitutions
 These are under the section ['Note Substitutions']. Similar to the above, you'll see something like this:
-> ...  
-> Basic = Basic  
-> Basic (and reversed card) = Basic (and reversed card)  
-> ...  
-
+<pre>
+...  
+Basic = Basic  
+Basic (and reversed card) = Basic (and reversed card)  
+...  
+</pre>
 If you edit and save this to say  
-> ...  
-> Basic = B  
-> Basic (and reversed card) = Basic (and reversed card)  
-> ...  
-
+<pre>
+...  
+Basic = B  
+Basic (and reversed card) = Basic (and reversed card)  
+...  
+</pre>
 Then you now format your notes like this:  
-> {Begin Note}  
-> B  
-> {Note Data}  
-> {End Note}
-
+<pre>
+{Begin Note}  
+B  
+{Note Data}  
+{End Note}
+</pre>
 As an inline note:
-> {Begin Inline Note} [B] {Note Data} {End Inline Note}
-
+<pre>
+{Begin Inline Note} [B] {Note Data} {End Inline Note}
+</pre>
 ## Deck formatting
 Anywhere within the file, format the deck that you want the notes to go into as follows:
-> {Target Deck Line}  
-> {Deck name}  
-
+<pre>
+{Target Deck Line}  
+{Deck name}  
+</pre>
 For example:
-> {Target Deck Line}  
-> Mathematics  
-
+<pre>
+{Target Deck Line}  
+Mathematics  
+</pre>
 You may place more than one target deck in the same file, but only the first instance will be read and used.
 
 ## Note formatting
 
 In the markdown file, you must format your 'block' notes as follows (see [Inline notes](#inline-note-formatting) for notes on a single line):
-
-> {Begin Note}  
-> {Note Type}  
-> {Note Fields}  
-> Tags:   
-> {End Note}  
-
+<pre>
+{Begin Note}  
+{Note Type}  
+{Note Fields}  
+Tags:   
+{End Note}  
+</pre>
 ### Markdown formatting
 
 Standard markdown formatting is supported.
@@ -165,84 +171,92 @@ Embedded images are supported if the following criteria are met:
 
 For reference, the note formatting style is:
 
-> {Begin Note}  
-> {Note Type}  
-> {Note Fields}  
-> Tags:   
-> {End Note}  
-
+<pre>
+{Begin Note}  
+{Note Type}  
+{Note Fields}  
+Tags:   
+{End Note}  
+</pre>
 Note that the Tags: line is optional - if you don't want tags, you may leave out the line.
 
 Tags should be formatted as such:
-
-> Tags: Tag1 Tag2 Tag3
-
+<pre>
+Tags: Tag1 Tag2 Tag3
+</pre>
 So, a space between the colon and the first tag, and a space between tags.
 
-*v1.1.1 Feature*:
+### File tag formatting
 
 v1.1.1 now allows you to specify 'file tags' for a file - these tags will be added to every card in the file.
 
 To do this:
 Anywhere within the file, format the file tags as follows:
-> {File Tags Line}  
-> {Tag_list}  
-
+<pre>
+{File Tags Line}  
+{Tag_list}  
+</pre>
 So, for example:
-> {File Tags Line}  
-> Maths School Physics  
-
+<pre>
+{File Tags Line}  
+Maths School Physics  
+</pre>
 Like with tag-line formatting, you need a space between tags - however, do not include the "Tags: " prefix.
 
 ### Field formatting
 
 Apart from the first field, each field must have a prefix to indicate to the program when to move on to the next field. For example:
 
-> {Begin Note}  
-> Basic  
-> This is a test.  
-> Back: Test successful!  
-> {End Note}  
-
+<pre>
+{Begin Note}  
+Basic  
+This is a test.  
+Back: Test successful!  
+{End Note}  
+</pre>
 Note that you must start new fields on a new line for non-inline notes.  
 When the script successfully adds a note, it will append an ID to the Note Data. This allows you to *update existing notes by running the script again*.
 
 Example output:
-
-> {Begin Note}  
-> Basic  
-> This is a test.  
-> Back: Test successful!  
-> ID: 1566052191670  
-> {End Note}  
-
+<pre>
+{Begin Note}  
+Basic  
+This is a test.  
+Back: Test successful!  
+ID: 1566052191670  
+{End Note}  
+</pre>
 ### Deleting notes
 
 The script can delete notes that *it has added* automatically. To do this:
 1. Find the formatted note in your file:
-> {Begin Note}  
-> {Note Type}  
-> {Note Data}  
-> ID: {Identifier}  
-> {End Note}  
+<pre>
+{Begin Note}  
+{Note Type}  
+{Note Data}  
+ID: {Identifier}  
+{End Note}  
+</pre>
 2. Change this to read:
-> {Begin Note}  
-> ID: {Identifier}  
-> {End Note}  
-3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary {Begin Note} {End Note} block from the file.
+<pre>
+{Begin Note}  
+ID: {Identifier}  
+{End Note}  
+</pre>
+3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `{Begin Note} {End Note}` block from the file.
 
 See [Deleting inline notes](#deleting-inline-notes) for how to do this with inline notes.
 
 ## Inline note formatting
 *v1.2 feature*
 v1.2 of the script introduces **inline notes** - notes which are entirely on a single line. They are formatted as such:  
-
-> {Begin Inline Note} [{Note Type}] {Note Data} {End Inline Note}  
-
+<pre>
+{Begin Inline Note} [{Note Type}] {Note Data} {End Inline Note}  
+</pre>
 For example  
-
-> {Begin Inline Note} [Basic] This is a test. Back: Test successful! {End Inline Note}  
-
+<pre>
+{Begin Inline Note} [Basic] This is a test. Back: Test successful! {End Inline Note}  
+</pre>
 Unlike regular 'block' notes, you can put inline notes anywhere on a line - for example, you could have a bulletpointed list of inline notes.  
 Also, unlike regular 'block' notes, the script identifies the note type through the string in square brackets. Hence, **note types with [ or ] in the name are not supported for inline notes**.
 
@@ -250,15 +264,19 @@ Also, unlike regular 'block' notes, the script identifies the note type through 
 
 The instructions are quite similar to deleting normal notes:
 1. Find the formatted note in your file:
-> {Begin Inline Note} [{Note Type}] {Note Data} ID: {Identifier} {End Inline Note}
+<pre>
+{Begin Inline Note} [{Note Type}] {Note Data} ID: {Identifier} {End Inline Note}
+</pre>
 2. Change this to read:
-> {Begin Inline Note} ID: {Identifier} {End Inline Note}
-3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary {Begin Inline Note} {End Inline Note} block from the file.
+<pre>
+{Begin Inline Note} ID: {Identifier} {End Inline Note}
+</pre>
+3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `{Begin Inline Note} {End Inline Note}` block from the file.
 
 ## Default
 By default, the script:
 - Adds notes with the tag "Obsidian_to_Anki" (+ other specified tags, if applicable)
-- Adds to the Default deck (if TARGET DECK is not specified)
+- Adds to the Default deck (if `{Target Deck Line}` is not specified)
 - Adds to the current profile in Anki  
 
 ## Troubleshooting
