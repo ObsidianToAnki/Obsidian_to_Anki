@@ -103,3 +103,7 @@ to
 6. Save the config file
 7. Run `obsidian_to_anki.py --regex test.md`
 8. You should see these cards in Anki:  
+![question_1](Images/Question_1.png)  
+![question_2](Images/Question_2.png)  
+![question_3](Images/Question_3.png)  
+![question_4](Images/Question_4.png)  
