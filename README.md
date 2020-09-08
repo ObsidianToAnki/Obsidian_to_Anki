@@ -137,9 +137,9 @@ Anywhere within the file, format the deck that you want the notes to go into as 
 {Target Deck Line}  
 {Deck name}  
 </pre>
-For example:
+For example, with the default settings:
 <pre>
-{Target Deck Line}  
+TARGET DECK  
 Mathematics  
 </pre>
 You may place more than one target deck in the same file, but only the first instance will be read and used.
@@ -197,9 +197,9 @@ Anywhere within the file, format the file tags as follows:
 {File Tags Line}  
 {Tag_list}  
 </pre>
-So, for example:
+For example, with the default settings:
 <pre>
-{File Tags Line}  
+FILE TAGS  
 Maths School Physics  
 </pre>
 Like with tag-line formatting, you need a space between tags - however, do not include the "Tags: " prefix.
