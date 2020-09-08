@@ -3,6 +3,7 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 
 * [Remnote single-line style](#remnote-single-line-style)
 * [Header paragraph style](#header-paragraph-style)
+* [Question answer style](#question-answer-style)
 
 ## Remnote single line style
 
@@ -66,3 +67,39 @@ to
 ![header_2](Images/Header_2.png)  
 ![header_3](Images/Header_3.png)  
 ![header_4](Images/Header_4.png)  
+
+## Question answer style
+
+Regex line: `^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)`
+
+Example usage:
+1. Create a file called `test.md`
+2. Paste the following contents into the file:
+<pre>
+Q: How do you use this style?
+A: Just like this.
+
+Q: Can the question
+run over multiple lines?
+A: Yes, and
+So can the answer
+
+Q: Does the answer need to be immediately after the question?
+
+
+A: No, and preceding whitespace will be ignored.
+
+Q: How is this possible?
+A: The 'magic' of regular expressions!
+</pre>
+3. Run `obsidian_to_anki.py -c` to open up the config file
+4. Navigate to the "Custom Regexps" section
+5. Change the line
+> Basic =  
+
+to  
+
+> Basic = `^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)`
+6. Save the config file
+7. Run `obsidian_to_anki.py --regex test.md`
+8. You should see these cards in Anki:  
