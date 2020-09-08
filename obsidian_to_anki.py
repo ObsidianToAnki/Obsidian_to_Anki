@@ -196,7 +196,11 @@ class FormatConverter:
         note_text = FormatConverter.fix_image_src(note_text)
         note_text = note_text.strip()
         # Remove unnecessary paragraph tag
-        if note_text.startswith(FormatConverter.PARA_OPEN):
+        if note_text.startswith(
+            FormatConverter.PARA_OPEN
+        ) and note_text.endswith(
+            FormatConverter.PARA_CLOSE
+        ):
             note_text = note_text[len(FormatConverter.PARA_OPEN):]
             note_text = note_text[:-len(FormatConverter.PARA_CLOSE)]
         return note_text
@@ -319,7 +323,7 @@ class Note:
                 line = line[len(self.current_sub):]
             fields[self.current_field] += line + "\n"
         fields = {
-            key: FormatConverter.format(value)
+            key: FormatConverter.format(value.strip())
             for key, value in fields.items()
         }
         return {key: value.strip() for key, value in fields.items()}
@@ -380,9 +384,6 @@ class InlineNote(Note):
         while self.next_sub:
             # So, we're expecting a new field
             end = self.text.find(self.next_sub)
-            if end == -1:
-                # Sub not found
-                break
             fields[self.current_field] += self.text[:end]
             self.text = self.text[end + len(self.next_sub):]
             self.current_field_num += 1
@@ -559,7 +560,7 @@ class Config:
         RegexFile.EMPTY_REGEXP = re.compile(
             re.escape(
                 config["Syntax"]["Delete Regex Note Line"]
-            ) + r"\n" + RegexNote.ID_REGEXP_STR
+            ) + RegexNote.ID_REGEXP_STR
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
@@ -659,7 +660,7 @@ class App:
             """,
         )
         self.parser.add_argument(
-            "--regex",
+            "-r", "--regex",
             action="store_true",
             dest="regex",
             help="""
