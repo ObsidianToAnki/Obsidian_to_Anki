@@ -583,9 +583,15 @@ class App:
             webbrowser.open(Config.CONFIG_PATH)
             return
         if args.path:
+            current = os.getcwd()
             self.path = args.path
             if os.path.isdir(self.path):
-                with os.scandir(self.path) as it:
+                try:
+                    os.chdir(self.path)
+                except Exception:
+                    print("Could not move to path directory.")
+                    return
+                with os.scandir() as it:
                     if args.regex:
                         self.files = [
                             RegexFile(entry.path)
@@ -617,6 +623,7 @@ class App:
                 file.remove_empties()
                 file.write_file()
             self.requests_2()
+            os.chdir(current)
 
     def setup_parser(self):
         """Set up the argument parser."""
