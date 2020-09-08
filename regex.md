@@ -1,7 +1,7 @@
 # Table of contents
 This page lists templates for custom syntax. In each case, copy-paste the regex line into the desired note type in the config file to use the template.
 
-* [Remnote single-line style](#remnote-single-line-style)
+* [RemNote single-line style](#remnote-single-line-style)
 * [Header paragraph style](#header-paragraph-style)
 * [Question answer style](#question-answer-style)
 * [Neuracache #flashcard style](#neuracache-flashcard-style)
@@ -11,16 +11,18 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 - [Tagging notes](#tagging-notes)
 - [Deleting notes](#deleting-notes)
 
-## Remnote single line #style
+## RemNote single line #style
 
-Regex line: `^(.*[^\n:]{1}):{2}([^\n:]{1}.*)`
+**Regex line:** `^(.*[^\n:]{1}):{2}([^\n:]{1}.*)`
 
-Example usage:
+**Example usage:**
 1. Create a file called `test.md`
 2. Paste the following contents into the file:
-> This is how to use::Remnote single-line style  
-> The script won't see things outside of it.  
-> You can have::multiple notes in the same file  
+<pre>
+This is how to use::Remnote single-line style  
+The script won't see things outside of it.  
+You can have::multiple notes in the same file  
+</pre>
 3. Run `obsidian_to_anki.py -c` to open up the config file
 4. Navigate to the "Custom Regexps" section
 5. Change the line
@@ -37,9 +39,9 @@ to
 
 ## Header paragraph style
 
-Regex line: `^#+(.+)\n+((?:[^\n#][\n]?)+)`
+**Regex line:** `^#+(.+)\n+((?:[^\n#][\n]?)+)`
 
-Example usage:
+**Example usage:**
 1. Create a file called `test.md`
 2. Paste the following contents into the file:
 <pre>
@@ -76,9 +78,9 @@ to
 
 ## Question answer style
 
-Regex line: `^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)`
+**Regex line:** `^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)`
 
-Example usage:
+**Example usage:**
 1. Create a file called `test.md`
 2. Paste the following contents into the file:
 <pre>
@@ -116,9 +118,9 @@ to
 
 ## Neuracache #flashcard style
 
-Regex line: `((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)`
+**Regex line:** `((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)`
 
-Example usage:
+**Example usage:**
 1. Create a file called `test.md`
 2. Paste the following contents into the file:
 <pre>
@@ -153,9 +155,9 @@ to
 
 ## Ruled style
 
-Regex line: `((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)`
+**Regex line:** `((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)`
 
-Example usage:
+**Example usage:**
 1. Create a file called `test.md`
 2. Paste the following contents into the file:
 <pre>
@@ -204,3 +206,16 @@ With the default settings:
 
 > DELETE  
 > ID: 129414201900  
+
+## Conflicts?
+Try to make sure your regex matches don't overlap with each other. The script is designed, however, to not recognise a match inside another match (for different note types).
+
+For example, if you're using the default syntax of the script for the 'Cloze' note type:
+<pre>
+START
+Cloze
+This is a {{c1::test}}
+END
+</pre>
+
+, you don't have to worry about a RemNote single-line match being picked up.
