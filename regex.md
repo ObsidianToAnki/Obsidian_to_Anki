@@ -149,7 +149,7 @@ to
 
 ## Ruled style
 
-Regex line: `((?:[^\n][\n]?)+)-{3,}\n((?:[^\n][\n]?)+)`
+Regex line: `((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)`
 
 Example usage:
 1. Create a file called `test.md`
@@ -173,7 +173,7 @@ directly before and after the ruler.
 
 to  
 
-> Basic = `((?:[^\n][\n]?)+)-{3,}\n((?:[^\n][\n]?)+)`
+> Basic = `((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)`
 6. Save the config file
 7. Run `obsidian_to_anki.py --regex test.md`
 8. You should see these cards in Anki:  
