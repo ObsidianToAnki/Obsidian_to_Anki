@@ -656,7 +656,7 @@ class App:
             """,
         )
         self.parser.add_argument(
-            "--regex",
+            "-r", "--regex",
             action="store_true",
             dest="regex",
             help="""
