@@ -2,7 +2,7 @@
 This page lists templates for custom syntax. In each case, copy-paste the regex line into the desired note type in the config file to use the template.
 
 * [Remnote single-line style](#remnote-single-line-style)
-* [Header paragraph style)(#header-paragraph-style)
+* [Header paragraph style](#header-paragraph-style)
 
 ## Remnote single line style
 
