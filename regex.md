@@ -5,7 +5,11 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 * [Header paragraph style](#header-paragraph-style)
 * [Question answer style](#question-answer-style)
 * [Neuracache #flashcard style](#neuracache-flashcard-style)
-* [Ruled style](#ruled-style)
+* [Ruled style](#ruled-style)  
+
+- [Custom styles?](#custom-styles)
+- [Tagging notes](#tagging-notes)
+- [Deleting notes](#deleting-notes)
 
 ## Remnote single line #style
 
@@ -177,4 +181,26 @@ to
 6. Save the config file
 7. Run `obsidian_to_anki.py --regex test.md`
 8. You should see these cards in Anki:  
+![ruled_1](/Images/Ruled_1.png)  
+![ruled_2](/Images/Ruled_2.png)
 
+## Custom styles
+The above styles are but a few examples of the endless possible styles you can make using regular expressions.
+If you want to make your own style, however, you should know these things:
+* The script automatically compiles the regular expression with a 'multiline' flag, so you can use the `^` character to signal the beginning of a line
+* You need to have as many capture groups in your regexp as there are fields in the note type - the 1st capture group becomes the 1st field, the 2nd becomes the 2nd field etc
+
+If you'd like for your style to be added to this page, make a style-request issue and I'll consider it. 
+
+## Tagging notes
+Cards made using this format support tags - simply append a "Tags: {tag_list}" to the end of your block. Note that this should be on the same line as the block, not on a new line (as that is reserved for the ID)
+
+## Deleting notes
+To delete notes made using this format, remove the content before the ID and make it look like:
+> {Delete Regex Note Line}  
+> ID: 129840142123  
+
+With the default settings:
+
+> DELETE  
+> ID: 129414201900  
