@@ -1149,7 +1149,7 @@ class RegexFile(File):
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    self.id_to_str(id)
+                    "\n" + "ID: " + str(id) + "\n"
                     for id in self.note_ids
                     if id is not None
                 ]
