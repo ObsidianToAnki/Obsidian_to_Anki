@@ -73,6 +73,7 @@ The sections below describe the default syntax of the script (when not in regex 
 ## Config
 
 ### Syntax
+Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
 As of v1.2, the Config file now allows you to change the syntax of the script:
 * Begin Note - The string that signals the start of a [note](#note-formatting). Defaults to START.
 * End Note - The string that signals the end of a note. Defaults to END.
