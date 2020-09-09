@@ -22,12 +22,12 @@ def write_safe(filename, contents):
 
     If write fails, a backup 'filename.bak' will still exist.
     """
-    with open(filename + ".tmp", "w") as temp:
+    with open(filename + ".tmp", "w", encoding='utf_8') as temp:
         temp.write(contents)
     os.rename(filename, filename + ".bak")
     os.rename(filename + ".tmp", filename)
     success = False
-    with open(filename) as f:
+    with open(filename, encoding='utf_8') as f:
         if f.read() == contents:
             success = True
     if success:
@@ -42,7 +42,7 @@ def string_insert(string, position_inserts):
     [(0, "hi"), (3, "hello"), (5, "beep")]
     """
     offset = 0
-    position_inserts = sorted(position_inserts)
+    position_inserts = sorted(list(position_inserts))
     for position, insert_str in position_inserts:
         string = "".join(
             [
@@ -69,7 +69,8 @@ def spans(pattern, string):
 def contained(span, spans):
     """Determine whether span is contained within spans."""
     return any(
-        span[0] >= start and span[1] <= end
+        span[0] >= start and span[1] <= end + 1
+        # + 1 to fix newline business
         for start, end in spans
     )
 
@@ -397,8 +398,8 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n(ID: \d+)"
-    TAG_REGEXP_STR = r"(Tags: .+)"
+    ID_REGEXP_STR = r"\n*(ID: \d+)"
+    TAG_REGEXP_STR = r"(Tags: .+\n?)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
         self.match = matchobject
@@ -523,7 +524,7 @@ class Config:
             config["Custom Regexps"] = dict()
             for note in note_types:
                 config["Custom Regexps"].setdefault(note, "")
-        with open(Config.CONFIG_PATH, "w") as configfile:
+        with open(Config.CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
         print("Configuration file updated!")
 
@@ -881,8 +882,9 @@ class File:
     def __init__(self, filepath):
         """Perform initial file reading and attribute setting."""
         self.filename = filepath
-        with open(self.filename) as f:
+        with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
+            self.file += "\n"  # Adds empty line, useful for ID
         self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
             self.target_deck = self.target_deck.group(1)
@@ -977,6 +979,7 @@ class File:
 
     def write_file(self):
         """Write to the actual os file"""
+        self.file = self.file.strip()  # Remove newline added
         write_safe(self.filename, self.file)
 
     def get_add_notes(self):
@@ -1149,7 +1152,7 @@ class RegexFile(File):
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    self.id_to_str(id)
+                    "ID: " + str(id) + "\n"
                     for id in self.note_ids
                     if id is not None
                 ]
