@@ -43,7 +43,6 @@ def string_insert(string, position_inserts):
     """
     offset = 0
     position_inserts = sorted(list(position_inserts))
-    print(position_inserts)
     for position, insert_str in position_inserts:
         string = "".join(
             [
