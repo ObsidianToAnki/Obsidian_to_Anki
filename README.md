@@ -61,7 +61,7 @@ If you are a **new user**, these steps are recommended:
 1. Check [Custom syntax](regex.md) to see if there is a template that works for you.
 2. Then, check the information on the following topics:
  * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis.
- * **[Markdown formatting](#markdown-formatting)**.
+ * **[Markdown formatting](#markdown-formatting)**, including **[math formatting](#math-formatting)**
  * **[Embedded images](#image-formatting)**. GIFs should work too.
  * **[Auto-deleting notes](#deleting-notes) from the file**.
  * **[File tag formatting](#file-tag-formatting)**.
@@ -162,6 +162,15 @@ You can check [test.md](./test.md) as an example.
 Card produced:
 ![front](/Images/Markdown_1.png)
 ![back](/Images/Markdown_2.png)
+
+### Math formatting
+Supports both inline mode and displayed mode:
+<pre>
+Inline $x = 5$
+</pre>
+<pre>
+Displayed $$z = 10$$
+</pre>
 
 ### Image formatting
 
