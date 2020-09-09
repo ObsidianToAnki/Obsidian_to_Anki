@@ -296,4 +296,16 @@ If the script itself is not able to run, try running `python3 {PATH_TO_SCRIPT}`.
 
 If you are getting a `KeyError`, you may have typed one of the [substitutions](#Config) wrong - double check the config file and what you actually wrote.
 Examples:
-* Anki actually stores "Basic (and reversed)" as 
+* Anki actually stores "Basic (and reversed)" as "Basic (and reversed card)" - hence, without changing the config file, formatting "Basic (and reversed)" for the note type will throw a `KeyError`
+
+The script seems to have unexpected behaviour when reading from a file for the first time, while the file is open in another program (though this doesn't always happen!).  
+The script was written in Python 3.8.5, and it uses `os` module features from Python 3.6+ [This issue](https://github.com/Pseudonium/Obsidian_to_Anki/issues/6#issue-690905446) confirms that the script does not run on Python 2.
+
+## Technical
+The script doesn't need to be in the same folder as your notes - you can put it in a Scripts folder if you have the means to run it remotely. Just ensure that the config file ends up in the same folder as the script.
+
+You may also want to prepend the following shebang to the start of the file:
+
+`#!/usr/bin/env python`
+
+For more information, see [this pull request](https://github.com/Pseudonium/Obsidian_to_Anki/pull/13).
