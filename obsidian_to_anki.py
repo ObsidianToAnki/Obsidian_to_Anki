@@ -22,12 +22,12 @@ def write_safe(filename, contents):
 
     If write fails, a backup 'filename.bak' will still exist.
     """
-    with open(filename + ".tmp", "w") as temp:
+    with open(filename + ".tmp", "w", encoding='utf_8') as temp:
         temp.write(contents)
     os.rename(filename, filename + ".bak")
     os.rename(filename + ".tmp", filename)
     success = False
-    with open(filename) as f:
+    with open(filename, encoding='utf_8') as f:
         if f.read() == contents:
             success = True
     if success:
@@ -523,7 +523,7 @@ class Config:
             config["Custom Regexps"] = dict()
             for note in note_types:
                 config["Custom Regexps"].setdefault(note, "")
-        with open(Config.CONFIG_PATH, "w") as configfile:
+        with open(Config.CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
         print("Configuration file updated!")
 
@@ -881,7 +881,7 @@ class File:
     def __init__(self, filepath):
         """Perform initial file reading and attribute setting."""
         self.filename = filepath
-        with open(self.filename) as f:
+        with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
         self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
