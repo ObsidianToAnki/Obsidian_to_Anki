@@ -85,21 +85,21 @@ As of v1.2, the Config file now allows you to change the syntax of the script:
 ### Field substitutions
 The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
 <pre>
-Front = Front:  
-Back = Back:  
+Front = Front:
+Back = Back:
 </pre>
 If you edit and save this to say
 <pre>
-Front = Front:   
-Back = A:  
+Front = Front:
+Back = A:
 </pre>
 Then you now format your notes like this:
 <pre>
-{Begin Note}  
-Basic  
-This is a test.  
-A: Test successful!  
-{End Note}  
+{Begin Note}
+Basic
+This is a test.
+A: Test successful!
+{End Note}
 </pre>
 As an inline note:
 <pre>
@@ -109,23 +109,23 @@ As an inline note:
 ### Note Type Substitutions
 These are under the section ['Note Substitutions']. Similar to the above, you'll see something like this:
 <pre>
-...  
-Basic = Basic  
-Basic (and reversed card) = Basic (and reversed card)  
-...  
+...
+Basic = Basic
+Basic (and reversed card) = Basic (and reversed card)
+...
 </pre>
 If you edit and save this to say  
 <pre>
-...  
-Basic = B  
-Basic (and reversed card) = Basic (and reversed card)  
-...  
+...
+Basic = B
+Basic (and reversed card) = Basic (and reversed card)
+...
 </pre>
 Then you now format your notes like this:  
 <pre>
-{Begin Note}  
-B  
-{Note Data}  
+{Begin Note}
+B
+{Note Data}
 {End Note}
 </pre>
 As an inline note:
@@ -135,13 +135,13 @@ As an inline note:
 ## Deck formatting
 Anywhere within the file, format the deck that you want the notes to go into as follows:
 <pre>
-{Target Deck Line}  
-{Deck name}  
+{Target Deck Line}
+{Deck name}
 </pre>
 For example, with the default settings:
 <pre>
-TARGET DECK  
-Mathematics  
+TARGET DECK
+Mathematics
 </pre>
 You may place more than one target deck in the same file, but only the first instance will be read and used.
 
@@ -149,11 +149,11 @@ You may place more than one target deck in the same file, but only the first ins
 
 In the markdown file, you must format your 'block' notes as follows (see [Inline notes](#inline-note-formatting) for notes on a single line):
 <pre>
-{Begin Note}  
-{Note Type}  
-{Note Fields}  
-Tags:   
-{End Note}  
+{Begin Note}
+{Note Type}
+{Note Fields}
+Tags:
+{End Note}
 </pre>
 ### Markdown formatting
 
@@ -183,11 +183,11 @@ Embedded images are supported if the following criteria are met:
 For reference, the note formatting style is:
 
 <pre>
-{Begin Note}  
-{Note Type}  
-{Note Fields}  
-Tags:   
-{End Note}  
+{Begin Note}
+{Note Type}
+{Note Fields}
+Tags:
+{End Note}
 </pre>
 Note that the Tags: line is optional - if you don't want tags, you may leave out the line.
 
@@ -204,13 +204,13 @@ v1.1.1 now allows you to specify 'file tags' for a file - these tags will be add
 To do this:
 Anywhere within the file, format the file tags as follows:
 <pre>
-{File Tags Line}  
-{Tag list}  
+{File Tags Line}
+{Tag list}
 </pre>
 For example, with the default settings:
 <pre>
-FILE TAGS  
-Maths School Physics  
+FILE TAGS
+Maths School Physics
 </pre>
 Like with tag-line formatting, you need a space between tags - however, do not include the "Tags: " prefix.
 
@@ -219,40 +219,40 @@ Like with tag-line formatting, you need a space between tags - however, do not i
 Apart from the first field, each field must have a prefix to indicate to the program when to move on to the next field. For example:
 
 <pre>
-{Begin Note}  
-Basic  
-This is a test.  
-Back: Test successful!  
-{End Note}  
+{Begin Note}
+Basic
+This is a test.
+Back: Test successful!
+{End Note}
 </pre>
 Note that you must start new fields on a new line for non-inline notes.  
 When the script successfully adds a note, it will append an ID to the Note Data. This allows you to *update existing notes by running the script again*.
 
 Example output:
 <pre>
-{Begin Note}  
-Basic  
-This is a test.  
-Back: Test successful!  
-ID: 1566052191670  
-{End Note}  
+{Begin Note}
+Basic
+This is a test.
+Back: Test successful!
+ID: 1566052191670
+{End Note}
 </pre>
 ### Deleting notes
 
 The script can delete notes that *it has added* automatically. To do this:
 1. Find the formatted note in your file:
 <pre>
-{Begin Note}  
-{Note Type}  
-{Note Data}  
-ID: {Identifier}  
-{End Note}  
+{Begin Note}
+{Note Type}
+{Note Data}
+ID: {Identifier}
+{End Note}
 </pre>
 2. Change this to read:
 <pre>
-{Begin Note}  
-ID: {Identifier}  
-{End Note}  
+{Begin Note}
+ID: {Identifier}
+{End Note}
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `{Begin Note} {End Note}` block from the file.
 
@@ -262,7 +262,7 @@ See [Deleting inline notes](#deleting-inline-notes) for how to do this with inli
 *v1.2 feature*
 v1.2 of the script introduces **inline notes** - notes which are entirely on a single line. They are formatted as such:  
 <pre>
-{Begin Inline Note} [{Note Type}] {Note Data} {End Inline Note}  
+{Begin Inline Note} [{Note Type}] {Note Data} {End Inline Note}
 </pre>
 For example  
 <pre>
@@ -296,16 +296,4 @@ If the script itself is not able to run, try running `python3 {PATH_TO_SCRIPT}`.
 
 If you are getting a `KeyError`, you may have typed one of the [substitutions](#Config) wrong - double check the config file and what you actually wrote.
 Examples:
-* Anki actually stores "Basic (and reversed)" as "Basic (and reversed card)" - hence, without changing the config file, formatting "Basic (and reversed)" for the note type will throw a `KeyError`.
-
-The script seems to have unexpected behaviour when reading from a file for the first time, while the file is open in another program (though this doesn't always happen!).  
-The script was written in Python 3.8.5, and it uses `os` module features from Python 3.6+ [This issue](https://github.com/Pseudonium/Obsidian_to_Anki/issues/6#issue-690905446) confirms that the script does not run on Python 2.
-
-## Technical
-The script doesn't need to be in the same folder as your notes - you can put it in a Scripts folder if you have the means to run it remotely. Just ensure that the config file ends up in the same folder as the script.
-
-You may also want to prepend the following shebang to the start of the file:
-
-`#!/usr/bin/env python`
-
-For more information, see [this pull request](https://github.com/Pseudonium/Obsidian_to_Anki/pull/13).
+* Anki actually stores "Basic (and reversed)" as 
