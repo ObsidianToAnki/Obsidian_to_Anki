@@ -42,7 +42,8 @@ def string_insert(string, position_inserts):
     [(0, "hi"), (3, "hello"), (5, "beep")]
     """
     offset = 0
-    position_inserts = sorted(position_inserts)
+    position_inserts = sorted(list(position_inserts))
+    print(position_inserts)
     for position, insert_str in position_inserts:
         string = "".join(
             [
@@ -69,7 +70,8 @@ def spans(pattern, string):
 def contained(span, spans):
     """Determine whether span is contained within spans."""
     return any(
-        span[0] >= start and span[1] <= end
+        span[0] >= start and span[1] <= end + 1
+        # + 1 to fix newline business
         for start, end in spans
     )
 
@@ -397,8 +399,8 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n(ID: \d+)"
-    TAG_REGEXP_STR = r"(Tags: .+)"
+    ID_REGEXP_STR = r"\n*(ID: \d+)"
+    TAG_REGEXP_STR = r"(Tags: .+\n?)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
         self.match = matchobject
@@ -1149,7 +1151,7 @@ class RegexFile(File):
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    "\n" + "ID: " + str(id) + "\n"
+                    "ID: " + str(id) + "\n"
                     for id in self.note_ids
                     if id is not None
                 ]
