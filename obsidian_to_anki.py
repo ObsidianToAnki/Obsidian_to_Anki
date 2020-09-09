@@ -884,6 +884,7 @@ class File:
         self.filename = filepath
         with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
+            self.file += "\n"  # Adds empty line, useful for ID
         self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
             self.target_deck = self.target_deck.group(1)
