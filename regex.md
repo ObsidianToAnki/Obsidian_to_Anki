@@ -80,6 +80,14 @@ Basic = ^#+(.+)\n+((?:[^\n#][\n]?)+)
 ![header_3](Images/Header_3.png)  
 ![header_4](Images/Header_4.png)  
 
+### Subheader paragraph style
+
+If you'd like the effect of the header paragraph style, but only want it to add cards below a certain subheading level (e.g. 3 # or more), use the following regex:
+
+* 2 or more - `^#{2,}(.+)\n+((?:[^\n#][\n]?)+)`
+* 3 or more - `^#{3,}(.+)\n+((?:[^\n#][\n]?)+)`
+* n or more - `^#{n,}(.+)\n+((?:[^\n#][\n]?)+)`, where you replace `{n,}` with the value of the number n. E.g. if n was 4, it would read `^#{4,}(.+)\n+((?:[^\n#][\n]?)+)`
+
 ## Question answer style
 
 **Regex line:** `^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)`
