@@ -3,7 +3,7 @@ Script to add flashcards from a text or markdown file to Anki. Run from the comm
 
 
 ## Setup
-1. Install the latest version of [Python](https://www.python.org/downloads/).
+1. Install the latest version of [Python](https://www.python.org/downloads/), and check the box that says 'add Python to environment variables'.
 2. Download the desired release from the [releases page](https://github.com/Pseudonium/Obsidian_to_Anki/releases).
 3. Place the script "obsidian_to_anki.py" in the same folder as your notes.
 4. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
