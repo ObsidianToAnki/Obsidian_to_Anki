@@ -13,6 +13,11 @@ import base64
 
 IMAGE_PATHS = set()
 
+ID_PREFIX = "ID: "
+TAG_PREFIX = "Tags: "
+TAG_SEP = " "
+Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
+
 md_parser = markdown.Markdown(
     extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
 )
@@ -243,10 +248,6 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
-    ID_PREFIX = "ID: "
-    TAG_PREFIX = "Tags: "
-    TAG_SEP = " "
-    Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
     NOTE_PREFIX = "START"
     NOTE_SUFFIX = "END"
 
@@ -256,8 +257,8 @@ class Note:
         self.lines = self.text.splitlines()
         self.current_field_num = 0
         self.delete = False
-        if self.lines[-1].startswith(Note.ID_PREFIX):
-            self.identifier = int(self.lines.pop()[len(Note.ID_PREFIX):])
+        if self.lines[-1].startswith(ID_PREFIX):
+            self.identifier = int(self.lines.pop()[len(ID_PREFIX):])
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
@@ -265,9 +266,9 @@ class Note:
             # This indicates a delete action.
             self.delete = True
             return
-        elif self.lines[-1].startswith(Note.TAG_PREFIX):
-            self.tags = self.lines.pop()[len(Note.TAG_PREFIX):].split(
-                Note.TAG_SEP
+        elif self.lines[-1].startswith(TAG_PREFIX):
+            self.tags = self.lines.pop()[len(TAG_PREFIX):].split(
+                TAG_SEP
             )
         else:
             self.tags = list()
@@ -342,15 +343,15 @@ class Note:
             template["fields"] = self.fields
             template["tags"] = template["tags"] + self.tags
             template["deckName"] = deck
-            return Note.Note_and_id(note=template, id=self.identifier)
+            return Note_and_id(note=template, id=self.identifier)
         else:
-            return Note.Note_and_id(note=False, id=self.identifier)
+            return Note_and_id(note=False, id=self.identifier)
 
 
 class InlineNote(Note):
 
     ID_REGEXP = re.compile(r"ID: (\d+)")
-    TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*)")
+    TAG_REGEXP = re.compile(TAG_PREFIX + r"(.*)")
     TYPE_REGEXP = re.compile(r"\[(.*?)\]")  # So e.g. [Basic]
 
     INLINE_PREFIX = "STARTI"
@@ -372,7 +373,7 @@ class InlineNote(Note):
             return
         TAGS = InlineNote.TAG_REGEXP.search(self.text)
         if TAGS is not None:
-            self.tags = TAGS.group(1).split(Note.TAG_SEP)
+            self.tags = TAGS.group(1).split(TAG_SEP)
             self.text = self.text[:TAGS.start()]
         else:
             self.tags = list()
@@ -413,13 +414,13 @@ class RegexNote:
         self.group_num = len(self.groups)
         if id:
             # This means id is last group
-            self.identifier = int(self.groups.pop()[len(Note.ID_PREFIX):])
+            self.identifier = int(self.groups.pop()[len(ID_PREFIX):])
         else:
             self.identifier = None
         if tags:
             # Even if id were present, tags is now last group
-            self.tags = self.groups.pop()[len(Note.TAG_PREFIX):].split(
-                Note.TAG_SEP
+            self.tags = self.groups.pop()[len(TAG_PREFIX):].split(
+                TAG_SEP
             )
         else:
             self.tags = list()
@@ -460,7 +461,7 @@ class RegexNote:
         template["fields"] = self.fields
         template["tags"] = template["tags"] + self.tags
         template["deckName"] = deck
-        return Note.Note_and_id(note=template, id=self.identifier)
+        return Note_and_id(note=template, id=self.identifier)
 
 
 class Config:
@@ -712,7 +713,7 @@ class App:
                         r"^",
                         Note.NOTE_PREFIX,
                         r"\n",
-                        Note.ID_PREFIX,
+                        ID_PREFIX,
                         r"[\s\S]*?\n",
                         Note.NOTE_SUFFIX
                     ]
@@ -1085,7 +1086,7 @@ class RegexFile(File):
         # Finally, scan for deleting notes
         for match in RegexFile.EMPTY_REGEXP.finditer(self.file):
             self.notes_to_delete.append(
-                int(match.group(1)[len(Note.ID_PREFIX):])
+                int(match.group(1)[len(ID_PREFIX):])
             )
 
     def search(self, note_type, regexp):
