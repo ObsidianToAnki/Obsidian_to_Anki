@@ -481,34 +481,42 @@ class Config:
             )
         }
         for note, note_field_subs in subs.items():
-            if note not in config:
-                config[note] = dict()
+            config.setdefault(note, dict())
             for field, sub in note_field_subs.items():
                 config[note].setdefault(field, sub)
                 # This means that, if there's already a substitution present,
-                # the 'default' substitution of field + ": " isn't added.
-        if "Note Substitutions" not in config:
-            config["Note Substitutions"] = dict()
+                # the 'default' substitution of field + ":" isn't added.
+        config.setdefault("Note Substitutions", dict())
         for note in note_types:
             config["Note Substitutions"].setdefault(note, note)
             # Similar to above - if there's already a substitution present,
             # it isn't overwritten
         # Now for syntax stuff
-        if "Syntax" not in config:
-            config["Syntax"] = {
-                "Begin Note": Note.NOTE_PREFIX,
-                "End Note": Note.NOTE_SUFFIX,
-                "Begin Inline Note": InlineNote.INLINE_PREFIX,
-                "End Inline Note": InlineNote.INLINE_SUFFIX,
-                "Target Deck Line": App.DECK_LINE,
-                "File Tags Line": App.TAG_LINE,
-            }
-        if "Delete Regex Note Line" not in config["Syntax"]:
-            config["Syntax"]["Delete Regex Note Line"] = App.DELETE_LINE
-        if "Custom Regexps" not in config:
-            config["Custom Regexps"] = dict()
-            for note in note_types:
-                config["Custom Regexps"].setdefault(note, "")
+        config.setdefault("Syntax", dict())
+        config["Syntax"].setdefault(
+            "Begin Note", Note.NOTE_PREFIX
+        )
+        config["Syntax"].setdefault(
+            "End Note", Note.NOTE_SUFFIX
+        )
+        config["Syntax"].setdefault(
+            "Begin Inline Note", InlineNote.INLINE_PREFIX
+        )
+        config["Syntax"].setdefault(
+            "End Inline Note", InlineNote.INLINE_SUFFIX
+        )
+        config["Syntax"].setdefault(
+            "Target Deck Line", App.DECK_LINE
+        )
+        config["Syntax"].setdefault(
+            "File Tags Line", App.TAG_LINE
+        )
+        config["Syntax"].setdefault(
+            "Delete Regex Note Line", App.DELETE_LINE
+        )
+        config.setdefault("Custom Regexps", dict())
+        for note in note_types:
+            config["Custom Regexps"].setdefault(note, "")
         with open(Config.CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
         print("Configuration file updated!")
@@ -550,6 +558,11 @@ class Config:
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
+
+
+class Data:
+    """Holds data loaded from config file."""
+    pass
 
 
 class App:
