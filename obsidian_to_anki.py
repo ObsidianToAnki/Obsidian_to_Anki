@@ -96,6 +96,10 @@ class AnkiConnect:
         ).encode('utf-8')
         response = json.load(urllib.request.urlopen(
             urllib.request.Request('http://localhost:8765', requestJson)))
+        return AnkiConnect.parse(response)
+
+    def parse(response):
+        """Parse the received response."""
         if len(response) != 2:
             raise Exception('response has an unexpected number of fields')
         if 'error' not in response:
