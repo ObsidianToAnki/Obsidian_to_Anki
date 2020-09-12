@@ -534,6 +534,13 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
+        config.setdefault("DEFAULT", dict())
+        config["DEFAULT"].setdefault(
+            "Tag", "Obsidian_to_Anki"
+        )
+        config["DEFAULT"].setdefault(
+            "Deck", "Default"
+        )
         # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -586,6 +593,8 @@ class Config:
                 config["Syntax"]["Delete Regex Note Line"]
             ) + RegexNote.ID_REGEXP_STR
         )
+        NOTE_DICT_TEMPLATE["tags"] = [config["DEFAULT"]["Tag"]]
+        NOTE_DICT_TEMPLATE["deckName"] = config["DEFAULT"]["Deck"]
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
@@ -939,7 +948,7 @@ class File:
         if self.target_deck is not None:
             self.target_deck = self.target_deck.group(1)
         else:
-            self.target_deck = "Default"
+            self.target_deck = NOTE_DICT_TEMPLATE["deckName"]
         print(
             "Identified target deck for", self.filename,
             "as", self.target_deck
