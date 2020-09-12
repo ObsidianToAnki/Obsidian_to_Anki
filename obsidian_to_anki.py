@@ -407,7 +407,7 @@ class InlineNote(Note):
 
 class RegexNote:
     ID_REGEXP_STR = r"\n(" + ID_PREFIX + r"\d+)"
-    TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".+)"
+    TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".*)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
         self.match = matchobject
@@ -731,7 +731,7 @@ class App:
                 "".join(
                     [
                         Data.INLINE_PREFIX,
-                        r"\s+ID: .*?",
+                        r"\s+" + ID_PREFIX + r".*?",
                         Data.INLINE_SUFFIX
                     ]
                 )
@@ -940,9 +940,9 @@ class File:
     def id_to_str(id, inline=False):
         """Get the string repr of id."""
         if inline:
-            return "ID: " + str(id) + " "
+            return ID_PREFIX + str(id) + " "
         else:
-            return "ID: " + str(id) + "\n"
+            return ID_PREFIX + str(id) + "\n"
 
     def write_ids(self):
         """Write the identifiers to self.file."""
@@ -1148,7 +1148,7 @@ class RegexFile(File):
     def fix_newline_ids(self):
         """Removes double newline then ids from self.file."""
         double_regexp = re.compile(
-            r"(\r\n|\r|\n){2}ID: \d+"
+            r"(\r\n|\r|\n){2}" + ID_PREFIX + r"\d+"
         )
         self.file = double_regexp.sub(
             lambda x: x.group()[1:],
@@ -1161,7 +1161,7 @@ class RegexFile(File):
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    "\nID: " + str(id) + "\n"
+                    "\n" + ID_PREFIX + str(id) + "\n"
                     for id in self.note_ids
                     if id is not None
                 ]
