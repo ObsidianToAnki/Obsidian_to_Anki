@@ -140,7 +140,7 @@ As an inline note:
 </pre>
 
 ### Added Media
-This section is reserved for the script to keep track of what media files it has added. You can re-generate this by running the script with the `-m` flag.
+This section is reserved for the script to keep track of what media files it has added. You can clear this by running the script with the `-m` flag.
 
 ## Deck formatting
 Anywhere within the file, format the deck that you want the notes to go into as follows:
