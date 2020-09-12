@@ -41,6 +41,8 @@ md_parser = markdown.Markdown(
     extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
 )
 
+CONFIG_DATA = dict()
+
 
 def write_safe(filename, contents):
     """
@@ -530,22 +532,22 @@ class Config:
             note: dict(config[note]) for note in config
             if note != "Note Substitutions" and note != "DEFAULT"
         }
-        Data.NOTE_PREFIX = re.escape(
+        CONFIG_DATA["NOTE_PREFIX"] = re.escape(
             config["Syntax"]["Begin Note"]
         )
-        Data.NOTE_SUFFIX = re.escape(
+        CONFIG_DATA["NOTE_SUFFIX"] = re.escape(
             config["Syntax"]["End Note"]
         )
-        Data.INLINE_PREFIX = re.escape(
+        CONFIG_DATA["INLINE_PREFIX"] = re.escape(
             config["Syntax"]["Begin Inline Note"]
         )
-        Data.INLINE_SUFFIX = re.escape(
+        CONFIG_DATA["INLINE_SUFFIX"] = re.escape(
             config["Syntax"]["End Inline Note"]
         )
-        Data.DECK_LINE = re.escape(
+        CONFIG_DATA["DECK_LINE"] = re.escape(
             config["Syntax"]["Target Deck Line"]
         )
-        Data.TAG_LINE = re.escape(
+        CONFIG_DATA["TAG_LINE"] = re.escape(
             config["Syntax"]["File Tags Line"]
         )
         RegexFile.EMPTY_REGEXP = re.compile(
@@ -555,11 +557,6 @@ class Config:
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
-
-
-class Data:
-    """Holds data loaded from config file."""
-    pass
 
 
 class App:
@@ -672,9 +669,9 @@ class App:
                 r"".join(
                     [
                         r"^",
-                        Data.NOTE_PREFIX,
+                        CONFIG_DATA["NOTE_PREFIX"],
                         r"\n([\s\S]*?\n)",
-                        Data.NOTE_SUFFIX,
+                        CONFIG_DATA["NOTE_SUFFIX"],
                         r"\n?"
                     ]
                 ), flags=re.MULTILINE
@@ -686,7 +683,7 @@ class App:
                 "".join(
                     [
                         r"^",
-                        Data.DECK_LINE,
+                        CONFIG_DATA["DECK_LINE"],
                         r"\n(.*)",
                     ]
                 ), flags=re.MULTILINE
@@ -698,11 +695,11 @@ class App:
                 "".join(
                     [
                         r"^",
-                        Data.NOTE_PREFIX,
+                        CONFIG_DATA["NOTE_PREFIX"],
                         r"\n",
                         ID_PREFIX,
                         r"[\s\S]*?\n",
-                        Data.NOTE_SUFFIX
+                        CONFIG_DATA["NOTE_SUFFIX"]
                     ]
                 ), flags=re.MULTILINE
             )
@@ -710,13 +707,19 @@ class App:
         setattr(
             App, "TAG_REGEXP",
             re.compile(
-                r"^" + Data.TAG_LINE + r"\n(.*)\n", flags=re.MULTILINE
+                r"^" + CONFIG_DATA["TAG_LINE"] + r"\n(.*)\n", flags=re.MULTILINE
             )
         )
         setattr(
             App, "INLINE_REGEXP",
             re.compile(
-                Data.INLINE_PREFIX + r"(.*?)" + Data.INLINE_SUFFIX
+                "".join(
+                    [
+                        CONFIG_DATA["INLINE_PREFIX"],
+                        r"(.*?)",
+                        CONFIG_DATA["INLINE_SUFFIX"]
+                    ]
+                )
             )
         )
         setattr(
@@ -724,9 +727,9 @@ class App:
             re.compile(
                 "".join(
                     [
-                        Data.INLINE_PREFIX,
+                        CONFIG_DATA["INLINE_PREFIX"],
                         r"\s+" + ID_PREFIX + r".*?",
-                        Data.INLINE_SUFFIX
+                        CONFIG_DATA["INLINE_SUFFIX"]
                     ]
                 )
             )
