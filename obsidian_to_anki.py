@@ -346,7 +346,7 @@ class Note:
 
 class InlineNote(Note):
 
-    ID_REGEXP = re.compile(r"ID: (\d+)")
+    ID_REGEXP = re.compile(ID_PREFIX + r"(\d+)")
     TAG_REGEXP = re.compile(TAG_PREFIX + r"(.*)")
     TYPE_REGEXP = re.compile(r"\[(.*?)\]")  # So e.g. [Basic]
 
