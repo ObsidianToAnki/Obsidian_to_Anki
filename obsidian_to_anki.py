@@ -406,8 +406,8 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n(ID: \d+)"
-    TAG_REGEXP_STR = r"(Tags: .+)"
+    ID_REGEXP_STR = r"\n(" + ID_PREFIX + r"\d+)"
+    TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".+)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
         self.match = matchobject
