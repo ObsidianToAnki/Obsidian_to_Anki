@@ -626,6 +626,8 @@ class App:
                 file.write_file()
             self.requests_2()
             os.chdir(current)
+        else:
+            self.parser.print_help()
 
     def setup_parser(self):
         """Set up the argument parser."""
