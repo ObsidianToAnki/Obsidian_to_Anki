@@ -1148,7 +1148,7 @@ class RegexFile(File):
     def fix_newline_ids(self):
         """Removes double newline then ids from self.file."""
         double_regexp = re.compile(
-            r"[^.]{2}(ID: \d+)"
+            r"(\r\n|\r|\n){2}ID: \d+"
         )
         self.file = double_regexp.sub(
             lambda x: x.group()[1:],
