@@ -406,8 +406,8 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n*(ID: \d+)"
-    TAG_REGEXP_STR = r"(Tags: .+\n?)"
+    ID_REGEXP_STR = r"\n(ID: \d+)"
+    TAG_REGEXP_STR = r"(Tags: .+)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
         self.match = matchobject
@@ -1143,18 +1143,29 @@ class RegexFile(File):
             )
             self.id_indexes.append(match.end())
 
+    def fix_newline_ids(self):
+        """Removes double newline then ids from self.file."""
+        double_regexp = re.compile(
+            r"[^.]{2}(ID: \d+)"
+        )
+        self.file = double_regexp.sub(
+            lambda x: x.group()[1:],
+            self.file
+        )
+
     def write_ids(self):
         """Write the identifiers to self.file."""
         print("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    "ID: " + str(id) + "\n"
+                    "\nID: " + str(id) + "\n"
                     for id in self.note_ids
                     if id is not None
                 ]
             )
         )
+        self.fix_newline_ids()
 
     def remove_empties(self):
         """Remove empty notes from self.file."""
@@ -1164,8 +1175,6 @@ class RegexFile(File):
 
 
 if __name__ == "__main__":
-    """
     if not os.path.exists(CONFIG_PATH):
         Config.update_config()
     App()
-    """
