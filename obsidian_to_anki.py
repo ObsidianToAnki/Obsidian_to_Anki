@@ -531,7 +531,13 @@ class Config:
         Note.note_subs = {v: k for k, v in note_subs.items()}
         Note.field_subs = {
             note: dict(config[note]) for note in config
-            if note != "Note Substitutions" and note != "DEFAULT"
+            if note not in [
+                "Note Substitutions",
+                "DEFAULT",
+                "Syntax",
+                "Custom Regexps",
+                "Added Media"
+            ]
         }
         CONFIG_DATA["NOTE_PREFIX"] = re.escape(
             config["Syntax"]["Begin Note"]
@@ -551,6 +557,7 @@ class Config:
         CONFIG_DATA["TAG_LINE"] = re.escape(
             config["Syntax"]["File Tags Line"]
         )
+        CONFIG_DATA["Added Media"] = config["Added Media"]
         RegexFile.EMPTY_REGEXP = re.compile(
             re.escape(
                 config["Syntax"]["Delete Regex Note Line"]
