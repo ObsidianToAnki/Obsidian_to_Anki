@@ -851,6 +851,8 @@ class App:
                 os.path.basename(imgpath),
                 "True"
             )
+        with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
+            Config.config.write(configfile)
 
     def requests_2(self):
         """Perform requests group 2.
