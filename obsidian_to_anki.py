@@ -899,7 +899,7 @@ class File:
             parsed = Note(note).parse(self.target_deck)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
-                parsed.note["tags"] += self.global_tags.split(" ")
+                parsed.note["tags"] += self.global_tags.split(TAG_SEP)
                 self.notes_to_add.append(parsed.note)
                 self.id_indexes.append(position)
             elif not parsed.note:
@@ -913,7 +913,7 @@ class File:
             parsed = InlineNote(note).parse(self.target_deck)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
-                parsed.note["tags"] += self.global_tags.split(" ")
+                parsed.note["tags"] += self.global_tags.split(TAG_SEP)
                 self.inline_notes_to_add.append(parsed.note)
                 self.inline_id_indexes.append(position)
             elif not parsed.note:
@@ -1114,7 +1114,7 @@ class RegexFile(File):
             parsed = RegexNote(match, note_type, tags=True, id=False).parse(
                 self.target_deck
             )
-            parsed.note["tags"] += self.global_tags.split(" ")
+            parsed.note["tags"] += self.global_tags.split(TAG_SEP)
             self.notes_to_add.append(
                 parsed.note
             )
@@ -1125,7 +1125,7 @@ class RegexFile(File):
             parsed = RegexNote(match, note_type, tags=False, id=False).parse(
                 self.target_deck
             )
-            parsed.note["tags"] += self.global_tags.split(" ")
+            parsed.note["tags"] += self.global_tags.split(TAG_SEP)
             self.notes_to_add.append(
                 parsed.note
             )
