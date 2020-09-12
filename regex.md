@@ -19,9 +19,9 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 1. Create a file called `test.md`
 2. Paste the following contents into the file:
 <pre>
-This is how to use::Remnote single-line style  
-The script won't see things outside of it.  
-You can have::multiple notes in the same file  
+This is how to use::Remnote single-line style
+The script won't see things outside of it.
+You can have::multiple notes in the same file
 </pre>
 3. Run `obsidian_to_anki.py -c` to open up the config file
 4. Navigate to the "Custom Regexps" section
@@ -49,8 +49,8 @@ Basic = ^(.*[^\n:]{1}):{2}([^\n:]{1}.*)
 <pre>
 # Style  
 This style is suitable for having the header as the front, and the answer as the back
-# Overall heading  
-## Subheading 1  
+# Overall heading
+## Subheading 1
 You're allowed to nest headers within each other
 ## Subheading 2
 It'll take the deepest level for the question
@@ -58,15 +58,15 @@ It'll take the deepest level for the question
    
    
    
-It'll even  
-Span over  
-Multiple lines, and ignore preceding whitespace  
+It'll even
+Span over
+Multiple lines, and ignore preceding whitespace
 </pre>
 3. Run `obsidian_to_anki.py -c` to open up the config file
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
-Basic =  
+Basic =
 </pre>
 to  
 <pre>
@@ -79,6 +79,14 @@ Basic = ^#+(.+)\n+((?:[^\n#][\n]?)+)
 ![header_2](Images/Header_2.png)  
 ![header_3](Images/Header_3.png)  
 ![header_4](Images/Header_4.png)  
+
+### Subheader paragraph style
+
+If you'd like the effect of the header paragraph style, but only want it to add cards below a certain subheading level (e.g. 3 # or more), use the following regex:
+
+* 2 or more - `^#{2,}(.+)\n+((?:[^\n#][\n]?)+)`
+* 3 or more - `^#{3,}(.+)\n+((?:[^\n#][\n]?)+)`
+* n or more - `^#{n,}(.+)\n+((?:[^\n#][\n]?)+)`, where you replace `{n,}` with the value of the number n. E.g. if n was 4, it would read `^#{4,}(.+)\n+((?:[^\n#][\n]?)+)`
 
 ## Question answer style
 
@@ -108,7 +116,7 @@ A: The 'magic' of regular expressions!
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
-Basic =  
+Basic =
 </pre>
 to  
 <pre>
@@ -148,7 +156,7 @@ Whitespace is ignored!
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
-Basic =  
+Basic =
 </pre>
 to  
 <pre>

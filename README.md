@@ -1,9 +1,9 @@
 # Obsidian_to_Anki
-Script to add flashcards from a text or markdown file to Anki. Run from the command line. Built with Obsidian markdown syntax in mind. Supports **user-defined custom syntax for flashcards.**
+Script to add flashcards from a text or markdown file to Anki. Run from the command line. Built with [Obsidian](https://obsidian.md/) markdown syntax in mind. Supports **user-defined custom syntax for flashcards.**
 
 
 ## Setup
-1. Install the latest version of [Python](https://www.python.org/downloads/).
+1. Install the latest version of [Python](https://www.python.org/downloads/), and check the box that says 'add Python to environment variables'.
 2. Download the desired release from the [releases page](https://github.com/Pseudonium/Obsidian_to_Anki/releases).
 3. Place the script "obsidian_to_anki.py" in the same folder as your notes.
 4. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
@@ -31,7 +31,7 @@ Current features:
 * **Substitutions** - see [Config](#config). Makes typing out long names easier.
 * **[Tags](#tag-formatting)**, including **[tags for an entire file](#file-tag-formatting)**.
 * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis.
-* **[Markdown formatting](#markdown-formatting)**.
+* **[Markdown formatting](#markdown-formatting)**, including **[math formatting](#math-formatting)**
 * **[Embedded images](#image-formatting)**. GIFs should work too.
 * **[Auto-deleting notes](#deleting-notes) from the file**.
 * **Reading from all files in a directory automatically** - not recursively however.
