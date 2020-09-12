@@ -160,6 +160,8 @@ class FormatConverter:
     PARA_OPEN = "<p>"
     PARA_CLOSE = "</p>"
 
+    FORCE_ADD = False
+
     @staticmethod
     def inline_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted inline math."""
@@ -241,7 +243,8 @@ class FormatConverter:
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
             path = match.group(1)
             filename = os.path.basename(path)
-            if filename not in CONFIG_DATA["Added Media"].keys():
+            if filename not in CONFIG_DATA["Added Media"].keys(
+            ) or FormatConverter.FORCE_ADD:
                 IMAGE_PATHS.add(path)
             # ^Adds the image path (relative to cwd)
 
@@ -580,6 +583,9 @@ class App:
         self.setup_parser()
         args = self.parser.parse_args()
         no_args = True
+        if args.mediaupdate:
+            no_args = False
+            FormatConverter.FORCE_ADD = True
         if args.update:
             no_args = False
             Config.update_config()
@@ -673,6 +679,14 @@ class App:
                 Use this if you're using custom regex syntax.
                 This will ignore any script-formatted regular notes
                 or inline notes.
+            """
+        )
+        self.parser.add_argument(
+            "-m", "--mediaupdate",
+            action="store_true",
+            dest="mediaupdate",
+            help="""
+                Forces script to re-add known media files.
             """
         )
 
