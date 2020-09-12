@@ -11,7 +11,7 @@ import webbrowser
 import markdown
 import base64
 
-IMAGE_PATHS = set()
+MEDIA_PATHS = set()
 
 ID_PREFIX = "ID: "
 TAG_PREFIX = "Tags: "
@@ -156,11 +156,10 @@ class FormatConverter:
     MATH_REPLACE = "OBSTOANKIMATH"
 
     IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
+    SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
 
     PARA_OPEN = "<p>"
     PARA_CLOSE = "</p>"
-
-    FORCE_ADD = False
 
     @staticmethod
     def inline_anki_repl(matchobject):
@@ -226,6 +225,7 @@ class FormatConverter:
             )
         FormatConverter.get_images(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
+        note_text = FormatConverter.fix_audio_src(note_text)
         note_text = note_text.strip()
         # Remove unnecessary paragraph tag
         if note_text.startswith(
@@ -243,13 +243,21 @@ class FormatConverter:
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
             path = match.group(1)
             filename = os.path.basename(path)
-            if filename not in CONFIG_DATA["Added Media"].keys(
-            ) or FormatConverter.FORCE_ADD:
-                IMAGE_PATHS.add(path)
+            if filename not in CONFIG_DATA["Added Media"].keys():
+                MEDIA_PATHS.add(path)
             # ^Adds the image path (relative to cwd)
 
     @staticmethod
-    def fix_image_src_repl(matchobject):
+    def get_audio(html_text):
+        """Get all the audio that needs to be added"""
+        for match in FormatConverter.SOUND_REGEXP.finditer(html_text):
+            path = match.group(1)
+            filename = os.path.basename(path)
+            if filename not in CONFIG_DATA["Added Media"].keys():
+                MEDIA_PATHS.add(path)
+
+    @staticmethod
+    def path_to_filename(matchobject):
         """Replace the src in matchobject appropriately."""
         found_string, found_path = matchobject.group(0), matchobject.group(1)
         found_string = found_string.replace(
@@ -261,7 +269,15 @@ class FormatConverter:
     def fix_image_src(html_text):
         """Fix the src of the images so that it's relative to Anki."""
         return FormatConverter.IMAGE_REGEXP.sub(
-            FormatConverter.fix_image_src_repl,
+            FormatConverter.path_to_filename,
+            html_text
+        )
+
+    @staticmethod
+    def fix_audio_src(html_text):
+        """Fix the audio filenames so that it's relative to Anki."""
+        return FormatConverter.SOUND_REGEXP.sub(
+            FormatConverter.path_to_filename,
             html_text
         )
 
@@ -583,13 +599,13 @@ class App:
         self.setup_parser()
         args = self.parser.parse_args()
         no_args = True
-        if args.mediaupdate:
-            no_args = False
-            FormatConverter.FORCE_ADD = True
         if args.update:
             no_args = False
             Config.update_config()
         Config.load_config()
+        if args.mediaupdate:
+            no_args = False
+            CONFIG_DATA["Added Media"].clear()
         self.gen_regexp()
         if args.config:
             no_args = False
@@ -771,19 +787,19 @@ class App:
         for info in self.info:
             self.tags.update(info["tags"])
 
-    def get_add_images(self):
-        """Get the AnkiConnect-formatted add_images request."""
+    def get_add_media(self):
+        """Get the AnkiConnect-formatted add_media request."""
         return AnkiConnect.request(
             "multi",
             actions=[
                 AnkiConnect.request(
                     "storeMediaFile",
-                    filename=imgpath.replace(
-                        imgpath, os.path.basename(imgpath)
+                    filename=path.replace(
+                        path, os.path.basename(path)
                     ),
-                    data=file_encode(imgpath)
+                    data=file_encode(path)
                 )
-                for imgpath in IMAGE_PATHS
+                for path in MEDIA_PATHS
             ]
         )
 
@@ -794,9 +810,9 @@ class App:
         gets note info, gets tags and removes notes.
         """
         requests = list()
-        print("Adding images with these paths...")
-        print(IMAGE_PATHS)
-        requests.append(self.get_add_images())
+        print("Adding media with these paths...")
+        print(MEDIA_PATHS)
+        requests.append(self.get_add_media())
         print("Adding notes into Anki...")
         requests.append(
             AnkiConnect.request(
@@ -860,7 +876,7 @@ class App:
             file.card_ids = AnkiConnect.parse(card_ids)
         for file in self.files:
             file.tags = tags
-        for imgpath in IMAGE_PATHS:
+        for imgpath in MEDIA_PATHS:
             CONFIG_DATA["Added Media"].setdefault(
                 os.path.basename(imgpath),
                 "True"
@@ -1211,6 +1227,8 @@ class RegexFile(File):
 
 
 if __name__ == "__main__":
+    """
     if not os.path.exists(CONFIG_PATH):
         Config.update_config()
     App()
+    """
