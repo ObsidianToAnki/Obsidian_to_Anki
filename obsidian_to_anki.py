@@ -239,7 +239,10 @@ class FormatConverter:
     def get_images(html_text):
         """Get all the images that need to be added."""
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
-            IMAGE_PATHS.add(match.group(1))
+            path = match.group(1)
+            filename = os.path.basename(path)
+            if filename not in CONFIG_DATA["Added Media"].keys():
+                IMAGE_PATHS.add(path)
             # ^Adds the image path (relative to cwd)
 
     @staticmethod
@@ -843,6 +846,11 @@ class App:
             file.card_ids = AnkiConnect.parse(card_ids)
         for file in self.files:
             file.tags = tags
+        for imgpath in IMAGE_PATHS:
+            CONFIG_DATA["Added Media"].setdefault(
+                os.path.basename(imgpath),
+                "True"
+            )
 
     def requests_2(self):
         """Perform requests group 2.
