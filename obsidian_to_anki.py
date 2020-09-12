@@ -494,25 +494,25 @@ class Config:
         # Now for syntax stuff
         config.setdefault("Syntax", dict())
         config["Syntax"].setdefault(
-            "Begin Note", Note.NOTE_PREFIX
+            "Begin Note", "START"
         )
         config["Syntax"].setdefault(
-            "End Note", Note.NOTE_SUFFIX
+            "End Note", "END"
         )
         config["Syntax"].setdefault(
-            "Begin Inline Note", InlineNote.INLINE_PREFIX
+            "Begin Inline Note", "STARTI"
         )
         config["Syntax"].setdefault(
-            "End Inline Note", InlineNote.INLINE_SUFFIX
+            "End Inline Note", "ENDI"
         )
         config["Syntax"].setdefault(
-            "Target Deck Line", App.DECK_LINE
+            "Target Deck Line", "TARGET DECK"
         )
         config["Syntax"].setdefault(
-            "File Tags Line", App.TAG_LINE
+            "File Tags Line", "FILE TAGS"
         )
         config["Syntax"].setdefault(
-            "Delete Regex Note Line", App.DELETE_LINE
+            "Delete Regex Note Line", "DELETE"
         )
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -533,22 +533,22 @@ class Config:
             note: dict(config[note]) for note in config
             if note != "Note Substitutions" and note != "DEFAULT"
         }
-        Note.NOTE_PREFIX = re.escape(
+        Data.NOTE_PREFIX = re.escape(
             config["Syntax"]["Begin Note"]
         )
-        Note.NOTE_SUFFIX = re.escape(
+        Data.NOTE_SUFFIX = re.escape(
             config["Syntax"]["End Note"]
         )
-        InlineNote.INLINE_PREFIX = re.escape(
+        Data.INLINE_PREFIX = re.escape(
             config["Syntax"]["Begin Inline Note"]
         )
-        InlineNote.INLINE_SUFFIX = re.escape(
+        Data.INLINE_SUFFIX = re.escape(
             config["Syntax"]["End Inline Note"]
         )
-        App.DECK_LINE = re.escape(
+        Data.DECK_LINE = re.escape(
             config["Syntax"]["Target Deck Line"]
         )
-        App.TAG_LINE = re.escape(
+        Data.TAG_LINE = re.escape(
             config["Syntax"]["File Tags Line"]
         )
         RegexFile.EMPTY_REGEXP = re.compile(
@@ -567,10 +567,6 @@ class Data:
 
 class App:
     """Master class that manages the application."""
-
-    DECK_LINE = "TARGET DECK"
-    TAG_LINE = "FILE TAGS"
-    DELETE_LINE = "DELETE"
 
     SUPPORTED_EXTS = [".md", ".txt"]
 
@@ -677,9 +673,9 @@ class App:
                 r"".join(
                     [
                         r"^",
-                        Note.NOTE_PREFIX,
+                        Data.NOTE_PREFIX,
                         r"\n([\s\S]*?\n)",
-                        Note.NOTE_SUFFIX,
+                        Data.NOTE_SUFFIX,
                         r"\n?"
                     ]
                 ), flags=re.MULTILINE
@@ -691,7 +687,7 @@ class App:
                 "".join(
                     [
                         r"^",
-                        App.DECK_LINE,
+                        Data.DECK_LINE,
                         r"\n(.*)",
                     ]
                 ), flags=re.MULTILINE
@@ -703,11 +699,11 @@ class App:
                 "".join(
                     [
                         r"^",
-                        Note.NOTE_PREFIX,
+                        Data.NOTE_PREFIX,
                         r"\n",
                         ID_PREFIX,
                         r"[\s\S]*?\n",
-                        Note.NOTE_SUFFIX
+                        Data.NOTE_SUFFIX
                     ]
                 ), flags=re.MULTILINE
             )
@@ -715,13 +711,13 @@ class App:
         setattr(
             App, "TAG_REGEXP",
             re.compile(
-                r"^" + App.TAG_LINE + r"\n(.*)\n", flags=re.MULTILINE
+                r"^" + Data.TAG_LINE + r"\n(.*)\n", flags=re.MULTILINE
             )
         )
         setattr(
             App, "INLINE_REGEXP",
             re.compile(
-                InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
+                Data.INLINE_PREFIX + r"(.*?)" + Data.INLINE_SUFFIX
             )
         )
         setattr(
@@ -729,9 +725,9 @@ class App:
             re.compile(
                 "".join(
                     [
-                        InlineNote.INLINE_PREFIX,
+                        Data.INLINE_PREFIX,
                         r"\s+ID: .*?",
-                        InlineNote.INLINE_SUFFIX
+                        Data.INLINE_SUFFIX
                     ]
                 )
             )
