@@ -33,17 +33,15 @@ Current features:
 * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis.
 * **[Markdown formatting](#markdown-formatting)**, including **[math formatting](#math-formatting)**
 * **[Embedded images](#image-formatting)**. GIFs should work too.
+* **[Audio](#audio-formatting)**.
 * **[Auto-deleting notes](#deleting-notes) from the file**.
 * **Reading from all files in a directory automatically** - not recursively however.
 * **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
 * **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
 
-Not available:
-* Audio.
-
 
 ## Usage
-For simple documentation, run the script with the `-h` flag.
+For simple documentation, run the script with no arguments or with the `-h` flag.
 
 **Apart from editing the config file, all operations of the script require Anki to be running.**
 
@@ -56,6 +54,8 @@ To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open
 To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`.
 
 To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py -r [path]`.
+
+## New users
 
 If you are a **new user**, these steps are recommended:
 1. Check [Custom syntax](regex.md) to see if there is a template that works for you.
@@ -71,6 +71,9 @@ If you are a **new user**, these steps are recommended:
 The sections below describe the default syntax of the script (when not in regex mode).
 
 ## Config
+
+### DEFAULT section
+Allows you to change the default deck and tag of the script.
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
@@ -178,6 +181,12 @@ Displayed $$z = 10$$
 Embedded images are supported if the following criteria are met:
 1. The image is stored locally
 2. It is embedded using the standard markdown syntax: `![alt-text](path_to_image)`
+
+### Audio formatting
+
+Embedded audio is supported if the following criteria are met:
+1. The audio file is stored locally
+2. It is embedded using the syntax `[sound:{path_to_file}]`. So, for example, if the filename was `record.wav` and it was in a `Media` folder, you'd write `[sound:Media/record.wav]`
 
 ### Tag formatting
 
@@ -287,8 +296,8 @@ The instructions are quite similar to deleting normal notes:
 
 ## Default
 By default, the script:
-- Adds notes with the tag "Obsidian_to_Anki" (+ other specified tags, if applicable).  
-- Adds to the Default deck (if `{Target Deck Line}` is not specified).  
+- Adds notes with the DEFAULT Tag in the config file (+ other specified tags, if applicable).  
+- Adds to the DEFAULT Deck in the config file (if `{Target Deck Line}` is not specified).  
 - Adds to the current profile in Anki.  
 
 ## Troubleshooting
