@@ -11,6 +11,8 @@ import webbrowser
 import markdown
 import base64
 
+IMAGE_PATHS = set()
+
 md_parser = markdown.Markdown(
     extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
 )
@@ -129,7 +131,6 @@ class FormatConverter:
 
     MATH_REPLACE = "OBSTOANKIMATH"
 
-    IMAGE_PATHS = set()
     IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
 
     PARA_OPEN = "<p>"
@@ -184,8 +185,8 @@ class FormatConverter:
                 note_text
             )
         ]
-        # Replace them to be later added  back, so they don't interfere
-        # With markdown parsing
+        # Replace them to be later added back, so they don't interfere
+        # with markdown parsing
         note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
             FormatConverter.MATH_REPLACE, note_text
         )
@@ -214,7 +215,7 @@ class FormatConverter:
     def get_images(html_text):
         """Get all the images that need to be added."""
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
-            FormatConverter.IMAGE_PATHS.add(match.group(1))
+            IMAGE_PATHS.add(match.group(1))
             # ^Adds the image path (relative to cwd)
 
     @staticmethod
@@ -761,7 +762,7 @@ class App:
                     ),
                     data=file_encode(imgpath)
                 )
-                for imgpath in FormatConverter.IMAGE_PATHS
+                for imgpath in IMAGE_PATHS
             ]
         )
 
@@ -773,7 +774,7 @@ class App:
         """
         requests = list()
         print("Adding images with these paths...")
-        print(FormatConverter.IMAGE_PATHS)
+        print(IMAGE_PATHS)
         requests.append(self.get_add_images())
         print("Adding notes into Anki...")
         requests.append(
