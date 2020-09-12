@@ -356,9 +356,6 @@ class InlineNote(Note):
     TAG_REGEXP = re.compile(TAG_PREFIX + r"(.*)")
     TYPE_REGEXP = re.compile(r"\[(.*?)\]")  # So e.g. [Basic]
 
-    INLINE_PREFIX = "STARTI"
-    INLINE_SUFFIX = "ENDI"
-
     def __init__(self, note_text):
         self.text = note_text.strip()
         self.current_field_num = 0
