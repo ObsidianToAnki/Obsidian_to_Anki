@@ -471,7 +471,7 @@ class Config:
         subs = {
             note: {
                 field: field + ":"
-                for field in fields["result"]
+                for field in AnkiConnect.parse(fields)
             }
             for note, fields in zip(
                 note_types,
@@ -823,13 +823,13 @@ class App:
     def parse_requests_1(self):
         """Get relevant info from requests_1."""
         result = self.requests_1()
-        notes_ids = result[1]["result"]
-        cards_ids = result[3]["result"]
-        tags = result[4]["result"]
+        notes_ids = AnkiConnect.parse(result[1])
+        cards_ids = AnkiConnect.parse(result[3])
+        tags = AnkiConnect.parse(result[4])
         for note_ids, file in zip(notes_ids, self.files):
-            file.note_ids = note_ids["result"]
+            file.note_ids = AnkiConnect.parse(note_ids)
         for card_ids, file in zip(cards_ids, self.files):
-            file.card_ids = card_ids["result"]
+            file.card_ids = AnkiConnect.parse(card_ids)
         for file in self.files:
             file.tags = tags
 
