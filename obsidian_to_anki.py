@@ -30,6 +30,13 @@ NOTE_DICT_TEMPLATE = {
     "audio": list()
 }
 
+CONFIG_PATH = os.path.expanduser(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "obsidian_to_anki_config.ini"
+    )
+)
+
 md_parser = markdown.Markdown(
     extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
 )
@@ -446,21 +453,14 @@ class RegexNote:
 class Config:
     """Deals with saving and loading the configuration file."""
 
-    CONFIG_PATH = os.path.expanduser(
-        os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "obsidian_to_anki_config.ini"
-        )
-    )
-
     def update_config():
         """Update config with new notes."""
         print("Updating configuration file...")
         config = configparser.ConfigParser()
         config.optionxform = str
-        if os.path.exists(Config.CONFIG_PATH):
+        if os.path.exists(CONFIG_PATH):
             print("Config file exists, reading...")
-            config.read(Config.CONFIG_PATH)
+            config.read(CONFIG_PATH)
         # Setting up field substitutions
         note_types = AnkiConnect.invoke("modelNames")
         fields_request = [
@@ -520,7 +520,7 @@ class Config:
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
             config["Custom Regexps"].setdefault(note, "")
-        with open(Config.CONFIG_PATH, "w", encoding='utf_8') as configfile:
+        with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
         print("Configuration file updated!")
 
@@ -529,7 +529,7 @@ class Config:
         print("Loading configuration file...")
         config = configparser.ConfigParser()
         config.optionxform = str  # Allows for case sensitivity
-        config.read(Config.CONFIG_PATH)
+        config.read(CONFIG_PATH)
         note_subs = config["Note Substitutions"]
         Note.note_subs = {v: k for k, v in note_subs.items()}
         Note.field_subs = {
@@ -582,7 +582,7 @@ class App:
         Config.load_config()
         self.gen_regexp()
         if args.config:
-            webbrowser.open(Config.CONFIG_PATH)
+            webbrowser.open(CONFIG_PATH)
             return
         if args.path:
             current = os.getcwd()
@@ -1165,7 +1165,7 @@ class RegexFile(File):
 
 if __name__ == "__main__":
     """
-    if not os.path.exists(Config.CONFIG_PATH):
+    if not os.path.exists(CONFIG_PATH):
         Config.update_config()
     App()
     """
