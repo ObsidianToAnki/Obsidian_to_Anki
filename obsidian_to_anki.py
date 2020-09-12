@@ -224,6 +224,7 @@ class FormatConverter:
                 1
             )
         FormatConverter.get_images(note_text)
+        FormatConverter.get_audio(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
         note_text = FormatConverter.fix_audio_src(note_text)
         note_text = note_text.strip()
@@ -1227,8 +1228,6 @@ class RegexFile(File):
 
 
 if __name__ == "__main__":
-    """
     if not os.path.exists(CONFIG_PATH):
         Config.update_config()
     App()
-    """
