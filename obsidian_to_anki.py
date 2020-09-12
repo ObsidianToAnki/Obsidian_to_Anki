@@ -11,6 +11,33 @@ import webbrowser
 import markdown
 import base64
 
+MEDIA_PATHS = set()
+
+ID_PREFIX = "ID: "
+TAG_PREFIX = "Tags: "
+TAG_SEP = " "
+Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
+NOTE_DICT_TEMPLATE = {
+    "deckName": "",
+    "modelName": "",
+    "fields": dict(),
+    "options": {
+        "allowDuplicate": False,
+        "duplicateScope": "deck"
+    },
+    "tags": ["Obsidian_to_Anki"],
+    # ^So that you can see what was added automatically.
+    "audio": list()
+}
+
+CONFIG_PATH = os.path.expanduser(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "obsidian_to_anki_config.ini"
+    )
+)
+CONFIG_DATA = dict()
+
 md_parser = markdown.Markdown(
     extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
 )
@@ -26,10 +53,8 @@ def write_safe(filename, contents):
         temp.write(contents)
     os.rename(filename, filename + ".bak")
     os.rename(filename + ".tmp", filename)
-    success = False
     with open(filename, encoding='utf_8') as f:
-        if f.read() == contents:
-            success = True
+        success = (f.read() == contents)
     if success:
         os.remove(filename + ".bak")
 
@@ -66,20 +91,21 @@ def spans(pattern, string):
     return [match.span() for match in pattern.finditer(string)]
 
 
-def contained(span, spans):
-    """Determine whether span is contained within spans."""
+def overlap(span, spans):
+    """Determine whether span overlaps with anything in spans."""
     return any(
-        span[0] >= start and span[1] <= end + 1
-        # + 1 to fix newline business
+        start <= span[0] < end or start < span[1] <= end
         for start, end in spans
     )
 
 
 def findignore(pattern, string, ignore_spans):
     """Yield all matches for pattern in string not in ignore_spans."""
-    for match in pattern.finditer(string):
-        if not contained(match.span(), ignore_spans):
-            yield match
+    return (
+        match
+        for match in pattern.finditer(string)
+        if not overlap(match.span(), ignore_spans)
+    )
 
 
 class AnkiConnect:
@@ -96,6 +122,10 @@ class AnkiConnect:
         ).encode('utf-8')
         response = json.load(urllib.request.urlopen(
             urllib.request.Request('http://localhost:8765', requestJson)))
+        return AnkiConnect.parse(response)
+
+    def parse(response):
+        """Parse the received response."""
         if len(response) != 2:
             raise Exception('response has an unexpected number of fields')
         if 'error' not in response:
@@ -125,8 +155,8 @@ class FormatConverter:
 
     MATH_REPLACE = "OBSTOANKIMATH"
 
-    IMAGE_PATHS = set()
     IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
+    SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
 
     PARA_OPEN = "<p>"
     PARA_CLOSE = "</p>"
@@ -180,8 +210,8 @@ class FormatConverter:
                 note_text
             )
         ]
-        # Replace them to be later added  back, so they don't interfere
-        # With markdown parsing
+        # Replace them to be later added back, so they don't interfere
+        # with markdown parsing
         note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
             FormatConverter.MATH_REPLACE, note_text
         )
@@ -194,7 +224,9 @@ class FormatConverter:
                 1
             )
         FormatConverter.get_images(note_text)
+        FormatConverter.get_audio(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
+        note_text = FormatConverter.fix_audio_src(note_text)
         note_text = note_text.strip()
         # Remove unnecessary paragraph tag
         if note_text.startswith(
@@ -210,11 +242,23 @@ class FormatConverter:
     def get_images(html_text):
         """Get all the images that need to be added."""
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
-            FormatConverter.IMAGE_PATHS.add(match.group(1))
+            path = match.group(1)
+            filename = os.path.basename(path)
+            if filename not in CONFIG_DATA["Added Media"].keys():
+                MEDIA_PATHS.add(path)
             # ^Adds the image path (relative to cwd)
 
     @staticmethod
-    def fix_image_src_repl(matchobject):
+    def get_audio(html_text):
+        """Get all the audio that needs to be added"""
+        for match in FormatConverter.SOUND_REGEXP.finditer(html_text):
+            path = match.group(1)
+            filename = os.path.basename(path)
+            if filename not in CONFIG_DATA["Added Media"].keys():
+                MEDIA_PATHS.add(path)
+
+    @staticmethod
+    def path_to_filename(matchobject):
         """Replace the src in matchobject appropriately."""
         found_string, found_path = matchobject.group(0), matchobject.group(1)
         found_string = found_string.replace(
@@ -226,7 +270,15 @@ class FormatConverter:
     def fix_image_src(html_text):
         """Fix the src of the images so that it's relative to Anki."""
         return FormatConverter.IMAGE_REGEXP.sub(
-            FormatConverter.fix_image_src_repl,
+            FormatConverter.path_to_filename,
+            html_text
+        )
+
+    @staticmethod
+    def fix_audio_src(html_text):
+        """Fix the audio filenames so that it's relative to Anki."""
+        return FormatConverter.SOUND_REGEXP.sub(
+            FormatConverter.path_to_filename,
             html_text
         )
 
@@ -238,21 +290,14 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
-    ID_PREFIX = "ID: "
-    TAG_PREFIX = "Tags: "
-    TAG_SEP = " "
-    Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
-    NOTE_PREFIX = "START"
-    NOTE_SUFFIX = "END"
-
     def __init__(self, note_text):
         """Set up useful variables."""
         self.text = note_text
         self.lines = self.text.splitlines()
         self.current_field_num = 0
         self.delete = False
-        if self.lines[-1].startswith(Note.ID_PREFIX):
-            self.identifier = int(self.lines.pop()[len(Note.ID_PREFIX):])
+        if self.lines[-1].startswith(ID_PREFIX):
+            self.identifier = int(self.lines.pop()[len(ID_PREFIX):])
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
@@ -260,31 +305,15 @@ class Note:
             # This indicates a delete action.
             self.delete = True
             return
-        elif self.lines[-1].startswith(Note.TAG_PREFIX):
-            self.tags = self.lines.pop()[len(Note.TAG_PREFIX):].split(
-                Note.TAG_SEP
+        elif self.lines[-1].startswith(TAG_PREFIX):
+            self.tags = self.lines.pop()[len(TAG_PREFIX):].split(
+                TAG_SEP
             )
         else:
             self.tags = list()
         self.note_type = Note.note_subs[self.lines[0]]
         self.subs = Note.field_subs[self.note_type]
         self.field_names = list(self.subs)
-
-    @property
-    def NOTE_DICT_TEMPLATE(self):
-        """Template for making notes."""
-        return {
-            "deckName": "",
-            "modelName": "",
-            "fields": dict(),
-            "options": {
-                "allowDuplicate": False,
-                "duplicateScope": "deck"
-            },
-            "tags": ["Obsidian_to_Anki"],
-            # ^So that you can see what was added automatically.
-            "audio": list()
-        }
 
     @property
     def current_field(self):
@@ -331,25 +360,22 @@ class Note:
 
     def parse(self, deck):
         """Get a properly formatted dictionary of the note."""
-        template = self.NOTE_DICT_TEMPLATE.copy()
+        template = NOTE_DICT_TEMPLATE.copy()
         if not self.delete:
             template["modelName"] = self.note_type
             template["fields"] = self.fields
             template["tags"] = template["tags"] + self.tags
             template["deckName"] = deck
-            return Note.Note_and_id(note=template, id=self.identifier)
+            return Note_and_id(note=template, id=self.identifier)
         else:
-            return Note.Note_and_id(note=False, id=self.identifier)
+            return Note_and_id(note=False, id=self.identifier)
 
 
 class InlineNote(Note):
 
-    ID_REGEXP = re.compile(r"ID: (\d+)")
-    TAG_REGEXP = re.compile(Note.TAG_PREFIX + r"(.*)")
+    ID_REGEXP = re.compile(ID_PREFIX + r"(\d+)")
+    TAG_REGEXP = re.compile(TAG_PREFIX + r"(.*)")
     TYPE_REGEXP = re.compile(r"\[(.*?)\]")  # So e.g. [Basic]
-
-    INLINE_PREFIX = "STARTI"
-    INLINE_SUFFIX = "ENDI"
 
     def __init__(self, note_text):
         self.text = note_text.strip()
@@ -367,7 +393,7 @@ class InlineNote(Note):
             return
         TAGS = InlineNote.TAG_REGEXP.search(self.text)
         if TAGS is not None:
-            self.tags = TAGS.group(1).split(Note.TAG_SEP)
+            self.tags = TAGS.group(1).split(TAG_SEP)
             self.text = self.text[:TAGS.start()]
         else:
             self.tags = list()
@@ -398,8 +424,8 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n*(ID: \d+)"
-    TAG_REGEXP_STR = r"(Tags: .+\n?)"
+    ID_REGEXP_STR = r"\n(" + ID_PREFIX + r"\d+)"
+    TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".*)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
         self.match = matchobject
@@ -408,33 +434,17 @@ class RegexNote:
         self.group_num = len(self.groups)
         if id:
             # This means id is last group
-            self.identifier = int(self.groups.pop()[len(Note.ID_PREFIX):])
+            self.identifier = int(self.groups.pop()[len(ID_PREFIX):])
         else:
             self.identifier = None
         if tags:
             # Even if id were present, tags is now last group
-            self.tags = self.groups.pop()[len(Note.TAG_PREFIX):].split(
-                Note.TAG_SEP
+            self.tags = self.groups.pop()[len(TAG_PREFIX):].split(
+                TAG_SEP
             )
         else:
             self.tags = list()
         self.field_names = list(Note.field_subs[self.note_type])
-
-    @property
-    def NOTE_DICT_TEMPLATE(self):
-        """Template for making notes."""
-        return {
-            "deckName": "",
-            "modelName": "",
-            "fields": dict(),
-            "options": {
-                "allowDuplicate": False,
-                "duplicateScope": "deck"
-            },
-            "tags": ["Obsidian_to_Anki"],
-            # ^So that you can see what was added automatically.
-            "audio": list()
-        }
 
     @property
     def fields(self):
@@ -450,32 +460,26 @@ class RegexNote:
 
     def parse(self, deck):
         """Get a properly formatted dictionary of the note."""
-        template = self.NOTE_DICT_TEMPLATE.copy()
+        template = NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
         template["tags"] = template["tags"] + self.tags
         template["deckName"] = deck
-        return Note.Note_and_id(note=template, id=self.identifier)
+        return Note_and_id(note=template, id=self.identifier)
 
 
 class Config:
     """Deals with saving and loading the configuration file."""
-
-    CONFIG_PATH = os.path.expanduser(
-        os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "obsidian_to_anki_config.ini"
-        )
-    )
 
     def update_config():
         """Update config with new notes."""
         print("Updating configuration file...")
         config = configparser.ConfigParser()
         config.optionxform = str
-        if os.path.exists(Config.CONFIG_PATH):
+        if os.path.exists(CONFIG_PATH):
             print("Config file exists, reading...")
-            config.read(Config.CONFIG_PATH)
+            config.read(CONFIG_PATH)
+        # Setting up field substitutions
         note_types = AnkiConnect.invoke("modelNames")
         fields_request = [
             AnkiConnect.request(
@@ -486,7 +490,7 @@ class Config:
         subs = {
             note: {
                 field: field + ":"
-                for field in fields["result"]
+                for field in AnkiConnect.parse(fields)
             }
             for note, fields in zip(
                 note_types,
@@ -496,35 +500,54 @@ class Config:
             )
         }
         for note, note_field_subs in subs.items():
-            if note not in config:
-                config[note] = dict()
+            config.setdefault(note, dict())
             for field, sub in note_field_subs.items():
                 config[note].setdefault(field, sub)
                 # This means that, if there's already a substitution present,
-                # the 'default' substitution of field + ": " isn't added.
-        if "Note Substitutions" not in config:
-            config["Note Substitutions"] = dict()
+                # the 'default' substitution of field + ":" isn't added.
+        # Setting up Note Substitutions
+        config.setdefault("Note Substitutions", dict())
         for note in note_types:
             config["Note Substitutions"].setdefault(note, note)
             # Similar to above - if there's already a substitution present,
             # it isn't overwritten
-        # Now for syntax stuff
-        if "Syntax" not in config:
-            config["Syntax"] = {
-                "Begin Note": Note.NOTE_PREFIX,
-                "End Note": Note.NOTE_SUFFIX,
-                "Begin Inline Note": InlineNote.INLINE_PREFIX,
-                "End Inline Note": InlineNote.INLINE_SUFFIX,
-                "Target Deck Line": App.DECK_LINE,
-                "File Tags Line": App.TAG_LINE,
-            }
-        if "Delete Regex Note Line" not in config["Syntax"]:
-            config["Syntax"]["Delete Regex Note Line"] = App.DELETE_LINE
-        if "Custom Regexps" not in config:
-            config["Custom Regexps"] = dict()
-            for note in note_types:
-                config["Custom Regexps"].setdefault(note, "")
-        with open(Config.CONFIG_PATH, "w", encoding='utf_8') as configfile:
+        # Setting up Syntax
+        config.setdefault("Syntax", dict())
+        config["Syntax"].setdefault(
+            "Begin Note", "START"
+        )
+        config["Syntax"].setdefault(
+            "End Note", "END"
+        )
+        config["Syntax"].setdefault(
+            "Begin Inline Note", "STARTI"
+        )
+        config["Syntax"].setdefault(
+            "End Inline Note", "ENDI"
+        )
+        config["Syntax"].setdefault(
+            "Target Deck Line", "TARGET DECK"
+        )
+        config["Syntax"].setdefault(
+            "File Tags Line", "FILE TAGS"
+        )
+        config["Syntax"].setdefault(
+            "Delete Regex Note Line", "DELETE"
+        )
+        config.setdefault("DEFAULT", dict())
+        config["DEFAULT"].setdefault(
+            "Tag", "Obsidian_to_Anki"
+        )
+        config["DEFAULT"].setdefault(
+            "Deck", "Default"
+        )
+        # Setting up Custom Regexps
+        config.setdefault("Custom Regexps", dict())
+        for note in note_types:
+            config["Custom Regexps"].setdefault(note, "")
+        # Setting up media files
+        config.setdefault("Added Media", dict())
+        with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
         print("Configuration file updated!")
 
@@ -533,36 +556,45 @@ class Config:
         print("Loading configuration file...")
         config = configparser.ConfigParser()
         config.optionxform = str  # Allows for case sensitivity
-        config.read(Config.CONFIG_PATH)
+        config.read(CONFIG_PATH)
         note_subs = config["Note Substitutions"]
         Note.note_subs = {v: k for k, v in note_subs.items()}
         Note.field_subs = {
             note: dict(config[note]) for note in config
-            if note != "Note Substitutions" and note != "DEFAULT"
+            if note not in [
+                "Note Substitutions",
+                "DEFAULT",
+                "Syntax",
+                "Custom Regexps",
+                "Added Media"
+            ]
         }
-        Note.NOTE_PREFIX = re.escape(
+        CONFIG_DATA["NOTE_PREFIX"] = re.escape(
             config["Syntax"]["Begin Note"]
         )
-        Note.NOTE_SUFFIX = re.escape(
+        CONFIG_DATA["NOTE_SUFFIX"] = re.escape(
             config["Syntax"]["End Note"]
         )
-        InlineNote.INLINE_PREFIX = re.escape(
+        CONFIG_DATA["INLINE_PREFIX"] = re.escape(
             config["Syntax"]["Begin Inline Note"]
         )
-        InlineNote.INLINE_SUFFIX = re.escape(
+        CONFIG_DATA["INLINE_SUFFIX"] = re.escape(
             config["Syntax"]["End Inline Note"]
         )
-        App.DECK_LINE = re.escape(
+        CONFIG_DATA["DECK_LINE"] = re.escape(
             config["Syntax"]["Target Deck Line"]
         )
-        App.TAG_LINE = re.escape(
+        CONFIG_DATA["TAG_LINE"] = re.escape(
             config["Syntax"]["File Tags Line"]
         )
+        CONFIG_DATA["Added Media"] = config["Added Media"]
         RegexFile.EMPTY_REGEXP = re.compile(
             re.escape(
                 config["Syntax"]["Delete Regex Note Line"]
             ) + RegexNote.ID_REGEXP_STR
         )
+        NOTE_DICT_TEMPLATE["tags"] = [config["DEFAULT"]["Tag"]]
+        NOTE_DICT_TEMPLATE["deckName"] = config["DEFAULT"]["Deck"]
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
@@ -570,24 +602,27 @@ class Config:
 class App:
     """Master class that manages the application."""
 
-    DECK_LINE = "TARGET DECK"
-    TAG_LINE = "FILE TAGS"
-    DELETE_LINE = "DELETE"
-
     SUPPORTED_EXTS = [".md", ".txt"]
 
     def __init__(self):
         """Execute the main functionality of the script."""
         self.setup_parser()
         args = self.parser.parse_args()
+        no_args = True
         if args.update:
+            no_args = False
             Config.update_config()
         Config.load_config()
+        if args.mediaupdate:
+            no_args = False
+            CONFIG_DATA["Added Media"].clear()
         self.gen_regexp()
         if args.config:
-            webbrowser.open(Config.CONFIG_PATH)
+            no_args = False
+            webbrowser.open(CONFIG_PATH)
             return
         if args.path:
+            no_args = False
             current = os.getcwd()
             self.path = args.path
             if os.path.isdir(self.path):
@@ -629,6 +664,8 @@ class App:
                 file.write_file()
             self.requests_2()
             os.chdir(current)
+        if no_args:
+            self.parser.print_help()
 
     def setup_parser(self):
         """Set up the argument parser."""
@@ -670,6 +707,14 @@ class App:
                 or inline notes.
             """
         )
+        self.parser.add_argument(
+            "-m", "--mediaupdate",
+            action="store_true",
+            dest="mediaupdate",
+            help="""
+                Forces script to re-add known media files.
+            """
+        )
 
     def gen_regexp(self):
         """Generate the regular expressions used by the app."""
@@ -679,9 +724,9 @@ class App:
                 r"".join(
                     [
                         r"^",
-                        Note.NOTE_PREFIX,
+                        CONFIG_DATA["NOTE_PREFIX"],
                         r"\n([\s\S]*?\n)",
-                        Note.NOTE_SUFFIX,
+                        CONFIG_DATA["NOTE_SUFFIX"],
                         r"\n?"
                     ]
                 ), flags=re.MULTILINE
@@ -693,7 +738,7 @@ class App:
                 "".join(
                     [
                         r"^",
-                        App.DECK_LINE,
+                        CONFIG_DATA["DECK_LINE"],
                         r"\n(.*)",
                     ]
                 ), flags=re.MULTILINE
@@ -705,11 +750,11 @@ class App:
                 "".join(
                     [
                         r"^",
-                        Note.NOTE_PREFIX,
+                        CONFIG_DATA["NOTE_PREFIX"],
                         r"\n",
-                        Note.ID_PREFIX,
+                        ID_PREFIX,
                         r"[\s\S]*?\n",
-                        Note.NOTE_SUFFIX
+                        CONFIG_DATA["NOTE_SUFFIX"]
                     ]
                 ), flags=re.MULTILINE
             )
@@ -717,13 +762,20 @@ class App:
         setattr(
             App, "TAG_REGEXP",
             re.compile(
-                r"^" + App.TAG_LINE + r"\n(.*)\n", flags=re.MULTILINE
+                r"^" + CONFIG_DATA["TAG_LINE"] + r"\n(.*)\n",
+                flags=re.MULTILINE
             )
         )
         setattr(
             App, "INLINE_REGEXP",
             re.compile(
-                InlineNote.INLINE_PREFIX + r"(.*?)" + InlineNote.INLINE_SUFFIX
+                "".join(
+                    [
+                        CONFIG_DATA["INLINE_PREFIX"],
+                        r"(.*?)",
+                        CONFIG_DATA["INLINE_SUFFIX"]
+                    ]
+                )
             )
         )
         setattr(
@@ -731,9 +783,9 @@ class App:
             re.compile(
                 "".join(
                     [
-                        InlineNote.INLINE_PREFIX,
-                        r"\s+ID: .*?",
-                        InlineNote.INLINE_SUFFIX
+                        CONFIG_DATA["INLINE_PREFIX"],
+                        r"\s+" + ID_PREFIX + r".*?",
+                        CONFIG_DATA["INLINE_SUFFIX"]
                     ]
                 )
             )
@@ -745,19 +797,19 @@ class App:
         for info in self.info:
             self.tags.update(info["tags"])
 
-    def get_add_images(self):
-        """Get the AnkiConnect-formatted add_images request."""
+    def get_add_media(self):
+        """Get the AnkiConnect-formatted add_media request."""
         return AnkiConnect.request(
             "multi",
             actions=[
                 AnkiConnect.request(
                     "storeMediaFile",
-                    filename=imgpath.replace(
-                        imgpath, os.path.basename(imgpath)
+                    filename=path.replace(
+                        path, os.path.basename(path)
                     ),
-                    data=file_encode(imgpath)
+                    data=file_encode(path)
                 )
-                for imgpath in FormatConverter.IMAGE_PATHS
+                for path in MEDIA_PATHS
             ]
         )
 
@@ -768,9 +820,9 @@ class App:
         gets note info, gets tags and removes notes.
         """
         requests = list()
-        print("Adding images with these paths...")
-        print(FormatConverter.IMAGE_PATHS)
-        requests.append(self.get_add_images())
+        print("Adding media with these paths...")
+        print(MEDIA_PATHS)
+        requests.append(self.get_add_media())
         print("Adding notes into Anki...")
         requests.append(
             AnkiConnect.request(
@@ -825,15 +877,22 @@ class App:
     def parse_requests_1(self):
         """Get relevant info from requests_1."""
         result = self.requests_1()
-        notes_ids = result[1]["result"]
-        cards_ids = result[3]["result"]
-        tags = result[4]["result"]
+        notes_ids = AnkiConnect.parse(result[1])
+        cards_ids = AnkiConnect.parse(result[3])
+        tags = AnkiConnect.parse(result[4])
         for note_ids, file in zip(notes_ids, self.files):
-            file.note_ids = note_ids["result"]
+            file.note_ids = AnkiConnect.parse(note_ids)
         for card_ids, file in zip(cards_ids, self.files):
-            file.card_ids = card_ids["result"]
+            file.card_ids = AnkiConnect.parse(card_ids)
         for file in self.files:
             file.tags = tags
+        for imgpath in MEDIA_PATHS:
+            CONFIG_DATA["Added Media"].setdefault(
+                os.path.basename(imgpath),
+                "True"
+            )
+        with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
+            Config.config.write(configfile)
 
     def requests_2(self):
         """Perform requests group 2.
@@ -889,7 +948,7 @@ class File:
         if self.target_deck is not None:
             self.target_deck = self.target_deck.group(1)
         else:
-            self.target_deck = "Default"
+            self.target_deck = NOTE_DICT_TEMPLATE["deckName"]
         print(
             "Identified target deck for", self.filename,
             "as", self.target_deck
@@ -914,7 +973,7 @@ class File:
             parsed = Note(note).parse(self.target_deck)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
-                parsed.note["tags"] += self.global_tags.split(" ")
+                parsed.note["tags"] += self.global_tags.split(TAG_SEP)
                 self.notes_to_add.append(parsed.note)
                 self.id_indexes.append(position)
             elif not parsed.note:
@@ -928,7 +987,7 @@ class File:
             parsed = InlineNote(note).parse(self.target_deck)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
-                parsed.note["tags"] += self.global_tags.split(" ")
+                parsed.note["tags"] += self.global_tags.split(TAG_SEP)
                 self.inline_notes_to_add.append(parsed.note)
                 self.inline_id_indexes.append(position)
             elif not parsed.note:
@@ -941,9 +1000,9 @@ class File:
     def id_to_str(id, inline=False):
         """Get the string repr of id."""
         if inline:
-            return "ID: " + str(id) + " "
+            return ID_PREFIX + str(id) + " "
         else:
-            return "ID: " + str(id) + "\n"
+            return ID_PREFIX + str(id) + "\n"
 
     def write_ids(self):
         """Write the identifiers to self.file."""
@@ -1080,7 +1139,7 @@ class RegexFile(File):
         # Finally, scan for deleting notes
         for match in RegexFile.EMPTY_REGEXP.finditer(self.file):
             self.notes_to_delete.append(
-                int(match.group(1)[len(Note.ID_PREFIX):])
+                int(match.group(1)[len(ID_PREFIX):])
             )
 
     def search(self, note_type, regexp):
@@ -1129,7 +1188,7 @@ class RegexFile(File):
             parsed = RegexNote(match, note_type, tags=True, id=False).parse(
                 self.target_deck
             )
-            parsed.note["tags"] += self.global_tags.split(" ")
+            parsed.note["tags"] += self.global_tags.split(TAG_SEP)
             self.notes_to_add.append(
                 parsed.note
             )
@@ -1140,11 +1199,21 @@ class RegexFile(File):
             parsed = RegexNote(match, note_type, tags=False, id=False).parse(
                 self.target_deck
             )
-            parsed.note["tags"] += self.global_tags.split(" ")
+            parsed.note["tags"] += self.global_tags.split(TAG_SEP)
             self.notes_to_add.append(
                 parsed.note
             )
             self.id_indexes.append(match.end())
+
+    def fix_newline_ids(self):
+        """Removes double newline then ids from self.file."""
+        double_regexp = re.compile(
+            r"(\r\n|\r|\n){2}" + ID_PREFIX + r"\d+"
+        )
+        self.file = double_regexp.sub(
+            lambda x: x.group()[1:],
+            self.file
+        )
 
     def write_ids(self):
         """Write the identifiers to self.file."""
@@ -1152,12 +1221,13 @@ class RegexFile(File):
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    "ID: " + str(id) + "\n"
+                    "\n" + ID_PREFIX + str(id) + "\n"
                     for id in self.note_ids
                     if id is not None
                 ]
             )
         )
+        self.fix_newline_ids()
 
     def remove_empties(self):
         """Remove empty notes from self.file."""
@@ -1167,6 +1237,6 @@ class RegexFile(File):
 
 
 if __name__ == "__main__":
-    if not os.path.exists(Config.CONFIG_PATH):
+    if not os.path.exists(CONFIG_PATH):
         Config.update_config()
     App()
