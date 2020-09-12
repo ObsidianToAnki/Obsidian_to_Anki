@@ -85,11 +85,10 @@ def spans(pattern, string):
     return [match.span() for match in pattern.finditer(string)]
 
 
-def contained(span, spans):
-    """Determine whether span is contained within spans."""
+def overlap(span, spans):
+    """Determine whether span overlaps with anything in spans."""
     return any(
-        span[0] >= start and span[1] <= end + 1
-        # + 1 to fix newline business
+        start <= span[0] < end or start < span[1] <= end
         for start, end in spans
     )
 
@@ -97,7 +96,7 @@ def contained(span, spans):
 def findignore(pattern, string, ignore_spans):
     """Yield all matches for pattern in string not in ignore_spans."""
     for match in pattern.finditer(string):
-        if not contained(match.span(), ignore_spans):
+        if not overlap(match.span(), ignore_spans):
             yield match
 
 
@@ -1153,6 +1152,8 @@ class RegexFile(File):
 
 
 if __name__ == "__main__":
+    """
     if not os.path.exists(Config.CONFIG_PATH):
         Config.update_config()
     App()
+    """
