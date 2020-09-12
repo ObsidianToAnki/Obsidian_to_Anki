@@ -55,6 +55,8 @@ To update the config file with new note types from Anki, run `obsidian_to_anki.p
 
 To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py -r [path]`.
 
+To clear the 'Added Media' section, run `obsidian_to_anki.py -m`.
+
 ## New users
 
 If you are a **new user**, these steps are recommended:
@@ -136,6 +138,10 @@ As an inline note:
 <pre>
 {Begin Inline Note} [B] {Note Data} {End Inline Note}
 </pre>
+
+### Added Media
+This section is reserved for the script to keep track of what media files it has added. You can re-generate this by running the script with the `-m` flag.
+
 ## Deck formatting
 Anywhere within the file, format the deck that you want the notes to go into as follows:
 <pre>
