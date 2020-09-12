@@ -36,12 +36,11 @@ CONFIG_PATH = os.path.expanduser(
         "obsidian_to_anki_config.ini"
     )
 )
+CONFIG_DATA = dict()
 
 md_parser = markdown.Markdown(
     extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
 )
-
-CONFIG_DATA = dict()
 
 
 def write_safe(filename, contents):
@@ -707,7 +706,8 @@ class App:
         setattr(
             App, "TAG_REGEXP",
             re.compile(
-                r"^" + CONFIG_DATA["TAG_LINE"] + r"\n(.*)\n", flags=re.MULTILINE
+                r"^" + CONFIG_DATA["TAG_LINE"] + r"\n(.*)\n",
+                flags=re.MULTILINE
             )
         )
         setattr(
