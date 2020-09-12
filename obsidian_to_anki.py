@@ -100,9 +100,11 @@ def overlap(span, spans):
 
 def findignore(pattern, string, ignore_spans):
     """Yield all matches for pattern in string not in ignore_spans."""
-    for match in pattern.finditer(string):
-        if not overlap(match.span(), ignore_spans):
-            yield match
+    return (
+        match
+        for match in pattern.finditer(string)
+        if not overlap(match.span(), ignore_spans)
+    )
 
 
 class AnkiConnect:
