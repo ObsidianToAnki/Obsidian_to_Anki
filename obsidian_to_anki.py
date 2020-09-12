@@ -266,9 +266,6 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
-    NOTE_PREFIX = "START"
-    NOTE_SUFFIX = "END"
-
     def __init__(self, note_text):
         """Set up useful variables."""
         self.text = note_text
