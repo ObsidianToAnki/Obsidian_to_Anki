@@ -515,6 +515,8 @@ class Config:
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
             config["Custom Regexps"].setdefault(note, "")
+        # Setting up media files
+        config.setdefault("Added Media", dict())
         with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
         print("Configuration file updated!")
@@ -567,14 +569,18 @@ class App:
         """Execute the main functionality of the script."""
         self.setup_parser()
         args = self.parser.parse_args()
+        no_args = True
         if args.update:
+            no_args = False
             Config.update_config()
         Config.load_config()
         self.gen_regexp()
         if args.config:
+            no_args = False
             webbrowser.open(CONFIG_PATH)
             return
         if args.path:
+            no_args = False
             current = os.getcwd()
             self.path = args.path
             if os.path.isdir(self.path):
@@ -616,7 +622,7 @@ class App:
                 file.write_file()
             self.requests_2()
             os.chdir(current)
-        else:
+        if no_args:
             self.parser.print_help()
 
     def setup_parser(self):
