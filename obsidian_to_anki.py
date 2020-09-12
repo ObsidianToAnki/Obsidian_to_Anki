@@ -461,6 +461,7 @@ class Config:
         if os.path.exists(Config.CONFIG_PATH):
             print("Config file exists, reading...")
             config.read(Config.CONFIG_PATH)
+        # Setting up field substitutions
         note_types = AnkiConnect.invoke("modelNames")
         fields_request = [
             AnkiConnect.request(
@@ -486,12 +487,13 @@ class Config:
                 config[note].setdefault(field, sub)
                 # This means that, if there's already a substitution present,
                 # the 'default' substitution of field + ":" isn't added.
+        # Setting up Note Substitutions
         config.setdefault("Note Substitutions", dict())
         for note in note_types:
             config["Note Substitutions"].setdefault(note, note)
             # Similar to above - if there's already a substitution present,
             # it isn't overwritten
-        # Now for syntax stuff
+        # Setting up Syntax
         config.setdefault("Syntax", dict())
         config["Syntax"].setdefault(
             "Begin Note", "START"
@@ -514,6 +516,7 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
+        # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
             config["Custom Regexps"].setdefault(note, "")
