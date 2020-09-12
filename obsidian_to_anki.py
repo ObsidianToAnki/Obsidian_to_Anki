@@ -52,10 +52,8 @@ def write_safe(filename, contents):
         temp.write(contents)
     os.rename(filename, filename + ".bak")
     os.rename(filename + ".tmp", filename)
-    success = False
     with open(filename, encoding='utf_8') as f:
-        if f.read() == contents:
-            success = True
+        success = (f.read() == contents)
     if success:
         os.remove(filename + ".bak")
 
