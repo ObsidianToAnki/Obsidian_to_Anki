@@ -17,6 +17,18 @@ ID_PREFIX = "ID: "
 TAG_PREFIX = "Tags: "
 TAG_SEP = " "
 Note_and_id = collections.namedtuple('Note_and_id', ['note', 'id'])
+NOTE_DICT_TEMPLATE = {
+    "deckName": "",
+    "modelName": "",
+    "fields": dict(),
+    "options": {
+        "allowDuplicate": False,
+        "duplicateScope": "deck"
+    },
+    "tags": ["Obsidian_to_Anki"],
+    # ^So that you can see what was added automatically.
+    "audio": list()
+}
 
 md_parser = markdown.Markdown(
     extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
@@ -277,22 +289,6 @@ class Note:
         self.field_names = list(self.subs)
 
     @property
-    def NOTE_DICT_TEMPLATE(self):
-        """Template for making notes."""
-        return {
-            "deckName": "",
-            "modelName": "",
-            "fields": dict(),
-            "options": {
-                "allowDuplicate": False,
-                "duplicateScope": "deck"
-            },
-            "tags": ["Obsidian_to_Anki"],
-            # ^So that you can see what was added automatically.
-            "audio": list()
-        }
-
-    @property
     def current_field(self):
         """Get the field to add text to."""
         return self.field_names[self.current_field_num]
@@ -337,7 +333,7 @@ class Note:
 
     def parse(self, deck):
         """Get a properly formatted dictionary of the note."""
-        template = self.NOTE_DICT_TEMPLATE.copy()
+        template = NOTE_DICT_TEMPLATE.copy()
         if not self.delete:
             template["modelName"] = self.note_type
             template["fields"] = self.fields
@@ -427,22 +423,6 @@ class RegexNote:
         self.field_names = list(Note.field_subs[self.note_type])
 
     @property
-    def NOTE_DICT_TEMPLATE(self):
-        """Template for making notes."""
-        return {
-            "deckName": "",
-            "modelName": "",
-            "fields": dict(),
-            "options": {
-                "allowDuplicate": False,
-                "duplicateScope": "deck"
-            },
-            "tags": ["Obsidian_to_Anki"],
-            # ^So that you can see what was added automatically.
-            "audio": list()
-        }
-
-    @property
     def fields(self):
         fields = dict.fromkeys(self.field_names, "")
         for name, match in zip(self.field_names, self.groups):
@@ -456,7 +436,7 @@ class RegexNote:
 
     def parse(self, deck):
         """Get a properly formatted dictionary of the note."""
-        template = self.NOTE_DICT_TEMPLATE.copy()
+        template = NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
         template["tags"] = template["tags"] + self.tags
