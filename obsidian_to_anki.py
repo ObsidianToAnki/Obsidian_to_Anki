@@ -157,6 +157,7 @@ class FormatConverter:
 
     IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
     SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
+    CLOZE_REGEXP = re.compile(r'{(.+?)}')
 
     PARA_OPEN = "<p>"
     PARA_CLOSE = "</p>"
@@ -194,13 +195,41 @@ class FormatConverter:
         )
 
     @staticmethod
+    def cloze_repl(string, cloze_number):
+        """Return a Anki-formatted cloze string."""
+        return "".join(
+            [
+                r"{{c",
+                str(cloze_number),
+                r"::",
+                string[1:-1],
+                r"}}"
+            ]
+        )
+
+    @staticmethod
+    def curly_to_cloze(text):
+        """Change text in curly brackets to Anki-formatted cloze."""
+        for index, cloze_match in enumerate(
+            FormatConverter.CLOZE_REGEXP.finditer(
+                text
+            ), start=1
+        ):
+            text = text.replace(
+                cloze_match.group(0),
+                FormatConverter.cloze_repl(cloze_match.group(0), index),
+                1
+            )
+        return text
+
+    @staticmethod
     def markdown_parse(text):
         """Apply markdown conversions to text."""
         text = md_parser.reset().convert(text)
         return text
 
     @staticmethod
-    def format(note_text):
+    def format(note_text, cloze=False):
         """Apply all format conversions to note_text."""
         note_text = FormatConverter.obsidian_to_anki_math(note_text)
         # Extract the parts that are anki math
@@ -215,6 +244,8 @@ class FormatConverter:
         note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
             FormatConverter.MATH_REPLACE, note_text
         )
+        if cloze:
+            note_text = FormatConverter.curly_to_cloze(note_text)
         note_text = FormatConverter.markdown_parse(note_text)
         # Add back the parts that are anki math
         for math_match in math_matches:
@@ -1227,6 +1258,9 @@ class RegexFile(File):
 
 
 if __name__ == "__main__":
+    """
     if not os.path.exists(CONFIG_PATH):
         Config.update_config()
     App()
+    """
+    print(FormatConverter.curly_to_cloze(test))
