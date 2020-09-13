@@ -5,11 +5,11 @@ import json
 import urllib.request
 import configparser
 import os
-import argparse
 import collections
 import webbrowser
 import markdown
 import base64
+import gooey
 
 MEDIA_PATHS = set()
 
@@ -608,23 +608,23 @@ class App:
         """Execute the main functionality of the script."""
         self.setup_parser()
         args = self.parser.parse_args()
-        no_args = True
+        # no_args = True
         if args.update:
-            no_args = False
+            # no_args = False
             Config.update_config()
         Config.load_config()
         if args.mediaupdate:
-            no_args = False
+            # no_args = False
             CONFIG_DATA["Added Media"].clear()
         self.gen_regexp()
         if args.config:
-            no_args = False
+            # no_args = False
             webbrowser.open(CONFIG_PATH)
             return
         if args.path:
-            no_args = False
+            # no_args = False
             current = os.getcwd()
-            self.path = args.path
+            self.path = " ".join(args.path)
             if os.path.isdir(self.path):
                 try:
                     os.chdir(self.path)
@@ -664,56 +664,45 @@ class App:
                 file.write_file()
             self.requests_2()
             os.chdir(current)
-        if no_args:
-            self.parser.print_help()
+        # if no_args:
+            # self.parser.print_help()
 
+    @gooey.Gooey
     def setup_parser(self):
         """Set up the argument parser."""
-        self.parser = argparse.ArgumentParser(
+        self.parser = gooey.GooeyParser(
             description="Add cards to Anki from an Obsidian markdown file."
         )
         self.parser.add_argument(
             "path",
-            nargs="?",
+            nargs="*",
             default=False,
             help="Path to the file or directory you want to scan.",
+            widget="FileChooser"
         )
         self.parser.add_argument(
             "-c", "--config",
             action="store_true",
             dest="config",
-            help="""
-                Opens up config file for editing.
-            """
+            help="Open up config file for editing."
         )
         self.parser.add_argument(
             "-u", "--update",
             action="store_true",
             dest="update",
-            help="""
-                Whether you want to update the config file
-                using new notes from Anki.
-                Note that this does NOT open the config file for editing,
-                use -c for that.
-            """,
+            help="Update config file."
         )
         self.parser.add_argument(
             "-r", "--regex",
             action="store_true",
             dest="regex",
-            help="""
-                Use this if you're using custom regex syntax.
-                This will ignore any script-formatted regular notes
-                or inline notes.
-            """
+            help="Use custom regex syntax."
         )
         self.parser.add_argument(
             "-m", "--mediaupdate",
             action="store_true",
             dest="mediaupdate",
-            help="""
-                Forces script to re-add known media files.
-            """
+            help="Force addition of media files."
         )
 
     def gen_regexp(self):
