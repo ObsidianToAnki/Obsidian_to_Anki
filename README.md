@@ -9,8 +9,9 @@ Script to add flashcards from a text or markdown file to Anki. Run from the comm
 4. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
 5. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
 6. Install the `python-markdown` library - see installation instructions [here](https://github.com/Python-Markdown/markdown). `pip install markdown` should work.
+7. Install the `Gooey` library - see installation instructions [here](https://github.com/chriskiehl/Gooey). `pip install Gooey` should work.
 7. Check the Permissions tab below to ensure the script is able to run.
-8. From the command line, run the script once with no arguments - `obsidian_to_anki.py` (or `python obsidian_to_anki.py`). This will make a configuration file in the same directory as the script, "obsidian_to_anki_config.ini".
+8. Run the script (e.g. by double-clicking).
 
 See [Troubleshooting](#Troubleshooting) if you have problems.
 
@@ -41,21 +42,13 @@ Current features:
 
 
 ## Usage
-For simple documentation, run the script with no arguments or with the `-h` flag.
 
 **Apart from editing the config file, all operations of the script require Anki to be running.**
 
-To add notes to Anki from a properly-formatted file, or a directory of files, run `obsidian_to_anki.py [path]`, replacing `[path]` with the path to the file or directory.  
-For example, running `obsidian_to_anki.py .` should add notes from all properly-formatted files in the current directory.  
-To avoid unexpected behaviour, the script will only scan files from a directory if they have either a `.md` or `.txt` extension. If you feel like this will be a major issue, please let me know, and I can add this as something to be configured.
+The GUI of the script looks like this:  
+![GUI](Images/GUI.png)
 
-To edit the config file, run `obsidian_to_anki.py -c`. This will attempt to open the config file for editing, but isn't guaranteed to work. If it doesn't work, you'll have to navigate to the config file and edit it manually. For more information, see [Config](#config).
-
-To update the config file with new note types from Anki, run `obsidian_to_anki.py -u`.
-
-To run the script in 'regex' mode (recognises user-defined syntax instead of standard script syntax), run `obsidian_to_anki.py -r [path]`.
-
-To clear the 'Added Media' section, run `obsidian_to_anki.py -m`.
+Hopefully the options and path are self-explanatory. Note that you cannot directly choose a folder in the 'Browse' dialog, but can manually remove the filename at the end to create a path to the folder.
 
 ## New users
 
@@ -68,9 +61,9 @@ If you are a **new user**, these steps are recommended:
  * **[Auto-deleting notes](#deleting-notes) from the file**.
  * **[File tag formatting](#file-tag-formatting)**.
  * [Defaults](#default).
-3. You should be good to go simply running the script in `-r` mode.
+3. You should be good to go simply running the script with the 'Regex' option checked.
 
-The sections below describe the default syntax of the script (when not in regex mode).
+The sections below describe the default syntax of the script (with the 'Regex' option not checked).
 
 ## Config
 
@@ -309,6 +302,8 @@ By default, the script:
 ## Troubleshooting
 
 If the script itself is not able to run, try running `python3 {PATH_TO_SCRIPT}`.
+
+If you are unable to get `pip` to run, see this [user guide](https://pip.pypa.io/en/stable/user_guide/).
 
 If you are getting a `KeyError`, you may have typed one of the [substitutions](#Config) wrong - double check the config file and what you actually wrote.
 Examples:
