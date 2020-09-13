@@ -10,6 +10,7 @@ import collections
 import webbrowser
 import markdown
 import base64
+from gooey import Gooey
 
 MEDIA_PATHS = set()
 
@@ -667,6 +668,7 @@ class App:
         if no_args:
             self.parser.print_help()
 
+    @Gooey
     def setup_parser(self):
         """Set up the argument parser."""
         self.parser = argparse.ArgumentParser(
