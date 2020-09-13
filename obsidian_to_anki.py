@@ -1028,7 +1028,7 @@ class File:
 
     def write_file(self):
         """Write to the actual os file"""
-        self.file = self.file.strip()  # Remove newline added
+        self.file = self.file[:-1]  # Remove newline added
         write_safe(self.filename, self.file)
 
     def get_add_notes(self):
