@@ -38,6 +38,7 @@ Current features:
 * **[Auto-deleting notes](#deleting-notes) from the file**.
 * **Reading from all files in a directory automatically** - not recursively however.
 * **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
+* **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
 * **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
 
 
@@ -68,7 +69,8 @@ The sections below describe the default syntax of the script (with the 'Regex' o
 ## Config
 
 ### DEFAULT section
-Allows you to change the default deck and tag of the script.
+Allows you to change the default deck and tag of the script.  
+New in v2.3 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
@@ -292,6 +294,19 @@ The instructions are quite similar to deleting normal notes:
 {Begin Inline Note} ID: {Identifier} {End Inline Note}
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `{Begin Inline Note} {End Inline Note}` block from the file.
+
+### Cloze formatting
+
+In any note, you can do clozes using Anki's standard syntax:  
+`This is a {{c1::cloze note}}`  
+However, by enabling the 'CurlyCloze' option (see [Config](#config)), you can write the above as:
+`This is a {cloze note}`
+It'll pick up multiple clozes accordingly:
+`This is a {cloze note} with {multiple clozes}`
+Gets translated to:  
+`This is a {{c1::cloze note}} with {{c2::multiple clozes}}`  
+However, simultaneous clozes are NOT supported when using this syntax.
+Also, you cannot use Anki's regular syntax for clozes if the 'CurlyCloze' option is enabled.
 
 ## Default
 By default, the script:
