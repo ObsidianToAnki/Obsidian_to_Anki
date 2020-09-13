@@ -23,7 +23,8 @@ This is how to use::Remnote single-line style
 The script won't see things outside of it.
 You can have::multiple notes in the same file
 </pre>
-3. Run `obsidian_to_anki.py -c` to open up the config file
+3. Run the script, and check 'Config' to open up the config file:  
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -34,7 +35,8 @@ to
 Basic = ^(.*[^\n:]{1}):{2}([^\n:]{1}.*)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![remnote_1](Images/Remnote_1.png)  
 ![remnote_2](Images/Remnote_2.png)
@@ -62,7 +64,8 @@ It'll even
 Span over
 Multiple lines, and ignore preceding whitespace
 </pre>
-3. Run `obsidian_to_anki.py -c` to open up the config file
+3. Run the script, and check 'Config' to open up the config file:  
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -73,7 +76,8 @@ to
 Basic = ^#+(.+)\n+((?:[^\n#][\n]?)+)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![header_1](Images/Header_1.png)  
 ![header_2](Images/Header_2.png)  
@@ -112,7 +116,8 @@ A: No, and preceding whitespace will be ignored.
 Q: How is this possible?
 A: The 'magic' of regular expressions!
 </pre>
-3. Run `obsidian_to_anki.py -c` to open up the config file
+3. Run the script, and check 'Config' to open up the config file:  
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -123,7 +128,8 @@ to
 Basic = ^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![question_1](Images/Question_1.png)  
 ![question_2](Images/Question_2.png)  
@@ -152,7 +158,8 @@ And, of course #flashcard
 Whitespace is ignored!
 
 </pre>
-3. Run `obsidian_to_anki.py -c` to open up the config file
+3. Run the script, and check 'Config' to open up the config file:  
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -163,7 +170,8 @@ to
 Basic = ((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![neuracache_1](Images/Neuracache_1.png)  
 ![neuracache_2](Images/Neuracache_2.png)  
@@ -188,7 +196,8 @@ supported?
 Yes, but you need the front and back
 directly before and after the ruler.
 </pre>
-3. Run `obsidian_to_anki.py -c` to open up the config file
+3. Run the script, and check 'Config' to open up the config file:  
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -199,7 +208,8 @@ to
 Basic = ((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![ruled_1](/Images/Ruled_1.png)  
 ![ruled_2](/Images/Ruled_2.png)
