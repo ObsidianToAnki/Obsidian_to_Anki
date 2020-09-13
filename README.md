@@ -61,6 +61,7 @@ If you are a **new user**, these steps are recommended:
  * **[Embedded images](#image-formatting)**. GIFs should work too.
  * **[Auto-deleting notes](#deleting-notes) from the file**.
  * **[File tag formatting](#file-tag-formatting)**.
+ * **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
  * [Defaults](#default).
 3. You should be good to go simply running the script with the 'Regex' option checked.
 
