@@ -61,9 +61,9 @@ If you are a **new user**, these steps are recommended:
  * **[Auto-deleting notes](#deleting-notes) from the file**.
  * **[File tag formatting](#file-tag-formatting)**.
  * [Defaults](#default).
-3. You should be good to go simply running the script in `-r` mode.
+3. You should be good to go simply running the script with the 'Regex' option checked.
 
-The sections below describe the default syntax of the script (when not in regex mode).
+The sections below describe the default syntax of the script (with the 'Regex' option not checked).
 
 ## Config
 
@@ -302,6 +302,8 @@ By default, the script:
 ## Troubleshooting
 
 If the script itself is not able to run, try running `python3 {PATH_TO_SCRIPT}`.
+
+If you are unable to get `pip` to run, see this [user guide](https://pip.pypa.io/en/stable/user_guide/).
 
 If you are getting a `KeyError`, you may have typed one of the [substitutions](#Config) wrong - double check the config file and what you actually wrote.
 Examples:
