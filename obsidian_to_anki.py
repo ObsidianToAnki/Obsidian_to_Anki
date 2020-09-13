@@ -5,7 +5,6 @@ import json
 import urllib.request
 import configparser
 import os
-import argparse
 import collections
 import webbrowser
 import markdown
