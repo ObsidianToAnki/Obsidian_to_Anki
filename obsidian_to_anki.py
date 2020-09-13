@@ -157,6 +157,7 @@ class FormatConverter:
 
     IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
     SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
+    CLOZE_REGEXP = re.compile(r'{(.+?)}')
 
     PARA_OPEN = "<p>"
     PARA_CLOSE = "</p>"
@@ -194,13 +195,41 @@ class FormatConverter:
         )
 
     @staticmethod
+    def cloze_repl(string, cloze_number):
+        """Return a Anki-formatted cloze string."""
+        return "".join(
+            [
+                r"{{c",
+                str(cloze_number),
+                r"::",
+                string[1:-1],
+                r"}}"
+            ]
+        )
+
+    @staticmethod
+    def curly_to_cloze(text):
+        """Change text in curly brackets to Anki-formatted cloze."""
+        for index, cloze_match in enumerate(
+            FormatConverter.CLOZE_REGEXP.finditer(
+                text
+            ), start=1
+        ):
+            text = text.replace(
+                cloze_match.group(0),
+                FormatConverter.cloze_repl(cloze_match.group(0), index),
+                1
+            )
+        return text
+
+    @staticmethod
     def markdown_parse(text):
         """Apply markdown conversions to text."""
         text = md_parser.reset().convert(text)
         return text
 
     @staticmethod
-    def format(note_text):
+    def format(note_text, cloze=False):
         """Apply all format conversions to note_text."""
         note_text = FormatConverter.obsidian_to_anki_math(note_text)
         # Extract the parts that are anki math
@@ -215,6 +244,8 @@ class FormatConverter:
         note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
             FormatConverter.MATH_REPLACE, note_text
         )
+        if cloze:
+            note_text = FormatConverter.curly_to_cloze(note_text)
         note_text = FormatConverter.markdown_parse(note_text)
         # Add back the parts that are anki math
         for math_match in math_matches:
@@ -353,7 +384,10 @@ class Note:
                 line = line[len(self.current_sub):]
             fields[self.current_field] += line + "\n"
         fields = {
-            key: FormatConverter.format(value.strip())
+            key: FormatConverter.format(
+                value.strip(),
+                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+            )
             for key, value in fields.items()
         }
         return {key: value.strip() for key, value in fields.items()}
@@ -417,7 +451,10 @@ class InlineNote(Note):
         # For last field:
         fields[self.current_field] += self.text
         fields = {
-            key: FormatConverter.format(value)
+            key: FormatConverter.format(
+                value,
+                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+            )
             for key, value in fields.items()
         }
         return {key: value.strip() for key, value in fields.items()}
@@ -453,7 +490,10 @@ class RegexNote:
             if match:
                 fields[name] = match
         fields = {
-            key: FormatConverter.format(value)
+            key: FormatConverter.format(
+                value,
+                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+            )
             for key, value in fields.items()
         }
         return {key: value.strip() for key, value in fields.items()}
@@ -541,6 +581,9 @@ class Config:
         config["DEFAULT"].setdefault(
             "Deck", "Default"
         )
+        config["DEFAULT"].setdefault(
+            "CurlyCloze", "False"
+        )
         # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -595,6 +638,9 @@ class Config:
         )
         NOTE_DICT_TEMPLATE["tags"] = [config["DEFAULT"]["Tag"]]
         NOTE_DICT_TEMPLATE["deckName"] = config["DEFAULT"]["Deck"]
+        CONFIG_DATA["CurlyCloze"] = config.getboolean(
+            "DEFAULT", "CurlyCloze"
+        )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
