@@ -45,8 +45,10 @@ Current features:
 
 **Apart from editing the config file, all operations of the script require Anki to be running.**
 
-The GUI of the script looks like this:
+The GUI of the script looks like this:  
 ![GUI](Images/GUI.png)
+
+Hopefully the options and path are self-explanatory. Note that you cannot directly choose a folder in the 'Browse' dialog, but can manually remove the filename at the end to create a path to the folder.
 
 ## New users
 
