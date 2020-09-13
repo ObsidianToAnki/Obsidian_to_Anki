@@ -35,7 +35,8 @@ to
 Basic = ^(.*[^\n:]{1}):{2}([^\n:]{1}.*)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![remnote_1](Images/Remnote_1.png)  
 ![remnote_2](Images/Remnote_2.png)
@@ -75,7 +76,8 @@ to
 Basic = ^#+(.+)\n+((?:[^\n#][\n]?)+)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![header_1](Images/Header_1.png)  
 ![header_2](Images/Header_2.png)  
@@ -126,7 +128,8 @@ to
 Basic = ^Q: ((?:[^\n][\n]?)+)\n+A: ((?:[^\n][\n]?)+)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![question_1](Images/Question_1.png)  
 ![question_2](Images/Question_2.png)  
@@ -167,7 +170,8 @@ to
 Basic = ((?:[^\n][\n]?)+) #flashcard\n+((?:[^\n][\n]?)+)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![neuracache_1](Images/Neuracache_1.png)  
 ![neuracache_2](Images/Neuracache_2.png)  
@@ -204,7 +208,8 @@ to
 Basic = ((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)
 </pre>
 6. Save the config file
-7. Run `obsidian_to_anki.py -r test.md`
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI.png)
 8. You should see these cards in Anki:  
 ![ruled_1](/Images/Ruled_1.png)  
 ![ruled_2](/Images/Ruled_2.png)
