@@ -623,6 +623,8 @@ class App:
             return
         if args.path:
             # no_args = False
+            if args.path == "False":
+                return
             current = os.getcwd()
             self.path = args.path
             if os.path.isdir(self.path):
