@@ -572,6 +572,9 @@ class Config:
         config["DEFAULT"].setdefault(
             "Deck", "Default"
         )
+        config["DEFAULT"].setdefault(
+            "CurlyCloze", "False"
+        )
         # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -626,6 +629,9 @@ class Config:
         )
         NOTE_DICT_TEMPLATE["tags"] = [config["DEFAULT"]["Tag"]]
         NOTE_DICT_TEMPLATE["deckName"] = config["DEFAULT"]["Deck"]
+        CONFIG_DATA["CurlyCloze"] = config.getboolean(
+            "DEFAULT", "CurlyCloze"
+        )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
@@ -1258,9 +1264,6 @@ class RegexFile(File):
 
 
 if __name__ == "__main__":
-    """
     if not os.path.exists(CONFIG_PATH):
         Config.update_config()
     App()
-    """
-    print(FormatConverter.curly_to_cloze(test))
