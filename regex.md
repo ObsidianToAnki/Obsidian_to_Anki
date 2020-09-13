@@ -24,7 +24,7 @@ The script won't see things outside of it.
 You can have::multiple notes in the same file
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](GUI.png)
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -64,7 +64,7 @@ Span over
 Multiple lines, and ignore preceding whitespace
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](GUI.png)
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -115,7 +115,7 @@ Q: How is this possible?
 A: The 'magic' of regular expressions!
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](GUI.png)
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -156,7 +156,7 @@ Whitespace is ignored!
 
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](GUI.png)
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -193,7 +193,7 @@ Yes, but you need the front and back
 directly before and after the ruler.
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](GUI.png)
+![GUI](Images/GUI.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
