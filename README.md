@@ -299,13 +299,13 @@ The instructions are quite similar to deleting normal notes:
 
 In any note, you can do clozes using Anki's standard syntax:  
 `This is a {{c1::cloze note}}`  
-However, by enabling the 'CurlyCloze' option (see [Config](#config)), you can write the above as:
-`This is a {cloze note}`
-It'll pick up multiple clozes accordingly:
-`This is a {cloze note} with {multiple clozes}`
+However, by enabling the 'CurlyCloze' option (see [Config](#config)), you can write the above as:  
+`This is a {cloze note}`  
+It'll pick up multiple clozes accordingly:  
+`This is a {cloze note} with {multiple clozes}`  
 Gets translated to:  
 `This is a {{c1::cloze note}} with {{c2::multiple clozes}}`  
-However, simultaneous clozes are NOT supported when using this syntax.
+However, simultaneous clozes are NOT supported when using this syntax.  
 Also, you cannot use Anki's regular syntax for clozes if the 'CurlyCloze' option is enabled.
 
 ## Default
