@@ -624,7 +624,7 @@ class App:
         if args.path:
             # no_args = False
             current = os.getcwd()
-            self.path = " ".join(args.path)
+            self.path = args.path
             if os.path.isdir(self.path):
                 try:
                     os.chdir(self.path)
@@ -667,7 +667,7 @@ class App:
         # if no_args:
             # self.parser.print_help()
 
-    @gooey.Gooey
+    @gooey.Gooey(use_cmd_args=True)
     def setup_parser(self):
         """Set up the argument parser."""
         self.parser = gooey.GooeyParser(
@@ -675,7 +675,6 @@ class App:
         )
         self.parser.add_argument(
             "path",
-            nargs="*",
             default=False,
             help="Path to the file or directory you want to scan.",
             widget="FileChooser"
