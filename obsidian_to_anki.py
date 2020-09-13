@@ -384,7 +384,10 @@ class Note:
                 line = line[len(self.current_sub):]
             fields[self.current_field] += line + "\n"
         fields = {
-            key: FormatConverter.format(value.strip())
+            key: FormatConverter.format(
+                value.strip(),
+                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+            )
             for key, value in fields.items()
         }
         return {key: value.strip() for key, value in fields.items()}
@@ -448,7 +451,10 @@ class InlineNote(Note):
         # For last field:
         fields[self.current_field] += self.text
         fields = {
-            key: FormatConverter.format(value)
+            key: FormatConverter.format(
+                value,
+                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+            )
             for key, value in fields.items()
         }
         return {key: value.strip() for key, value in fields.items()}
@@ -484,7 +490,10 @@ class RegexNote:
             if match:
                 fields[name] = match
         fields = {
-            key: FormatConverter.format(value)
+            key: FormatConverter.format(
+                value,
+                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+            )
             for key, value in fields.items()
         }
         return {key: value.strip() for key, value in fields.items()}
