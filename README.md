@@ -181,9 +181,9 @@ Displayed $$z = 10$$
 
 ### Image formatting
 
-Embedded images are supported if the following criteria are met:
-1. The image is stored locally
-2. It is embedded using the standard markdown syntax: `![alt-text](path_to_image)`
+Embedded images are supported if they are embedded using the standard markdown syntax: `![alt-text](path_to_image)`
+
+v2.3 - Web-hosted images are now supported! Do `![alt-text](image_url)`. You'll want to do 'copy image address' on the image, and use that for the image url.
 
 ### Audio formatting
 
