@@ -158,6 +158,7 @@ class FormatConverter:
     IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
     SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
     CLOZE_REGEXP = re.compile(r'{(.+?)}')
+    URL_REGEXP = re.compile(r'https?://')
 
     PARA_OPEN = "<p>"
     PARA_CLOSE = "</p>"
@@ -270,10 +271,19 @@ class FormatConverter:
         return note_text
 
     @staticmethod
+    def is_url(text):
+        """Check whether text looks like a url."""
+        return bool(
+            FormatConverter.URL_REGEXP.match(text)
+        )
+
+    @staticmethod
     def get_images(html_text):
         """Get all the images that need to be added."""
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
             path = match.group(1)
+            if FormatConverter.is_url(path):
+                continue  # Skips over images web-hosted.
             filename = os.path.basename(path)
             if filename not in CONFIG_DATA["Added Media"].keys():
                 MEDIA_PATHS.add(path)
@@ -292,6 +302,8 @@ class FormatConverter:
     def path_to_filename(matchobject):
         """Replace the src in matchobject appropriately."""
         found_string, found_path = matchobject.group(0), matchobject.group(1)
+        if FormatConverter.is_url(found_path):
+            return found_string  # So urls should not be altered.
         found_string = found_string.replace(
             found_path, os.path.basename(found_path)
         )
