@@ -530,7 +530,7 @@ class Config:
         config.optionxform = str
         if os.path.exists(CONFIG_PATH):
             print("Config file exists, reading...")
-            config.read(CONFIG_PATH)
+            config.read(CONFIG_PATH, encoding='utf-8-sig')
         # Setting up field substitutions
         note_types = AnkiConnect.invoke("modelNames")
         fields_request = [
@@ -611,7 +611,7 @@ class Config:
         print("Loading configuration file...")
         config = configparser.ConfigParser()
         config.optionxform = str  # Allows for case sensitivity
-        config.read(CONFIG_PATH)
+        config.read(CONFIG_PATH, encoding='utf-8-sig')
         note_subs = config["Note Substitutions"]
         Note.note_subs = {v: k for k, v in note_subs.items()}
         Note.field_subs = {
