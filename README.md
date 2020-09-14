@@ -97,15 +97,15 @@ Back = A:
 </pre>
 Then you now format your notes like this:
 <pre>
-{Begin Note}
+START
 Basic
 This is a test.
 A: Test successful!
-{End Note}
+END
 </pre>
 As an inline note:
 <pre>
-{Begin Inline Note} [Basic] This is a test. A: Test successful! {End Inline Note}
+STARTI [Basic] This is a test. A: Test successful! ENDI
 </pre>
 
 ### Note Type Substitutions
@@ -125,14 +125,15 @@ Basic (and reversed card) = Basic (and reversed card)
 </pre>
 Then you now format your notes like this:  
 <pre>
-{Begin Note}
+START
 B
-{Note Data}
-{End Note}
+This is a test.
+Back: Test successful!
+END
 </pre>
 As an inline note:
 <pre>
-{Begin Inline Note} [B] {Note Data} {End Inline Note}
+STARTI [B] This is a test. Back: Test successful! ENDI
 </pre>
 
 ### Added Media
@@ -155,11 +156,11 @@ You may place more than one target deck in the same file, but only the first ins
 
 In the markdown file, you must format your 'block' notes as follows (see [Inline notes](#inline-note-formatting) for notes on a single line):
 <pre>
-{Begin Note}
+START
 {Note Type}
 {Note Fields}
 Tags:
-{End Note}
+END
 </pre>
 ### Markdown formatting
 
@@ -195,11 +196,11 @@ Embedded audio is supported if the following criteria are met:
 For reference, the note formatting style is:
 
 <pre>
-{Begin Note}
+START
 {Note Type}
 {Note Fields}
 Tags:
-{End Note}
+END
 </pre>
 Note that the Tags: line is optional - if you don't want tags, you may leave out the line.
 
@@ -231,42 +232,42 @@ Like with tag-line formatting, you need a space between tags - however, do not i
 Apart from the first field, each field must have a prefix to indicate to the program when to move on to the next field. For example:
 
 <pre>
-{Begin Note}
+START
 Basic
 This is a test.
 Back: Test successful!
-{End Note}
+END
 </pre>
 Note that you must start new fields on a new line for non-inline notes.  
 When the script successfully adds a note, it will append an ID to the Note Data. This allows you to *update existing notes by running the script again*.
 
 Example output:
 <pre>
-{Begin Note}
+START
 Basic
 This is a test.
 Back: Test successful!
 ID: 1566052191670
-{End Note}
+END
 </pre>
 ### Deleting notes
 
 The script can delete notes that *it has added* automatically. To do this:
 1. Find the formatted note in your file:
 <pre>
-{Begin Note}
+START
 {Note Type}
 {Note Data}
 ID: {Identifier}
-{End Note}
+END
 </pre>
 2. Change this to read:
 <pre>
-{Begin Note}
+START
 ID: {Identifier}
-{End Note}
+END
 </pre>
-3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `{Begin Note} {End Note}` block from the file.
+3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `START END` block from the file.
 
 See [Deleting inline notes](#deleting-inline-notes) for how to do this with inline notes.
 
@@ -274,11 +275,11 @@ See [Deleting inline notes](#deleting-inline-notes) for how to do this with inli
 *v1.2 feature*
 v1.2 of the script introduces **inline notes** - notes which are entirely on a single line. They are formatted as such:  
 <pre>
-{Begin Inline Note} [{Note Type}] {Note Data} {End Inline Note}
+STARTI [{Note Type}] {Note Data} ENDI
 </pre>
 For example  
 <pre>
-{Begin Inline Note} [Basic] This is a test. Back: Test successful! {End Inline Note}  
+STARTI [Basic] This is a test. Back: Test successful! ENDI  
 </pre>
 Unlike regular 'block' notes, you can put inline notes anywhere on a line - for example, you could have a bulletpointed list of inline notes.  
 Also, unlike regular 'block' notes, the script identifies the note type through the string in square brackets. Hence, **note types with [ or ] in the name are not supported for inline notes.**
@@ -288,13 +289,13 @@ Also, unlike regular 'block' notes, the script identifies the note type through 
 The instructions are quite similar to deleting normal notes:
 1. Find the formatted note in your file:
 <pre>
-{Begin Inline Note} [{Note Type}] {Note Data} ID: {Identifier} {End Inline Note}
+STARTI [{Note Type}] {Note Data} ID: {Identifier} ENDI
 </pre>
 2. Change this to read:
 <pre>
-{Begin Inline Note} ID: {Identifier} {End Inline Note}
+STARTI ID: {Identifier} ENDI
 </pre>
-3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `{Begin Inline Note} {End Inline Note}` block from the file.
+3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `STARTI ENDI` block from the file.
 
 ### Cloze formatting
 
