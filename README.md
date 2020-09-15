@@ -49,7 +49,16 @@ Current features:
 The GUI of the script looks like this:  
 ![GUI](Images/GUI.png)
 
-Hopefully the options and path are self-explanatory. Note that you cannot directly choose a folder in the 'Browse' dialog, but can manually remove the filename at the end to create a path to the folder.
+Hopefully the options and path are self-explanatory.
+
+### Command line usage
+If you set 'GUI' in the config file to False, the script is then run from the command line:
+* Use `-h` to see help.
+* Run the script as `obsidian_to_anki.py [path]`, where `[path]` is the path to the file or folder you wish to add notes from.
+* Use `-c` to open up the config file for editing (not guaranteed to work on all operating systems, if it doesn't you'll have to find and edit it manually).
+* Use `-u` to update the config file. Do this when you add new note types to Anki.
+* Use `-m` to force the script to add all media files detected, instead of lazy addition of media files. Useful if you've e.g. resized the image, and want the changes to be reflected in Anki.
+* Use `-r` to use custom regex syntax, ignoring the default syntax of the script.
 
 ## New users
 
@@ -71,7 +80,8 @@ The sections below describe the default syntax of the script (with the 'Regex' o
 
 ### DEFAULT section
 Allows you to change the default deck and tag of the script.  
-New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)
+New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)  
+New in v2.4.0 - allows you to enable/disable the GUI of the script - see [Command line usage](#command-line-usage).  
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
