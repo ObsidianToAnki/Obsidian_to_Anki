@@ -596,6 +596,9 @@ class Config:
         config["DEFAULT"].setdefault(
             "CurlyCloze", "False"
         )
+        config["DEFAULT"].setdefault(
+            "GUI", "True"
+        )
         # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -652,6 +655,9 @@ class Config:
         NOTE_DICT_TEMPLATE["deckName"] = config["DEFAULT"]["Deck"]
         CONFIG_DATA["CurlyCloze"] = config.getboolean(
             "DEFAULT", "CurlyCloze"
+        )
+        CONFIG_DATA["GUI"] = config.getboolean(
+            "DEFAULT", "GUI"
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
