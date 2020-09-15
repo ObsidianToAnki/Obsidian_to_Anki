@@ -666,6 +666,8 @@ class App:
         """Execute the main functionality of the script."""
         self.setup_parser()
         args = self.parser.parse_args()
+        if args.dirpath:
+            args.path = args.dirpath
         # no_args = True
         if args.update:
             # no_args = False
@@ -733,12 +735,27 @@ class App:
         self.parser = gooey.GooeyParser(
             description="Add cards to Anki from an Obsidian markdown file."
         )
+        path_group = self.parser.add_mutually_exclusive_group(required=False)
+        path_group.add_argument(
+            "-f", "--file",
+            help="Choose a file to scan.",
+            dest="path",
+            widget='FileChooser'
+        )
+        path_group.add_argument(
+            "-d", "--dir",
+            help="Choose a directory to scan.",
+            dest="dirpath",
+            widget='DirChooser'
+        )
+        """
         self.parser.add_argument(
             "path",
             default=False,
             help="Path to the file or directory you want to scan.",
             widget="FileChooser"
         )
+        """
         self.parser.add_argument(
             "-c", "--config",
             action="store_true",
