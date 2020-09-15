@@ -10,6 +10,7 @@ import webbrowser
 import markdown
 import base64
 import gooey
+import argparse
 
 MEDIA_PATHS = set()
 
@@ -670,25 +671,28 @@ class App:
 
     def __init__(self):
         """Execute the main functionality of the script."""
-        self.setup_parser()
+        if CONFIG_DATA["GUI"]:
+            self.setup_gui_parser()
+        else:
+            self.setup_cli_parser()
         args = self.parser.parse_args()
-        if args.dirpath:
+        if CONFIG_DATA["GUI"] and args.dirpath:
             args.path = args.dirpath
-        # no_args = True
+        no_args = True
         if args.update:
-            # no_args = False
+            no_args = False
             Config.update_config()
         Config.load_config()
         if args.mediaupdate:
-            # no_args = False
+            no_args = False
             CONFIG_DATA["Added Media"].clear()
         self.gen_regexp()
         if args.config:
-            # no_args = False
+            no_args = False
             webbrowser.open(CONFIG_PATH)
             return
         if args.path:
-            # no_args = False
+            no_args = False
             if args.path == "False":
                 return
             current = os.getcwd()
@@ -732,36 +736,11 @@ class App:
                 file.write_file()
             self.requests_2()
             os.chdir(current)
-        # if no_args:
-            # self.parser.print_help()
+        if no_args:
+            self.parser.print_help()
 
-    @gooey.Gooey(use_cmd_args=True)
-    def setup_parser(self):
-        """Set up the argument parser."""
-        self.parser = gooey.GooeyParser(
-            description="Add cards to Anki from an Obsidian markdown file."
-        )
-        path_group = self.parser.add_mutually_exclusive_group(required=False)
-        path_group.add_argument(
-            "-f", "--file",
-            help="Choose a file to scan.",
-            dest="path",
-            widget='FileChooser'
-        )
-        path_group.add_argument(
-            "-d", "--dir",
-            help="Choose a directory to scan.",
-            dest="dirpath",
-            widget='DirChooser'
-        )
-        """
-        self.parser.add_argument(
-            "path",
-            default=False,
-            help="Path to the file or directory you want to scan.",
-            widget="FileChooser"
-        )
-        """
+    def setup_parser_optionals(self):
+        """Set up optional arguments for the parser."""
         self.parser.add_argument(
             "-c", "--config",
             action="store_true",
@@ -786,6 +765,39 @@ class App:
             dest="mediaupdate",
             help="Force addition of media files."
         )
+
+    @gooey.Gooey(use_cmd_args=True)
+    def setup_gui_parser(self):
+        """Set up the GUI argument parser."""
+        self.parser = gooey.GooeyParser(
+            description="Add cards to Anki from a markdown or text file."
+        )
+        path_group = self.parser.add_mutually_exclusive_group(required=False)
+        path_group.add_argument(
+            "-f", "--file",
+            help="Choose a file to scan.",
+            dest="path",
+            widget='FileChooser'
+        )
+        path_group.add_argument(
+            "-d", "--dir",
+            help="Choose a directory to scan.",
+            dest="dirpath",
+            widget='DirChooser'
+        )
+        self.setup_parser_optionals()
+
+    def setup_cli_parser(self):
+        """Setup the command-line argument parser."""
+        self.parser = argparse.ArgumentParser(
+            description="Add cards to Anki from a markdown or text file."
+        )
+        self.parser.add_argument(
+            "path",
+            default=False,
+            help="Path to the file or directory you want to scan."
+        )
+        self.setup_parser_optionals()
 
     def gen_regexp(self):
         """Generate the regular expressions used by the app."""
