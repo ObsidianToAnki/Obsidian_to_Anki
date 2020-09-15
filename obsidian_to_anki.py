@@ -671,6 +671,7 @@ class App:
 
     def __init__(self):
         """Execute the main functionality of the script."""
+        Config.load_config()
         if CONFIG_DATA["GUI"]:
             self.setup_gui_parser()
         else:
@@ -682,7 +683,7 @@ class App:
         if args.update:
             no_args = False
             Config.update_config()
-        Config.load_config()
+            Config.load_config()
         if args.mediaupdate:
             no_args = False
             CONFIG_DATA["Added Media"].clear()
@@ -795,6 +796,7 @@ class App:
         self.parser.add_argument(
             "path",
             default=False,
+            nargs="?",
             help="Path to the file or directory you want to scan."
         )
         self.setup_parser_optionals()
