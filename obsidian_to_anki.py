@@ -671,7 +671,13 @@ class App:
 
     def __init__(self):
         """Execute the main functionality of the script."""
-        Config.load_config()
+        try:
+            Config.load_config()
+        except configparser.Error as e:
+            print("Error:", e)
+            print("Attempting to fix config file...")
+            Config.update_config()
+            Config.load_config()
         if CONFIG_DATA["GUI"]:
             self.setup_gui_parser()
         else:
