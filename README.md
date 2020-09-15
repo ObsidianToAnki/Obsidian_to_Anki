@@ -80,8 +80,8 @@ The sections below describe the default syntax of the script (with the 'Regex' o
 
 ### DEFAULT section
 Allows you to change the default deck and tag of the script.  
-New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)
-New in v2.4.0 - allows you to enable/disable the GUI of the script - see [Command line usage](#command-line-usage).
+New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)  
+New in v2.4.0 - allows you to enable/disable the GUI of the script - see [Command line usage](#command-line-usage).  
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
