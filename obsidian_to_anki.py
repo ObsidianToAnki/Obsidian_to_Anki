@@ -594,6 +594,7 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
+        config["DEFAULT"] = dict()  # Removes DEFAULT if it's there.
         config.setdefault("Defaults", dict())
         config["Defaults"].setdefault(
             "Tag", "Obsidian_to_Anki"
@@ -702,6 +703,8 @@ class App:
                 args.path = args.dirpath
             elif args.file:
                 args.path = args.file
+            else:
+                args.path = False
         no_args = True
         if args.update:
             no_args = False
