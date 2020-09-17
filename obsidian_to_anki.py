@@ -7,10 +7,24 @@ import configparser
 import os
 import collections
 import webbrowser
-import markdown
 import base64
-import gooey
 import argparse
+import subprocess
+import sys
+
+try:
+    import markdown
+except ModuleNotFoundError:
+    print("Installing markdown library...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "markdown"])
+    import markdown
+
+try:
+    import gooey
+except ModuleNotFoundError:
+    print("Installing gooey library...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "gooey"])
+    import gooey
 
 MEDIA_PATHS = set()
 
