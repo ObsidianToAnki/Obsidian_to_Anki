@@ -11,6 +11,7 @@ import markdown
 import base64
 import gooey
 import argparse
+import html
 
 MEDIA_PATHS = set()
 
@@ -40,7 +41,7 @@ CONFIG_PATH = os.path.expanduser(
 CONFIG_DATA = dict()
 
 md_parser = markdown.Markdown(
-    extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
+    extensions=['extra', 'nl2br', 'sane_lists']
 )
 
 
@@ -231,47 +232,6 @@ class FormatConverter:
         return text
 
     @staticmethod
-    def format(note_text, cloze=False):
-        """Apply all format conversions to note_text."""
-        note_text = FormatConverter.obsidian_to_anki_math(note_text)
-        # Extract the parts that are anki math
-        math_matches = [
-            math_match.group(0)
-            for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
-                note_text
-            )
-        ]
-        # Replace them to be later added back, so they don't interfere
-        # with markdown parsing
-        note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
-            FormatConverter.MATH_REPLACE, note_text
-        )
-        if cloze:
-            note_text = FormatConverter.curly_to_cloze(note_text)
-        note_text = FormatConverter.markdown_parse(note_text)
-        # Add back the parts that are anki math
-        for math_match in math_matches:
-            note_text = note_text.replace(
-                FormatConverter.MATH_REPLACE,
-                math_match,
-                1
-            )
-        FormatConverter.get_images(note_text)
-        FormatConverter.get_audio(note_text)
-        note_text = FormatConverter.fix_image_src(note_text)
-        note_text = FormatConverter.fix_audio_src(note_text)
-        note_text = note_text.strip()
-        # Remove unnecessary paragraph tag
-        if note_text.startswith(
-            FormatConverter.PARA_OPEN
-        ) and note_text.endswith(
-            FormatConverter.PARA_CLOSE
-        ):
-            note_text = note_text[len(FormatConverter.PARA_OPEN):]
-            note_text = note_text[:-len(FormatConverter.PARA_CLOSE)]
-        return note_text
-
-    @staticmethod
     def is_url(text):
         """Check whether text looks like a url."""
         return bool(
@@ -325,6 +285,47 @@ class FormatConverter:
             FormatConverter.path_to_filename,
             html_text
         )
+
+    @staticmethod
+    def format(note_text, cloze=False):
+        """Apply all format conversions to note_text."""
+        note_text = FormatConverter.obsidian_to_anki_math(note_text)
+        # Extract the parts that are anki math
+        math_matches = [
+            math_match.group(0)
+            for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
+                note_text
+            )
+        ]
+        # Replace them to be later added back, so they don't interfere
+        # with markdown parsing
+        note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
+            FormatConverter.MATH_REPLACE, note_text
+        )
+        if cloze:
+            note_text = FormatConverter.curly_to_cloze(note_text)
+        note_text = FormatConverter.markdown_parse(note_text)
+        # Add back the parts that are anki math
+        for math_match in math_matches:
+            note_text = note_text.replace(
+                FormatConverter.MATH_REPLACE,
+                html.escape(math_match),
+                1
+            )
+        FormatConverter.get_images(note_text)
+        FormatConverter.get_audio(note_text)
+        note_text = FormatConverter.fix_image_src(note_text)
+        note_text = FormatConverter.fix_audio_src(note_text)
+        note_text = note_text.strip()
+        # Remove unnecessary paragraph tag
+        if note_text.startswith(
+            FormatConverter.PARA_OPEN
+        ) and note_text.endswith(
+            FormatConverter.PARA_CLOSE
+        ):
+            note_text = note_text[len(FormatConverter.PARA_OPEN):]
+            note_text = note_text[:-len(FormatConverter.PARA_CLOSE)]
+        return note_text
 
 
 class Note:
