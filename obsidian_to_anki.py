@@ -335,14 +335,20 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
+    ID_REGEXP = re.compile(
+        r"(?:<!--)?" + ID_PREFIX + r"(\d+)"
+    )
+
     def __init__(self, note_text):
         """Set up useful variables."""
         self.text = note_text
         self.lines = self.text.splitlines()
         self.current_field_num = 0
         self.delete = False
-        if self.lines[-1].startswith(ID_PREFIX):
-            self.identifier = int(self.lines.pop()[len(ID_PREFIX):])
+        if Note.ID_REGEXP.match(self.lines[-1]):
+            self.identifier = int(
+                Note.ID_REGEXP.match(self.lines.pop()).group(1)
+            )
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
@@ -690,8 +696,11 @@ class App:
         else:
             self.setup_cli_parser()
         args = self.parser.parse_args()
-        if CONFIG_DATA["GUI"] and args.dirpath:
-            args.path = args.dirpath
+        if CONFIG_DATA["GUI"]:
+            if args.directory:
+                args.path = args.dirpath
+            elif args.file:
+                args.path = args.file
         no_args = True
         if args.update:
             no_args = False
@@ -791,13 +800,13 @@ class App:
         path_group.add_argument(
             "-f", "--file",
             help="Choose a file to scan.",
-            dest="path",
+            dest="file",
             widget='FileChooser'
         )
         path_group.add_argument(
             "-d", "--dir",
             help="Choose a directory to scan.",
-            dest="dirpath",
+            dest="directory",
             widget='DirChooser'
         )
         self.setup_parser_optionals()
