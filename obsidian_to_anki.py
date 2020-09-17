@@ -427,7 +427,7 @@ class Note:
 
 class InlineNote(Note):
 
-    ID_REGEXP = re.compile(ID_PREFIX + r"(\d+)")
+    ID_REGEXP = re.compile(r"(?:<!--)?" + ID_PREFIX + r"(\d+)")
     TAG_REGEXP = re.compile(TAG_PREFIX + r"(.*)")
     TYPE_REGEXP = re.compile(r"\[(.*?)\]")  # So e.g. [Basic]
 
@@ -594,20 +594,20 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
-        config.setdefault("DEFAULT", dict())
-        config["DEFAULT"].setdefault(
+        config.setdefault("Defaults", dict())
+        config["Defaults"].setdefault(
             "Tag", "Obsidian_to_Anki"
         )
-        config["DEFAULT"].setdefault(
+        config["Defaults"].setdefault(
             "Deck", "Default"
         )
-        config["DEFAULT"].setdefault(
+        config["Defaults"].setdefault(
             "CurlyCloze", "False"
         )
-        config["DEFAULT"].setdefault(
+        config["Defaults"].setdefault(
             "GUI", "True"
         )
-        config["DEFAULT"].setdefault(
+        config["Defaults"].setdefault(
             "Regex", "False"
         )
         # Setting up Custom Regexps
@@ -632,10 +632,11 @@ class Config:
             note: dict(config[note]) for note in config
             if note not in [
                 "Note Substitutions",
-                "DEFAULT",
+                "Defaults",
                 "Syntax",
                 "Custom Regexps",
-                "Added Media"
+                "Added Media",
+                "DEFAULT"
             ]
         }
         CONFIG_DATA["NOTE_PREFIX"] = re.escape(
@@ -662,16 +663,16 @@ class Config:
                 config["Syntax"]["Delete Regex Note Line"]
             ) + RegexNote.ID_REGEXP_STR
         )
-        NOTE_DICT_TEMPLATE["tags"] = [config["DEFAULT"]["Tag"]]
-        NOTE_DICT_TEMPLATE["deckName"] = config["DEFAULT"]["Deck"]
+        NOTE_DICT_TEMPLATE["tags"] = [config["Defaults"]["Tag"]]
+        NOTE_DICT_TEMPLATE["deckName"] = config["Defaults"]["Deck"]
         CONFIG_DATA["CurlyCloze"] = config.getboolean(
-            "DEFAULT", "CurlyCloze"
+            "Defaults", "CurlyCloze"
         )
         CONFIG_DATA["GUI"] = config.getboolean(
-            "DEFAULT", "GUI"
+            "Defaults", "GUI"
         )
         CONFIG_DATA["Regex"] = config.getboolean(
-            "DEFAULT", "Regex"
+            "Defaults", "Regex"
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
