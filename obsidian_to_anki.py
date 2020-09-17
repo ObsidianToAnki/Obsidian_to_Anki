@@ -601,6 +601,9 @@ class Config:
         config["DEFAULT"].setdefault(
             "GUI", "True"
         )
+        config["DEFAULT"].setdefault(
+            "Regex", "False"
+        )
         # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -660,6 +663,9 @@ class Config:
         )
         CONFIG_DATA["GUI"] = config.getboolean(
             "DEFAULT", "GUI"
+        )
+        CONFIG_DATA["Regex"] = config.getboolean(
+            "DEFAULT", "Regex"
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
@@ -765,7 +771,8 @@ class App:
             "-r", "--regex",
             action="store_true",
             dest="regex",
-            help="Use custom regex syntax."
+            help="Use custom regex syntax.",
+            default=CONFIG_DATA["Regex"]
         )
         self.parser.add_argument(
             "-m", "--mediaupdate",
