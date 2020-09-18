@@ -1117,12 +1117,16 @@ class File:
                 self.notes_to_edit.append(parsed)
 
     @staticmethod
-    def id_to_str(id, inline=False):
+    def id_to_str(id, inline=False, comment=False):
         """Get the string repr of id."""
+        result = ID_PREFIX + str(id)
+        if comment:
+            result = "<!--" + result + "-->"
         if inline:
-            return ID_PREFIX + str(id) + " "
+            result += " "
         else:
-            return ID_PREFIX + str(id) + "\n"
+            result += "\n"
+        return result
 
     def write_ids(self):
         """Write the identifiers to self.file."""
@@ -1341,7 +1345,7 @@ class RegexFile(File):
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    "\n" + ID_PREFIX + str(id) + "\n"
+                    "\n" + File.id_to_str(id)
                     for id in self.note_ids
                     if id is not None
                 ]
