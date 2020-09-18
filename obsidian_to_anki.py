@@ -1375,7 +1375,138 @@ class RegexFile(File):
 
 class Directory:
     """Class for managing a directory of files at a time."""
-    pass
+
+    def __init__(self, abspath, regex=False, onefile=None):
+        """Scan directory for files."""
+        self.path = abspath
+        self.parent = os.getcwd()
+        if regex:
+            self.file_class = RegexFile
+        else:
+            self.file_class = File
+        os.chdir(self.path)
+        if onefile:
+            # Hence, just one file to do
+            self.files = [self.file_class(onefile)]
+        else:
+            with os.scandir() as it:
+                self.files = [
+                    self.file_class(entry.path)
+                    for entry in it
+                    if entry.is_file() and os.path.splitext(
+                        entry.path
+                    )[1] in App.SUPPORTED_EXTS
+                ]
+        for file in self.files:
+            file.scan_file()
+        os.chdir(self.parent)
+
+    def requests_1(self):
+        """Get the 1st HTTP request for this directory."""
+        print("Forming request 1 for directory", self.path)
+        requests = list()
+        print("Adding notes into Anki...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_add_notes()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Updating fields of existing notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_update_fields()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Getting card IDs of notes to be edited...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_note_info()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Removing empty notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_delete_notes()
+                    for file in self.files
+                ]
+            )
+        )
+        return AnkiConnect.request(
+            "multi",
+            actions=requests
+        )
+
+    def parse_requests_1(self, requests_1_response, tag_response):
+        response = requests_1_response
+        notes_ids = AnkiConnect.parse(response[0])
+        cards_ids = AnkiConnect.parse(response[2])
+        tags = AnkiConnect.parse(tag_response)
+        for note_ids, file in zip(notes_ids, self.files):
+            file.note_ids = AnkiConnect.parse(note_ids)
+        for card_ids, file in zip(cards_ids, self.files):
+            file.card_ids = AnkiConnect.parse(card_ids)
+        for file in self.files:
+            file.tags = tags
+        os.chdir(self.path)
+        for file in self.files:
+            file.get_cards()
+            file.write_ids()
+            print("Removing empty notes for file", file.filename)
+            file.remove_empties()
+            file.write_file()
+        os.chdir(self.parent)
+
+    def requests_2(self):
+        """Get 2nd big request."""
+        print("Forming request 2 for directory", self.path)
+        requests = list()
+        print("Moving cards to target deck...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_change_decks()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Replacing tags...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_clear_tags()
+                    for file in self.files
+                ]
+            )
+        )
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_add_tags()
+                    for file in self.files
+                ]
+            )
+        )
+        return AnkiConnect.request(
+            "multi",
+            actions=requests
+        )
 
 
 if __name__ == "__main__":
