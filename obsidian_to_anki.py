@@ -1341,7 +1341,7 @@ class RegexFile(File):
     def fix_newline_ids(self):
         """Removes double newline then ids from self.file."""
         double_regexp = re.compile(
-            r"(\r\n|\r|\n){2}" + ID_PREFIX + r"\d+"
+            r"(\r\n|\r|\n){2}(?:<!--)?" + ID_PREFIX + r"\d+"
         )
         self.file = double_regexp.sub(
             lambda x: x.group()[1:],
@@ -1354,7 +1354,7 @@ class RegexFile(File):
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    "\n" + File.id_to_str(id)
+                    "\n" + File.id_to_str(id, comment=CONFIG_DATA["Comment"])
                     for id in self.note_ids
                     if id is not None
                 ]
