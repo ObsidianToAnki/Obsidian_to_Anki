@@ -229,12 +229,12 @@ Cards made using this format support tags - simply append a "Tags: {tag_list}" t
 To delete notes made using this format, remove the content before the ID and make it look like:
 <pre>
 {Delete Regex Note Line}  
-ID: 129840142123  
+&lt;!--ID: 129840142123--&gt;  
 </pre>
 With the default settings:
 <pre>
 DELETE  
-ID: 129414201900  
+&lt;!--ID: 129414201900--&gt;  
 </pre>
 ## Conflicts?
 Try to make sure your regex matches don't overlap with each other. The script is designed, however, to not recognise a match inside another match (for different note types).
