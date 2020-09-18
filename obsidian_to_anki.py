@@ -742,11 +742,22 @@ class App:
             directories = list()
             if os.path.isdir(self.path):
                 os.chdir(self.path)
-                directories = [
-                    Directory(
-                        os.getcwd(), regex=args.regex
-                    )
-                ]
+                if args.recurse:
+                    directories = list()
+                    for root, dirs, files in os.walk(os.getcwd()):
+                        directories.append(
+                            Directory(root, regex=args.regex)
+                        )
+                        for dir in dirs:
+                            if dir.startswith("."):
+                                dirs.remove(dir)
+                                # So, ignore . folders
+                else:
+                    directories = [
+                        Directory(
+                            os.getcwd(), regex=args.regex
+                        )
+                    ]
                 os.chdir(current)
             else:
                 directories = [
@@ -811,6 +822,12 @@ class App:
             action="store_true",
             dest="mediaupdate",
             help="Force addition of media files."
+        )
+        self.parser.add_argument(
+            "-R", "--recurse",
+            action="store_true",
+            dest="recurse",
+            help="Recursively scan subfolders."
         )
 
     if GOOEY:
