@@ -740,7 +740,7 @@ class App:
             current = os.getcwd()
             self.path = args.path
             directories = list()
-            if os.is_dir(self.path):
+            if os.path.isdir(self.path):
                 os.chdir(self.path)
                 directories = [
                     Directory(
@@ -763,7 +763,7 @@ class App:
             )
             print("Adding media with these filenames...")
             print(list(MEDIA.keys()))
-            requests.append(self.get_add_media)
+            requests.append(self.get_add_media())
             print("Adding directory requests...")
             for directory in directories:
                 requests.append(directory.requests_1())
@@ -771,10 +771,11 @@ class App:
                 "multi",
                 actions=requests
             )
-            tags = AnkiConnect.parse(result[1])
+            print(result)
+            tags = AnkiConnect.parse(result[0])
             directory_responses = result[2:]
             for directory, response in zip(directories, directory_responses):
-                directory.parse_requests_1(response, tags)
+                directory.parse_requests_1(AnkiConnect.parse(response), tags)
             requests = list()
             for directory in directories:
                 requests.append(directory.requests_2())
