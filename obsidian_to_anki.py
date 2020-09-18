@@ -165,7 +165,7 @@ class FormatConverter:
 
     MATH_REPLACE = "OBSTOANKIMATH"
 
-    IMAGE_REGEXP = re.compile(r'<img alt=".*?" src="(.*?)" />')
+    IMAGE_REGEXP = re.compile(r'<img alt=".*?" src="(.*?)"')
     SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
     CLOZE_REGEXP = re.compile(r'{(.+?)}')
     URL_REGEXP = re.compile(r'https?://')
