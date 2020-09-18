@@ -165,7 +165,7 @@ class FormatConverter:
 
     MATH_REPLACE = "OBSTOANKIMATH"
 
-    IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
+    IMAGE_REGEXP = re.compile(r'<img alt=".*?" src="(.*?)" />')
     SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
     CLOZE_REGEXP = re.compile(r'{(.+?)}')
     URL_REGEXP = re.compile(r'https?://')
@@ -251,6 +251,7 @@ class FormatConverter:
         """Get all the images that need to be added."""
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
             path = match.group(1)
+            print(path)
             if FormatConverter.is_url(path):
                 continue  # Skips over images web-hosted.
             filename = os.path.basename(path)
@@ -323,6 +324,7 @@ class FormatConverter:
                 html.escape(math_match),
                 1
             )
+        print(note_text)
         FormatConverter.get_images(note_text)
         FormatConverter.get_audio(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
@@ -782,6 +784,12 @@ class App:
                 "multi",
                 actions=requests
             )
+            for filename in MEDIA.keys():
+                CONFIG_DATA["Added Media"].setdefault(
+                    filename, "True"
+                )
+            with open(CONFIG_PATH, "w") as configfile:
+                Config.config.write(configfile)
             tags = AnkiConnect.parse(result[0])
             directory_responses = result[2:]
             for directory, response in zip(directories, directory_responses):
