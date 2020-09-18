@@ -2,29 +2,6 @@
 Script to add flashcards from a text or markdown file to Anki. Run from the command line. Built with [Obsidian](https://obsidian.md/) markdown syntax in mind. Supports **user-defined custom syntax for flashcards.**  
 See the [Trello](https://trello.com/b/6MXEizGg/obsidiantoanki) for planned features.
 
-
-## Setup
-1. Install the latest version of [Python](https://www.python.org/downloads/), and check the box that says 'add Python to environment variables'.
-2. Download the desired release from the [releases page](https://github.com/Pseudonium/Obsidian_to_Anki/releases).
-3. Place the script "obsidian_to_anki.py" in the same folder as your notes.
-4. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
-5. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
-6. Install the `python-markdown` library - see installation instructions [here](https://github.com/Python-Markdown/markdown). `pip install markdown` should work.
-7. Install the `Gooey` library - see installation instructions [here](https://github.com/chriskiehl/Gooey). `pip install Gooey` should work.
-7. Check the Permissions tab below to ensure the script is able to run.
-8. Run the script (e.g. by double-clicking).
-
-See [Troubleshooting](#Troubleshooting) if you have problems.
-
-## Permissions
-The script needs to be able to:
-* Make a config file in the directory the script is installed.
-* Read the file in the directory the script is used.
-* Make a backup file in the directory the script is used.
-* Rename files in the directory the script is used.
-* Remove a backup file in the directory the script is used.
-* Change the current working directory temporarily (so that local image paths are resolved correctly).
-
 ## Features
 
 Current features:
@@ -42,6 +19,34 @@ Current features:
 * **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
 * **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
 
+## Who is this for?
+
+It might be useful to show the motivation for me personally writing the script in the first place.  
+My workflow is essentially to have notes *be* flashcards - [one of my notes](https://www.evernote.com/shard/s522/sh/672b696d-4944-4894-a641-c84529d9ce9b/230b93561681475726fa1e2188becf78) (before I discovered Obsidian). However, it got tedious to keep copy-pasting cards into Anki, so I got the idea to write a script to do it automatically.
+
+However, you don't need to have your notes be files of flashcards to use this script! You just need to be fine with visibly embedding flashcards in your notes, and keeping them there for future reference/editing. The script will ignore anything it doesn't think is a flashcard, so you're free to add context/information not needed for Anki to your notes.
+
+## Setup
+1. Install the latest version of [Python](https://www.python.org/downloads/).
+2. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
+3. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
+4. If you are a new user, download `obstoanki_setup.py`, and place it in the folder you want the script installed (for example your notes folder).  
+5. Run `obstoanki_setup.py`, for example by double-clicking it in a file explorer. This will download the latest version of the script and required dependencies automatically. Existing users should be able to run their existing `obstoanki_setup.py` to get the latest version of the script.  
+6. Check the Permissions tab below to ensure the script is able to run.
+7. Run `obsidian_to_anki.py`, for example by double-clicking it in a file explorer. This will generate a config file, `obsidian_to_anki_config.ini`.
+
+See [Troubleshooting](#Troubleshooting) if you have problems.
+
+
+## Permissions
+The script needs to be able to:
+* Make a config file in the directory the script is installed.
+* Read the file in the directory the script is used.
+* Make a backup file in the directory the script is used.
+* Rename files in the directory the script is used.
+* Remove a backup file in the directory the script is used.
+* Change the current working directory temporarily (so that local image paths are resolved correctly).
+
 
 ## Usage
 
@@ -50,7 +55,8 @@ Current features:
 The GUI of the script looks like this:  
 ![GUI](Images/GUI.png)
 
-Hopefully the options and path are self-explanatory.
+Hopefully the options and path are self-explanatory.  
+Note that you can run the script over the same file twice perfectly fine - it won't add duplicate cards. 
 
 ### Command line usage
 If you set 'GUI' in the config file to False, the script is then run from the command line:
@@ -83,6 +89,7 @@ The sections below describe the default syntax of the script (with the 'Regex' o
 Allows you to change the default deck and tag of the script.  
 New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)  
 New in v2.4.0 - allows you to enable/disable the GUI of the script - see [Command line usage](#command-line-usage).  
+New in v2.5.0 - allows you to enable/disable IDs being embedded in HTML comments. The script can read IDs whether or not they are in a HTML comment.  
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
@@ -219,7 +226,12 @@ Tags should be formatted as such:
 <pre>
 Tags: Tag1 Tag2 Tag3
 </pre>
-So, a space between the colon and the first tag, and a space between tags.
+So, **a space between the colon and the first tag**, and a space between tags.
+
+Hence, this syntax **would not work**:
+<pre>
+Tags:Tag1 Tag2 Tag3
+</pre>
 
 ### File tag formatting
 
@@ -258,7 +270,7 @@ START
 Basic
 This is a test.
 Back: Test successful!
-ID: 1566052191670
+&lt;!--ID: 1566052191670--&gt;
 END
 </pre>
 ### Deleting notes
@@ -269,13 +281,13 @@ The script can delete notes that *it has added* automatically. To do this:
 START
 {Note Type}
 {Note Data}
-ID: {Identifier}
+&lt;!--ID: {Identifier}--&gt;
 END
 </pre>
 2. Change this to read:
 <pre>
 START
-ID: {Identifier}
+&lt;!--ID: {Identifier}--&gt;
 END
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `START END` block from the file.
@@ -300,11 +312,11 @@ Also, unlike regular 'block' notes, the script identifies the note type through 
 The instructions are quite similar to deleting normal notes:
 1. Find the formatted note in your file:
 <pre>
-STARTI [{Note Type}] {Note Data} ID: {Identifier} ENDI
+STARTI [{Note Type}] {Note Data} &lt;!--ID: {Identifier}--&gt; ENDI
 </pre>
 2. Change this to read:
 <pre>
-STARTI ID: {Identifier} ENDI
+STARTI &lt;!--ID: {Identifier}--&gt; ENDI
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `STARTI ENDI` block from the file.
 
@@ -333,6 +345,8 @@ By default, the script:
 If the script itself is not able to run, try running `python3 {PATH_TO_SCRIPT}`.
 
 If you are unable to get `pip` to run, see this [user guide](https://pip.pypa.io/en/stable/user_guide/).
+
+Some people have reported issues with installing the `Gooey` dependency. From v2.5.0 onwards, the script can run without `Gooey`, falling back to a command-line interface.
 
 If you are getting a `KeyError`, you may have typed one of the [substitutions](#Config) wrong - double check the config file and what you actually wrote.
 Examples:

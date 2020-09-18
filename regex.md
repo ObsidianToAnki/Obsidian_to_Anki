@@ -24,7 +24,7 @@ The script won't see things outside of it.
 You can have::multiple notes in the same file
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](Images/GUI_config.png)
+![GUI](Images/GUI_configREAL.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -65,7 +65,7 @@ Span over
 Multiple lines, and ignore preceding whitespace
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](Images/GUI_config.png)
+![GUI](Images/GUI_configREAL.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -117,7 +117,7 @@ Q: How is this possible?
 A: The 'magic' of regular expressions!
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](Images/GUI_config.png)
+![GUI](Images/GUI_configREAL.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -159,7 +159,7 @@ Whitespace is ignored!
 
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](Images/GUI_config.png)
+![GUI](Images/GUI_configREAL.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -197,7 +197,7 @@ Yes, but you need the front and back
 directly before and after the ruler.
 </pre>
 3. Run the script, and check 'Config' to open up the config file:  
-![GUI](Images/GUI_config.png)
+![GUI](Images/GUI_configREAL.png)
 4. Navigate to the "Custom Regexps" section
 5. Change the line
 <pre>
@@ -229,12 +229,12 @@ Cards made using this format support tags - simply append a "Tags: {tag_list}" t
 To delete notes made using this format, remove the content before the ID and make it look like:
 <pre>
 {Delete Regex Note Line}  
-ID: 129840142123  
+&lt;!--ID: 129840142123--&gt;  
 </pre>
 With the default settings:
 <pre>
 DELETE  
-ID: 129414201900  
+&lt;!--ID: 129414201900--&gt;  
 </pre>
 ## Conflicts?
 Try to make sure your regex matches don't overlap with each other. The script is designed, however, to not recognise a match inside another match (for different note types).

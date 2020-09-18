@@ -9,8 +9,14 @@ import collections
 import webbrowser
 import markdown
 import base64
-import gooey
 import argparse
+import html
+try:
+    import gooey
+    GOOEY = True
+except ModuleNotFoundError:
+    print("Gooey not installed, switching to cli...")
+    GOOEY = False
 
 MEDIA_PATHS = set()
 
@@ -40,7 +46,7 @@ CONFIG_PATH = os.path.expanduser(
 CONFIG_DATA = dict()
 
 md_parser = markdown.Markdown(
-    extensions=['extra', 'nl2br', 'sane_lists'], output_format="html5"
+    extensions=['extra', 'nl2br', 'sane_lists']
 )
 
 
@@ -231,47 +237,6 @@ class FormatConverter:
         return text
 
     @staticmethod
-    def format(note_text, cloze=False):
-        """Apply all format conversions to note_text."""
-        note_text = FormatConverter.obsidian_to_anki_math(note_text)
-        # Extract the parts that are anki math
-        math_matches = [
-            math_match.group(0)
-            for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
-                note_text
-            )
-        ]
-        # Replace them to be later added back, so they don't interfere
-        # with markdown parsing
-        note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
-            FormatConverter.MATH_REPLACE, note_text
-        )
-        if cloze:
-            note_text = FormatConverter.curly_to_cloze(note_text)
-        note_text = FormatConverter.markdown_parse(note_text)
-        # Add back the parts that are anki math
-        for math_match in math_matches:
-            note_text = note_text.replace(
-                FormatConverter.MATH_REPLACE,
-                math_match,
-                1
-            )
-        FormatConverter.get_images(note_text)
-        FormatConverter.get_audio(note_text)
-        note_text = FormatConverter.fix_image_src(note_text)
-        note_text = FormatConverter.fix_audio_src(note_text)
-        note_text = note_text.strip()
-        # Remove unnecessary paragraph tag
-        if note_text.startswith(
-            FormatConverter.PARA_OPEN
-        ) and note_text.endswith(
-            FormatConverter.PARA_CLOSE
-        ):
-            note_text = note_text[len(FormatConverter.PARA_OPEN):]
-            note_text = note_text[:-len(FormatConverter.PARA_CLOSE)]
-        return note_text
-
-    @staticmethod
     def is_url(text):
         """Check whether text looks like a url."""
         return bool(
@@ -326,6 +291,47 @@ class FormatConverter:
             html_text
         )
 
+    @staticmethod
+    def format(note_text, cloze=False):
+        """Apply all format conversions to note_text."""
+        note_text = FormatConverter.obsidian_to_anki_math(note_text)
+        # Extract the parts that are anki math
+        math_matches = [
+            math_match.group(0)
+            for math_match in FormatConverter.ANKI_MATH_REGEXP.finditer(
+                note_text
+            )
+        ]
+        # Replace them to be later added back, so they don't interfere
+        # with markdown parsing
+        note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
+            FormatConverter.MATH_REPLACE, note_text
+        )
+        if cloze:
+            note_text = FormatConverter.curly_to_cloze(note_text)
+        note_text = FormatConverter.markdown_parse(note_text)
+        # Add back the parts that are anki math
+        for math_match in math_matches:
+            note_text = note_text.replace(
+                FormatConverter.MATH_REPLACE,
+                html.escape(math_match),
+                1
+            )
+        FormatConverter.get_images(note_text)
+        FormatConverter.get_audio(note_text)
+        note_text = FormatConverter.fix_image_src(note_text)
+        note_text = FormatConverter.fix_audio_src(note_text)
+        note_text = note_text.strip()
+        # Remove unnecessary paragraph tag
+        if note_text.startswith(
+            FormatConverter.PARA_OPEN
+        ) and note_text.endswith(
+            FormatConverter.PARA_CLOSE
+        ):
+            note_text = note_text[len(FormatConverter.PARA_OPEN):]
+            note_text = note_text[:-len(FormatConverter.PARA_CLOSE)]
+        return note_text
+
 
 class Note:
     """Manages parsing notes into a dictionary formatted for AnkiConnect.
@@ -334,14 +340,20 @@ class Note:
     Does NOT deal with finding the note in the file.
     """
 
+    ID_REGEXP = re.compile(
+        r"(?:<!--)?" + ID_PREFIX + r"(\d+)"
+    )
+
     def __init__(self, note_text):
         """Set up useful variables."""
         self.text = note_text
         self.lines = self.text.splitlines()
         self.current_field_num = 0
         self.delete = False
-        if self.lines[-1].startswith(ID_PREFIX):
-            self.identifier = int(self.lines.pop()[len(ID_PREFIX):])
+        if Note.ID_REGEXP.match(self.lines[-1]):
+            self.identifier = int(
+                Note.ID_REGEXP.match(self.lines.pop()).group(1)
+            )
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
@@ -420,7 +432,7 @@ class Note:
 
 class InlineNote(Note):
 
-    ID_REGEXP = re.compile(ID_PREFIX + r"(\d+)")
+    ID_REGEXP = re.compile(r"(?:<!--)?" + ID_PREFIX + r"(\d+)")
     TAG_REGEXP = re.compile(TAG_PREFIX + r"(.*)")
     TYPE_REGEXP = re.compile(r"\[(.*?)\]")  # So e.g. [Basic]
 
@@ -474,7 +486,7 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n(" + ID_PREFIX + r"\d+)"
+    ID_REGEXP_STR = r"\n(?:<!--)?(?:" + ID_PREFIX + r"(\d+).*)"
     TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".*)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
@@ -484,7 +496,7 @@ class RegexNote:
         self.group_num = len(self.groups)
         if id:
             # This means id is last group
-            self.identifier = int(self.groups.pop()[len(ID_PREFIX):])
+            self.identifier = int(self.groups.pop())
         else:
             self.identifier = None
         if tags:
@@ -587,18 +599,25 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
-        config.setdefault("DEFAULT", dict())
-        config["DEFAULT"].setdefault(
+        config["DEFAULT"] = dict()  # Removes DEFAULT if it's there.
+        config.setdefault("Defaults", dict())
+        config["Defaults"].setdefault(
             "Tag", "Obsidian_to_Anki"
         )
-        config["DEFAULT"].setdefault(
+        config["Defaults"].setdefault(
             "Deck", "Default"
         )
-        config["DEFAULT"].setdefault(
+        config["Defaults"].setdefault(
             "CurlyCloze", "False"
         )
-        config["DEFAULT"].setdefault(
+        config["Defaults"].setdefault(
             "GUI", "True"
+        )
+        config["Defaults"].setdefault(
+            "Regex", "False"
+        )
+        config["Defaults"].setdefault(
+            "ID Comments", "True"
         )
         # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
@@ -622,10 +641,11 @@ class Config:
             note: dict(config[note]) for note in config
             if note not in [
                 "Note Substitutions",
-                "DEFAULT",
+                "Defaults",
                 "Syntax",
                 "Custom Regexps",
-                "Added Media"
+                "Added Media",
+                "DEFAULT"
             ]
         }
         CONFIG_DATA["NOTE_PREFIX"] = re.escape(
@@ -652,13 +672,19 @@ class Config:
                 config["Syntax"]["Delete Regex Note Line"]
             ) + RegexNote.ID_REGEXP_STR
         )
-        NOTE_DICT_TEMPLATE["tags"] = [config["DEFAULT"]["Tag"]]
-        NOTE_DICT_TEMPLATE["deckName"] = config["DEFAULT"]["Deck"]
+        NOTE_DICT_TEMPLATE["tags"] = [config["Defaults"]["Tag"]]
+        NOTE_DICT_TEMPLATE["deckName"] = config["Defaults"]["Deck"]
         CONFIG_DATA["CurlyCloze"] = config.getboolean(
-            "DEFAULT", "CurlyCloze"
+            "Defaults", "CurlyCloze"
         )
         CONFIG_DATA["GUI"] = config.getboolean(
-            "DEFAULT", "GUI"
+            "Defaults", "GUI"
+        )
+        CONFIG_DATA["Regex"] = config.getboolean(
+            "Defaults", "Regex"
+        )
+        CONFIG_DATA["Comment"] = config.getboolean(
+            "Defaults", "ID Comments"
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
@@ -678,13 +704,18 @@ class App:
             print("Attempting to fix config file...")
             Config.update_config()
             Config.load_config()
-        if CONFIG_DATA["GUI"]:
+        if CONFIG_DATA["GUI"] and GOOEY:
             self.setup_gui_parser()
         else:
             self.setup_cli_parser()
         args = self.parser.parse_args()
-        if CONFIG_DATA["GUI"] and args.dirpath:
-            args.path = args.dirpath
+        if CONFIG_DATA["GUI"] and GOOEY:
+            if args.directory:
+                args.path = args.dirpath
+            elif args.file:
+                args.path = args.file
+            else:
+                args.path = False
         no_args = True
         if args.update:
             no_args = False
@@ -764,7 +795,8 @@ class App:
             "-r", "--regex",
             action="store_true",
             dest="regex",
-            help="Use custom regex syntax."
+            help="Use custom regex syntax.",
+            default=CONFIG_DATA["Regex"]
         )
         self.parser.add_argument(
             "-m", "--mediaupdate",
@@ -773,26 +805,29 @@ class App:
             help="Force addition of media files."
         )
 
-    @gooey.Gooey(use_cmd_args=True)
-    def setup_gui_parser(self):
-        """Set up the GUI argument parser."""
-        self.parser = gooey.GooeyParser(
-            description="Add cards to Anki from a markdown or text file."
-        )
-        path_group = self.parser.add_mutually_exclusive_group(required=False)
-        path_group.add_argument(
-            "-f", "--file",
-            help="Choose a file to scan.",
-            dest="path",
-            widget='FileChooser'
-        )
-        path_group.add_argument(
-            "-d", "--dir",
-            help="Choose a directory to scan.",
-            dest="dirpath",
-            widget='DirChooser'
-        )
-        self.setup_parser_optionals()
+    if GOOEY:
+        @gooey.Gooey(use_cmd_args=True)
+        def setup_gui_parser(self):
+            """Set up the GUI argument parser."""
+            self.parser = gooey.GooeyParser(
+                description="Add cards to Anki from a markdown or text file."
+            )
+            path_group = self.parser.add_mutually_exclusive_group(
+                required=False
+            )
+            path_group.add_argument(
+                "-f", "--file",
+                help="Choose a file to scan.",
+                dest="file",
+                widget='FileChooser'
+            )
+            path_group.add_argument(
+                "-d", "--dir",
+                help="Choose a directory to scan.",
+                dest="directory",
+                widget='DirChooser'
+            )
+            self.setup_parser_optionals()
 
     def setup_cli_parser(self):
         """Setup the command-line argument parser."""
@@ -842,7 +877,7 @@ class App:
                     [
                         r"^",
                         CONFIG_DATA["NOTE_PREFIX"],
-                        r"\n",
+                        r"\n(?:<!--)?",
                         ID_PREFIX,
                         r"[\s\S]*?\n",
                         CONFIG_DATA["NOTE_SUFFIX"]
@@ -875,7 +910,7 @@ class App:
                 "".join(
                     [
                         CONFIG_DATA["INLINE_PREFIX"],
-                        r"\s+" + ID_PREFIX + r".*?",
+                        r"\s+(?:<!--)?" + ID_PREFIX + r".*?",
                         CONFIG_DATA["INLINE_SUFFIX"]
                     ]
                 )
@@ -1088,12 +1123,16 @@ class File:
                 self.notes_to_edit.append(parsed)
 
     @staticmethod
-    def id_to_str(id, inline=False):
+    def id_to_str(id, inline=False, comment=False):
         """Get the string repr of id."""
+        result = ID_PREFIX + str(id)
+        if comment:
+            result = "<!--" + result + "-->"
         if inline:
-            return ID_PREFIX + str(id) + " "
+            result += " "
         else:
-            return ID_PREFIX + str(id) + "\n"
+            result += "\n"
+        return result
 
     def write_ids(self):
         """Write the identifiers to self.file."""
@@ -1102,7 +1141,7 @@ class File:
             self.file, list(
                 zip(
                     self.id_indexes, [
-                        self.id_to_str(id)
+                        self.id_to_str(id, comment=CONFIG_DATA["Comment"])
                         for id in self.note_ids[:len(self.notes_to_add)]
                         if id is not None
                     ]
@@ -1110,7 +1149,10 @@ class File:
             ) + list(
                 zip(
                     self.inline_id_indexes, [
-                        self.id_to_str(id, inline=True)
+                        self.id_to_str(
+                            id, inline=True,
+                            comment=CONFIG_DATA["Comment"]
+                        )
                         for id in self.note_ids[len(self.notes_to_add):]
                         if id is not None
                     ]
@@ -1230,7 +1272,7 @@ class RegexFile(File):
         # Finally, scan for deleting notes
         for match in RegexFile.EMPTY_REGEXP.finditer(self.file):
             self.notes_to_delete.append(
-                int(match.group(1)[len(ID_PREFIX):])
+                int(match.group(1))
             )
 
     def search(self, note_type, regexp):
@@ -1299,7 +1341,7 @@ class RegexFile(File):
     def fix_newline_ids(self):
         """Removes double newline then ids from self.file."""
         double_regexp = re.compile(
-            r"(\r\n|\r|\n){2}" + ID_PREFIX + r"\d+"
+            r"(\r\n|\r|\n){2}(?:<!--)?" + ID_PREFIX + r"\d+"
         )
         self.file = double_regexp.sub(
             lambda x: x.group()[1:],
@@ -1312,7 +1354,7 @@ class RegexFile(File):
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
-                    "\n" + ID_PREFIX + str(id) + "\n"
+                    "\n" + File.id_to_str(id, comment=CONFIG_DATA["Comment"])
                     for id in self.note_ids
                     if id is not None
                 ]
