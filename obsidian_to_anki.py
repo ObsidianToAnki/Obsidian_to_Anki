@@ -925,12 +925,6 @@ class App:
             )
         )
 
-    def get_tags(self):
-        """Get a set of currently used tags for notes to be edited."""
-        self.tags = set()
-        for info in self.info:
-            self.tags.update(info["tags"])
-
     def get_add_media(self):
         """Get the AnkiConnect-formatted add_media request."""
         return AnkiConnect.request(
