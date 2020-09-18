@@ -711,7 +711,7 @@ class App:
         args = self.parser.parse_args()
         if CONFIG_DATA["GUI"] and GOOEY:
             if args.directory:
-                args.path = args.dirpath
+                args.path = args.directory
             elif args.file:
                 args.path = args.file
             else:
