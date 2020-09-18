@@ -616,6 +616,9 @@ class Config:
         config["Defaults"].setdefault(
             "Regex", "False"
         )
+        config["Defaults"].setdefault(
+            "ID Comments", "True"
+        )
         # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -679,6 +682,9 @@ class Config:
         )
         CONFIG_DATA["Regex"] = config.getboolean(
             "Defaults", "Regex"
+        )
+        CONFIG_DATA["Comment"] = config.getboolean(
+            "Defaults", "ID Comments"
         )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
@@ -1135,7 +1141,7 @@ class File:
             self.file, list(
                 zip(
                     self.id_indexes, [
-                        self.id_to_str(id)
+                        self.id_to_str(id, comment=CONFIG_DATA["Comment"])
                         for id in self.note_ids[:len(self.notes_to_add)]
                         if id is not None
                     ]
@@ -1143,7 +1149,10 @@ class File:
             ) + list(
                 zip(
                     self.inline_id_indexes, [
-                        self.id_to_str(id, inline=True)
+                        self.id_to_str(
+                            id, inline=True,
+                            comment=CONFIG_DATA["Comment"]
+                        )
                         for id in self.note_ids[len(self.notes_to_add):]
                         if id is not None
                     ]
