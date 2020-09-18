@@ -19,6 +19,9 @@ except ModuleNotFoundError:
     GOOEY = False
 
 MEDIA_PATHS = set()
+MEDIA_NAMES = list()
+MEDIA_DATA = list()
+MEDIA = dict()
 
 ID_PREFIX = "ID: "
 TAG_PREFIX = "Tags: "
@@ -162,7 +165,7 @@ class FormatConverter:
 
     MATH_REPLACE = "OBSTOANKIMATH"
 
-    IMAGE_REGEXP = re.compile(r'<img alt="[\s\S]*?" src="([\s\S]*?)">')
+    IMAGE_REGEXP = re.compile(r'<img alt=".*?" src="(.*?)"')
     SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
     CLOZE_REGEXP = re.compile(r'{(.+?)}')
     URL_REGEXP = re.compile(r'https?://')
@@ -248,12 +251,14 @@ class FormatConverter:
         """Get all the images that need to be added."""
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
             path = match.group(1)
+            print(path)
             if FormatConverter.is_url(path):
                 continue  # Skips over images web-hosted.
             filename = os.path.basename(path)
-            if filename not in CONFIG_DATA["Added Media"].keys():
-                MEDIA_PATHS.add(path)
-            # ^Adds the image path (relative to cwd)
+            if filename not in CONFIG_DATA["Added Media"].keys(
+            ) and filename not in MEDIA:
+                MEDIA[filename] = file_encode(path)
+                # Adds the filename and data to media_names
 
     @staticmethod
     def get_audio(html_text):
@@ -261,8 +266,10 @@ class FormatConverter:
         for match in FormatConverter.SOUND_REGEXP.finditer(html_text):
             path = match.group(1)
             filename = os.path.basename(path)
-            if filename not in CONFIG_DATA["Added Media"].keys():
-                MEDIA_PATHS.add(path)
+            if filename not in CONFIG_DATA["Added Media"].keys(
+            ) and filename not in MEDIA:
+                MEDIA[filename] = file_encode(path)
+                # Adds the filename and data to media_names
 
     @staticmethod
     def path_to_filename(matchobject):
@@ -317,6 +324,7 @@ class FormatConverter:
                 html.escape(math_match),
                 1
             )
+        print(note_text)
         FormatConverter.get_images(note_text)
         FormatConverter.get_audio(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
@@ -731,49 +739,68 @@ class App:
             return
         if args.path:
             no_args = False
-            if args.path == "False":
-                return
             current = os.getcwd()
             self.path = args.path
+            directories = list()
             if os.path.isdir(self.path):
-                try:
-                    os.chdir(self.path)
-                except Exception:
-                    print("Could not move to path directory.")
-                    return
-                with os.scandir() as it:
-                    if args.regex:
-                        self.files = [
-                            RegexFile(entry.path)
-                            for entry in it
-                            if entry.is_file() and os.path.splitext(
-                                entry.path
-                            )[1] in App.SUPPORTED_EXTS
-                        ]
-                    else:
-                        self.files = [
-                            File(entry.path)
-                            for entry in it
-                            if entry.is_file() and os.path.splitext(
-                                entry.path
-                            )[1] in App.SUPPORTED_EXTS
-                        ]
-            else:
-                if args.regex:
-                    self.files = [RegexFile(self.path)]
+                os.chdir(self.path)
+                if args.recurse:
+                    directories = list()
+                    for root, dirs, files in os.walk(os.getcwd()):
+                        directories.append(
+                            Directory(root, regex=args.regex)
+                        )
+                        for dir in dirs:
+                            if dir.startswith("."):
+                                dirs.remove(dir)
+                                # So, ignore . folders
                 else:
-                    self.files = [File(self.path)]
-            for file in self.files:
-                file.scan_file()
-            self.parse_requests_1()
-            for file in self.files:
-                file.get_cards()
-                file.write_ids()
-                print("Removing empty notes for file", file.filename)
-                file.remove_empties()
-                file.write_file()
-            self.requests_2()
-            os.chdir(current)
+                    directories = [
+                        Directory(
+                            os.getcwd(), regex=args.regex
+                        )
+                    ]
+                os.chdir(current)
+            else:
+                directories = [
+                    Directory(
+                        current, regex=args.regex, onefile=self.path
+                    )
+                ]
+            requests = list()
+            print("Getting tag list")
+            requests.append(
+                AnkiConnect.request(
+                    "getTags"
+                )
+            )
+            print("Adding media with these filenames...")
+            print(list(MEDIA.keys()))
+            requests.append(self.get_add_media())
+            print("Adding directory requests...")
+            for directory in directories:
+                requests.append(directory.requests_1())
+            result = AnkiConnect.invoke(
+                "multi",
+                actions=requests
+            )
+            for filename in MEDIA.keys():
+                CONFIG_DATA["Added Media"].setdefault(
+                    filename, "True"
+                )
+            with open(CONFIG_PATH, "w") as configfile:
+                Config.config.write(configfile)
+            tags = AnkiConnect.parse(result[0])
+            directory_responses = result[2:]
+            for directory, response in zip(directories, directory_responses):
+                directory.parse_requests_1(AnkiConnect.parse(response), tags)
+            requests = list()
+            for directory in directories:
+                requests.append(directory.requests_2())
+            AnkiConnect.invoke(
+                "multi",
+                actions=requests
+            )
         if no_args:
             self.parser.print_help()
 
@@ -803,6 +830,12 @@ class App:
             action="store_true",
             dest="mediaupdate",
             help="Force addition of media files."
+        )
+        self.parser.add_argument(
+            "-R", "--recurse",
+            action="store_true",
+            dest="recurse",
+            help="Recursively scan subfolders."
         )
 
     if GOOEY:
@@ -917,12 +950,6 @@ class App:
             )
         )
 
-    def get_tags(self):
-        """Get a set of currently used tags for notes to be edited."""
-        self.tags = set()
-        for info in self.info:
-            self.tags.update(info["tags"])
-
     def get_add_media(self):
         """Get the AnkiConnect-formatted add_media request."""
         return AnkiConnect.request(
@@ -930,134 +957,11 @@ class App:
             actions=[
                 AnkiConnect.request(
                     "storeMediaFile",
-                    filename=path.replace(
-                        path, os.path.basename(path)
-                    ),
-                    data=file_encode(path)
+                    filename=key,
+                    data=value
                 )
-                for path in MEDIA_PATHS
+                for key, value in MEDIA.items()
             ]
-        )
-
-    def requests_1(self):
-        """Do big request 1.
-
-        This adds images, adds notes, updates fields,
-        gets note info, gets tags and removes notes.
-        """
-        requests = list()
-        print("Adding media with these paths...")
-        print(MEDIA_PATHS)
-        requests.append(self.get_add_media())
-        print("Adding notes into Anki...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_add_notes()
-                    for file in self.files
-                ]
-            )
-        )
-        print("Updating fields of existing notes...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_update_fields()
-                    for file in self.files
-                ]
-            )
-        )
-        print("Getting card IDs of notes to be edited...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_note_info()
-                    for file in self.files
-                ]
-            )
-        )
-        print("Getting list of tags...")
-        requests.append(
-            AnkiConnect.request(
-                "getTags"
-            )
-        )
-        print("Removing empty notes...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_delete_notes()
-                    for file in self.files
-                ]
-            )
-        )
-        return AnkiConnect.invoke(
-            "multi",
-            actions=requests
-        )
-
-    def parse_requests_1(self):
-        """Get relevant info from requests_1."""
-        result = self.requests_1()
-        notes_ids = AnkiConnect.parse(result[1])
-        cards_ids = AnkiConnect.parse(result[3])
-        tags = AnkiConnect.parse(result[4])
-        for note_ids, file in zip(notes_ids, self.files):
-            file.note_ids = AnkiConnect.parse(note_ids)
-        for card_ids, file in zip(cards_ids, self.files):
-            file.card_ids = AnkiConnect.parse(card_ids)
-        for file in self.files:
-            file.tags = tags
-        for imgpath in MEDIA_PATHS:
-            CONFIG_DATA["Added Media"].setdefault(
-                os.path.basename(imgpath),
-                "True"
-            )
-        with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
-            Config.config.write(configfile)
-
-    def requests_2(self):
-        """Perform requests group 2.
-
-        This moves cards, clears tags, adds tags.
-        """
-        requests = list()
-        print("Moving cards to target deck...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_change_decks()
-                    for file in self.files
-                ]
-            )
-        )
-        print("Replacing tags...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_clear_tags()
-                    for file in self.files
-                ]
-            )
-        )
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_add_tags()
-                    for file in self.files
-                ]
-            )
-        )
-        AnkiConnect.invoke(
-            "multi",
-            actions=requests
         )
 
 
@@ -1366,6 +1270,141 @@ class RegexFile(File):
         """Remove empty notes from self.file."""
         self.file = RegexFile.EMPTY_REGEXP.sub(
             "", self.file
+        )
+
+
+class Directory:
+    """Class for managing a directory of files at a time."""
+
+    def __init__(self, abspath, regex=False, onefile=None):
+        """Scan directory for files."""
+        self.path = abspath
+        self.parent = os.getcwd()
+        if regex:
+            self.file_class = RegexFile
+        else:
+            self.file_class = File
+        os.chdir(self.path)
+        if onefile:
+            # Hence, just one file to do
+            self.files = [self.file_class(onefile)]
+        else:
+            with os.scandir() as it:
+                self.files = [
+                    self.file_class(entry.path)
+                    for entry in it
+                    if entry.is_file() and os.path.splitext(
+                        entry.path
+                    )[1] in App.SUPPORTED_EXTS
+                ]
+        for file in self.files:
+            file.scan_file()
+        os.chdir(self.parent)
+
+    def requests_1(self):
+        """Get the 1st HTTP request for this directory."""
+        print("Forming request 1 for directory", self.path)
+        requests = list()
+        print("Adding notes into Anki...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_add_notes()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Updating fields of existing notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_update_fields()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Getting card IDs of notes to be edited...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_note_info()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Removing empty notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_delete_notes()
+                    for file in self.files
+                ]
+            )
+        )
+        return AnkiConnect.request(
+            "multi",
+            actions=requests
+        )
+
+    def parse_requests_1(self, requests_1_response, tags):
+        response = requests_1_response
+        notes_ids = AnkiConnect.parse(response[0])
+        cards_ids = AnkiConnect.parse(response[2])
+        for note_ids, file in zip(notes_ids, self.files):
+            file.note_ids = AnkiConnect.parse(note_ids)
+        for card_ids, file in zip(cards_ids, self.files):
+            file.card_ids = AnkiConnect.parse(card_ids)
+        for file in self.files:
+            file.tags = tags
+        os.chdir(self.path)
+        for file in self.files:
+            file.get_cards()
+            file.write_ids()
+            print("Removing empty notes for file", file.filename)
+            file.remove_empties()
+            file.write_file()
+        os.chdir(self.parent)
+
+    def requests_2(self):
+        """Get 2nd big request."""
+        print("Forming request 2 for directory", self.path)
+        requests = list()
+        print("Moving cards to target deck...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_change_decks()
+                    for file in self.files
+                ]
+            )
+        )
+        print("Replacing tags...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_clear_tags()
+                    for file in self.files
+                ]
+            )
+        )
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_add_tags()
+                    for file in self.files
+                ]
+            )
+        )
+        return AnkiConnect.request(
+            "multi",
+            actions=requests
         )
 
 
