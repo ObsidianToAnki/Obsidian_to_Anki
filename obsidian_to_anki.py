@@ -737,49 +737,51 @@ class App:
             return
         if args.path:
             no_args = False
-            if args.path == "False":
-                return
             current = os.getcwd()
             self.path = args.path
-            if os.path.isdir(self.path):
-                try:
-                    os.chdir(self.path)
-                except Exception:
-                    print("Could not move to path directory.")
-                    return
-                with os.scandir() as it:
-                    if args.regex:
-                        self.files = [
-                            RegexFile(entry.path)
-                            for entry in it
-                            if entry.is_file() and os.path.splitext(
-                                entry.path
-                            )[1] in App.SUPPORTED_EXTS
-                        ]
-                    else:
-                        self.files = [
-                            File(entry.path)
-                            for entry in it
-                            if entry.is_file() and os.path.splitext(
-                                entry.path
-                            )[1] in App.SUPPORTED_EXTS
-                        ]
+            directories = list()
+            if os.is_dir(self.path):
+                os.chdir(self.path)
+                directories = [
+                    Directory(
+                        os.getcwd(), regex=args.regex
+                    )
+                ]
+                os.chdir(current)
             else:
-                if args.regex:
-                    self.files = [RegexFile(self.path)]
-                else:
-                    self.files = [File(self.path)]
-            for file in self.files:
-                file.scan_file()
-            self.parse_requests_1()
-            for file in self.files:
-                file.get_cards()
-                file.write_ids()
-                print("Removing empty notes for file", file.filename)
-                file.remove_empties()
-                file.write_file()
-            self.requests_2()
-            os.chdir(current)
+                directories = [
+                    Directory(
+                        current, regex=args.regex, onefile=self.path
+                    )
+                ]
+            requests = list()
+            print("Getting tag list")
+            requests.append(
+                AnkiConnect.request(
+                    "getTags"
+                )
+            )
+            print("Adding media with these filenames...")
+            print(list(MEDIA.keys()))
+            requests.append(self.get_add_media)
+            print("Adding directory requests...")
+            for directory in directories:
+                requests.append(directory.requests_1())
+            result = AnkiConnect.invoke(
+                "multi",
+                actions=requests
+            )
+            tags = AnkiConnect.parse(result[1])
+            directory_responses = result[2:]
+            for directory, response in zip(directories, directory_responses):
+                directory.parse_requests_1(response, tags)
+            requests = list()
+            for directory in directories:
+                requests.append(directory.requests_2())
+            AnkiConnect.invoke(
+                "multi",
+                actions=requests
+            )
         if no_args:
             self.parser.print_help()
 
@@ -1450,11 +1452,10 @@ class Directory:
             actions=requests
         )
 
-    def parse_requests_1(self, requests_1_response, tag_response):
+    def parse_requests_1(self, requests_1_response, tags):
         response = requests_1_response
         notes_ids = AnkiConnect.parse(response[0])
         cards_ids = AnkiConnect.parse(response[2])
-        tags = AnkiConnect.parse(tag_response)
         for note_ids, file in zip(notes_ids, self.files):
             file.note_ids = AnkiConnect.parse(note_ids)
         for card_ids, file in zip(cards_ids, self.files):
