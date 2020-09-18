@@ -88,7 +88,7 @@ The sections below describe the default syntax of the script (with the 'Regex' o
 Allows you to change the default deck and tag of the script.  
 New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)  
 New in v2.4.0 - allows you to enable/disable the GUI of the script - see [Command line usage](#command-line-usage).  
-New in v2.5.0 - allows you to enable/disable IDs being embedded in HTML comments.  
+New in v2.5.0 - allows you to enable/disable IDs being embedded in HTML comments. The script can read IDs whether or not they are in a HTML comment.  
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
@@ -280,13 +280,13 @@ The script can delete notes that *it has added* automatically. To do this:
 START
 {Note Type}
 {Note Data}
-ID: {Identifier}
+&lt;--ID: {Identifier}--&gt;
 END
 </pre>
 2. Change this to read:
 <pre>
 START
-ID: {Identifier}
+&lt;--ID: {Identifier}--&gt;
 END
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `START END` block from the file.
@@ -311,11 +311,11 @@ Also, unlike regular 'block' notes, the script identifies the note type through 
 The instructions are quite similar to deleting normal notes:
 1. Find the formatted note in your file:
 <pre>
-STARTI [{Note Type}] {Note Data} ID: {Identifier} ENDI
+STARTI [{Note Type}] {Note Data} &lt;--ID: {Identifier}--&gt; ENDI
 </pre>
 2. Change this to read:
 <pre>
-STARTI ID: {Identifier} ENDI
+STARTI &lt;--ID: {Identifier}--&gt; ENDI
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `STARTI ENDI` block from the file.
 
