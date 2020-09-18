@@ -19,6 +19,9 @@ except ModuleNotFoundError:
     GOOEY = False
 
 MEDIA_PATHS = set()
+MEDIA_NAMES = list()
+MEDIA_DATA = list()
+MEDIA = dict()
 
 ID_PREFIX = "ID: "
 TAG_PREFIX = "Tags: "
@@ -251,9 +254,10 @@ class FormatConverter:
             if FormatConverter.is_url(path):
                 continue  # Skips over images web-hosted.
             filename = os.path.basename(path)
-            if filename not in CONFIG_DATA["Added Media"].keys():
-                MEDIA_PATHS.add(path)
-            # ^Adds the image path (relative to cwd)
+            if filename not in CONFIG_DATA["Added Media"].keys(
+            ) and filename not in MEDIA:
+                MEDIA[filename] = file_encode(path)
+                # Adds the filename and data to media_names
 
     @staticmethod
     def get_audio(html_text):
@@ -261,8 +265,10 @@ class FormatConverter:
         for match in FormatConverter.SOUND_REGEXP.finditer(html_text):
             path = match.group(1)
             filename = os.path.basename(path)
-            if filename not in CONFIG_DATA["Added Media"].keys():
-                MEDIA_PATHS.add(path)
+            if filename not in CONFIG_DATA["Added Media"].keys(
+            ) and filename not in MEDIA:
+                MEDIA[filename] = file_encode(path)
+                # Adds the filename and data to media_names
 
     @staticmethod
     def path_to_filename(matchobject):
@@ -930,12 +936,10 @@ class App:
             actions=[
                 AnkiConnect.request(
                     "storeMediaFile",
-                    filename=path.replace(
-                        path, os.path.basename(path)
-                    ),
-                    data=file_encode(path)
+                    filename=key,
+                    data=value
                 )
-                for path in MEDIA_PATHS
+                for key, value in MEDIA.items()
             ]
         )
 
@@ -1367,6 +1371,11 @@ class RegexFile(File):
         self.file = RegexFile.EMPTY_REGEXP.sub(
             "", self.file
         )
+
+
+class Directory:
+    """Class for managing a directory of files at a time."""
+    pass
 
 
 if __name__ == "__main__":
