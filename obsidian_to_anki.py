@@ -9,9 +9,14 @@ import collections
 import webbrowser
 import markdown
 import base64
-import gooey
 import argparse
 import html
+try:
+    import gooey
+    GOOEY = True
+except ModuleNotFoundError:
+    print("Gooey not installed, switching to cli...")
+    GOOEY = False
 
 MEDIA_PATHS = set()
 
@@ -693,12 +698,12 @@ class App:
             print("Attempting to fix config file...")
             Config.update_config()
             Config.load_config()
-        if CONFIG_DATA["GUI"]:
+        if CONFIG_DATA["GUI"] and GOOEY:
             self.setup_gui_parser()
         else:
             self.setup_cli_parser()
         args = self.parser.parse_args()
-        if CONFIG_DATA["GUI"]:
+        if CONFIG_DATA["GUI"] and GOOEY:
             if args.directory:
                 args.path = args.dirpath
             elif args.file:
@@ -794,26 +799,29 @@ class App:
             help="Force addition of media files."
         )
 
-    @gooey.Gooey(use_cmd_args=True)
-    def setup_gui_parser(self):
-        """Set up the GUI argument parser."""
-        self.parser = gooey.GooeyParser(
-            description="Add cards to Anki from a markdown or text file."
-        )
-        path_group = self.parser.add_mutually_exclusive_group(required=False)
-        path_group.add_argument(
-            "-f", "--file",
-            help="Choose a file to scan.",
-            dest="file",
-            widget='FileChooser'
-        )
-        path_group.add_argument(
-            "-d", "--dir",
-            help="Choose a directory to scan.",
-            dest="directory",
-            widget='DirChooser'
-        )
-        self.setup_parser_optionals()
+    if GOOEY:
+        @gooey.Gooey(use_cmd_args=True)
+        def setup_gui_parser(self):
+            """Set up the GUI argument parser."""
+            self.parser = gooey.GooeyParser(
+                description="Add cards to Anki from a markdown or text file."
+            )
+            path_group = self.parser.add_mutually_exclusive_group(
+                required=False
+            )
+            path_group.add_argument(
+                "-f", "--file",
+                help="Choose a file to scan.",
+                dest="file",
+                widget='FileChooser'
+            )
+            path_group.add_argument(
+                "-d", "--dir",
+                help="Choose a directory to scan.",
+                dest="directory",
+                widget='DirChooser'
+            )
+            self.setup_parser_optionals()
 
     def setup_cli_parser(self):
         """Setup the command-line argument parser."""
