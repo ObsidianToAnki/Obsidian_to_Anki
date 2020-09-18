@@ -771,7 +771,6 @@ class App:
                 "multi",
                 actions=requests
             )
-            print(result)
             tags = AnkiConnect.parse(result[0])
             directory_responses = result[2:]
             for directory, response in zip(directories, directory_responses):
