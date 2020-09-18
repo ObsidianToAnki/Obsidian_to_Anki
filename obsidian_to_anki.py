@@ -486,7 +486,7 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n(" + ID_PREFIX + r"\d+)"
+    ID_REGEXP_STR = r"\n(?:<!--)?(?:" + ID_PREFIX + r"(\d+))"
     TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".*)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
@@ -496,7 +496,7 @@ class RegexNote:
         self.group_num = len(self.groups)
         if id:
             # This means id is last group
-            self.identifier = int(self.groups.pop()[len(ID_PREFIX):])
+            self.identifier = int(self.groups.pop())
         else:
             self.identifier = None
         if tags:
