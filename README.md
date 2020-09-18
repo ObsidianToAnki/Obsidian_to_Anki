@@ -280,13 +280,13 @@ The script can delete notes that *it has added* automatically. To do this:
 START
 {Note Type}
 {Note Data}
-&lt;--ID: {Identifier}--&gt;
+&lt;!--ID: {Identifier}--&gt;
 END
 </pre>
 2. Change this to read:
 <pre>
 START
-&lt;--ID: {Identifier}--&gt;
+&lt;!--ID: {Identifier}--&gt;
 END
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `START END` block from the file.
@@ -311,11 +311,11 @@ Also, unlike regular 'block' notes, the script identifies the note type through 
 The instructions are quite similar to deleting normal notes:
 1. Find the formatted note in your file:
 <pre>
-STARTI [{Note Type}] {Note Data} &lt;--ID: {Identifier}--&gt; ENDI
+STARTI [{Note Type}] {Note Data} &lt;!--ID: {Identifier}--&gt; ENDI
 </pre>
 2. Change this to read:
 <pre>
-STARTI &lt;--ID: {Identifier}--&gt; ENDI
+STARTI &lt;!--ID: {Identifier}--&gt; ENDI
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `STARTI ENDI` block from the file.
 
