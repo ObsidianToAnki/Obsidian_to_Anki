@@ -486,7 +486,7 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n(?:<!--)?(?:" + ID_PREFIX + r"(\d+))"
+    ID_REGEXP_STR = r"\n(?:<!--)?(?:" + ID_PREFIX + r"(\d+).*)"
     TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".*)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
@@ -877,7 +877,7 @@ class App:
                     [
                         r"^",
                         CONFIG_DATA["NOTE_PREFIX"],
-                        r"\n",
+                        r"\n(?:<!--)?",
                         ID_PREFIX,
                         r"[\s\S]*?\n",
                         CONFIG_DATA["NOTE_SUFFIX"]
@@ -910,7 +910,7 @@ class App:
                 "".join(
                     [
                         CONFIG_DATA["INLINE_PREFIX"],
-                        r"\s+" + ID_PREFIX + r".*?",
+                        r"\s+(?:<!--)?" + ID_PREFIX + r".*?",
                         CONFIG_DATA["INLINE_SUFFIX"]
                     ]
                 )
@@ -1272,7 +1272,7 @@ class RegexFile(File):
         # Finally, scan for deleting notes
         for match in RegexFile.EMPTY_REGEXP.finditer(self.file):
             self.notes_to_delete.append(
-                int(match.group(1)[len(ID_PREFIX):])
+                int(match.group(1))
             )
 
     def search(self, note_type, regexp):
