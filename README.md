@@ -296,6 +296,8 @@ END
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `START END` block from the file.
 
+Note that if you manually delete a note in Anki, **you must remove the ID line from the text file**. Otherwise, the script will throw an error.
+
 See [Deleting inline notes](#deleting-inline-notes) for how to do this with inline notes.
 
 ## Inline note formatting
@@ -323,6 +325,8 @@ STARTI [{Note Type}] {Note Data} &lt;!--ID: {Identifier}--&gt; ENDI
 STARTI &lt;!--ID: {Identifier}--&gt; ENDI
 </pre>
 3. If you run the script on the file, it will interpret this as "delete the note with ID {identifier}". For convenience, it will also delete the unnecessary `STARTI ENDI` block from the file.
+
+Note that if you manually delete a note in Anki, **you must remove the ID line from the text file**. Otherwise, the script will throw an error.
 
 ### Cloze formatting
 
@@ -376,6 +380,6 @@ Note that the script will never close Anki by itself, so you may find Anki open 
 
 On Windows, check out [Task Scheduler](https://www.windowscentral.com/how-create-automated-task-using-task-scheduler-windows-10).
 
-On macOS/Linux, check out Corey Schafer's excellent tutorial on [cron](https://www.windowscentral.com/how-create-automated-task-using-task-scheduler-windows-10).
+On macOS/Linux, check out Corey Schafer's excellent tutorial on [cron](https://www.youtube.com/watch?v=QZJ1drMQz1A).
 
 As an example, you could schedule the script to run recursively over your top-level notes folder, at midnight every day.
