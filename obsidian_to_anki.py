@@ -324,7 +324,6 @@ class FormatConverter:
                 html.escape(math_match),
                 1
             )
-        print(note_text)
         FormatConverter.get_images(note_text)
         FormatConverter.get_audio(note_text)
         note_text = FormatConverter.fix_image_src(note_text)
