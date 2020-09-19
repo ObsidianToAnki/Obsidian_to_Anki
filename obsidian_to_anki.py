@@ -706,7 +706,7 @@ class App:
         """Execute the main functionality of the script."""
         try:
             Config.load_config()
-        except configparser.Error as e:
+        except Exception as e:
             print("Error:", e)
             print("Attempting to fix config file...")
             Config.update_config()
