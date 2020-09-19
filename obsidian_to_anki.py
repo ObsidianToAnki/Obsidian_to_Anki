@@ -146,6 +146,11 @@ def wait_for_port(port, host='localhost', timeout=5.0):
                 ) from ex
 
 
+def load_anki():
+    """Attempt to load anki in the correct profile."""
+    pass
+
+
 class AnkiConnect:
     """Namespace for AnkiConnect functions."""
 
@@ -654,6 +659,12 @@ class Config:
         config["Defaults"].setdefault(
             "ID Comments", "True"
         )
+        config["Defaults"].setdefault(
+            "Anki Path", ""
+        )
+        config["Defaults"].setdefault(
+            "Anki Profile", ""
+        )
         # Setting up Custom Regexps
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -721,6 +732,8 @@ class Config:
         CONFIG_DATA["Comment"] = config.getboolean(
             "Defaults", "ID Comments"
         )
+        CONFIG_DATA["Path"] = config["Defaults"]["Anki Path"]
+        CONFIG_DATA["Profile"] = config["Defaults"]["Anki Profile"]
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
