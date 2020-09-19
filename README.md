@@ -50,7 +50,8 @@ The script needs to be able to:
 
 ## Usage
 
-**Apart from editing the config file, all operations of the script require Anki to be running.**
+**Apart from editing the config file, all operations of the script require Anki to be running.**  
+New in v2.7.0 - if you supply Anki Path and Anki Profile, the script will automatically attempt to open Anki if it isn't already running.  
 
 The GUI of the script looks like this:  
 ![GUI](Images/GUI.png)
@@ -91,6 +92,8 @@ Allows you to change the default deck and tag of the script.
 New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)  
 New in v2.4.0 - allows you to enable/disable the GUI of the script - see [Command line usage](#command-line-usage).  
 New in v2.5.0 - allows you to enable/disable IDs being embedded in HTML comments. The script can read IDs whether or not they are in a HTML comment.  
+New in v2.5.0 - allows you to have regex mode on by default.  
+New in v2.7.0 - Anki Path and Anki Profile. If you supply both the absolute path to the Anki executable, and your profile on Anki, the script will attempt to open Anki when run if it's not already running. Useful for automation - see [Technical](#technical)
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
@@ -364,3 +367,15 @@ You may also want to prepend the following shebang to the start of the file:
 `#!/usr/bin/env python`
 
 For more information, see [this pull request](https://github.com/Pseudonium/Obsidian_to_Anki/pull/13).
+
+New in v2.7.0 - the script can now automatically open Anki if Anki Path and Anki Profile are supplied. This would allow you to schedule the script to run at a certain time without needing to worry about whether Anki was open at that time.
+
+Note that the script will never close Anki by itself, so you may find Anki open when you return to your computer!
+
+### Scheduling
+
+On Windows, check out [Task Scheduler](https://www.windowscentral.com/how-create-automated-task-using-task-scheduler-windows-10).
+
+On macOS/Linux, check out Corey Schafer's excellent tutorial on [cron](https://www.windowscentral.com/how-create-automated-task-using-task-scheduler-windows-10).
+
+As an example, you could schedule the script to run recursively over your top-level notes folder, at midnight every day.
