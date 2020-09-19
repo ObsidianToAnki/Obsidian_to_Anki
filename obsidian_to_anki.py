@@ -149,7 +149,12 @@ def wait_for_port(port, host='localhost', timeout=5.0):
 
 def load_anki():
     """Attempt to load anki in the correct profile."""
-    Config.load_config()
+    try:
+        Config.load_config()
+    except Exception as e:
+        print("Error when loading config:", e)
+        print("Please open Anki before running script again.")
+        return False
     if CONFIG_DATA["Path"] and CONFIG_DATA["Profile"]:
         print("Anki Path and Anki Profile provided.")
         print("Attempting to open Anki in selected profile...")
