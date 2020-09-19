@@ -13,6 +13,7 @@ import argparse
 import html
 import time
 import socket
+import subprocess
 try:
     import gooey
     GOOEY = True
@@ -148,7 +149,33 @@ def wait_for_port(port, host='localhost', timeout=5.0):
 
 def load_anki():
     """Attempt to load anki in the correct profile."""
-    pass
+    Config.load_config()
+    if CONFIG_DATA["Path"] and CONFIG_DATA["Profile"]:
+        print("Anki Path and Anki Profile provided.")
+        print("Attempting to open Anki in selected profile...")
+        subprocess.Popen(
+            [CONFIG_DATA["Path"], "-p", CONFIG_DATA["Profile"]]
+        )
+        try:
+            wait_for_port(ANKI_PORT)
+        except TimeoutError:
+            print("Opened Anki, but can't connect! Is AnkiConnect working?")
+            return False
+        else:
+            print("Opened and connected to Anki successfully!")
+            return True
+    else:
+        print(
+            "Must provide both Anki Path and Anki Profile",
+            "in order to open Anki automatically"
+        )
+
+
+def main():
+    """Main functionality of script."""
+    if not os.path.exists(CONFIG_PATH):
+        Config.update_config()
+    App()
 
 
 class AnkiConnect:
@@ -1453,9 +1480,9 @@ if __name__ == "__main__":
     try:
         wait_for_port(ANKI_PORT)
     except TimeoutError:
-        print("Couldn't connect to Anki, quitting...")
+        print("Couldn't connect to Anki, attempting to open Anki...")
+        if load_anki():
+            main()
     else:
         print("Connected!")
-        if not os.path.exists(CONFIG_PATH):
-            Config.update_config()
-        App()
+        main()
