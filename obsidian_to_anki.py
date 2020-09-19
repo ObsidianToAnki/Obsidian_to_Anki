@@ -54,6 +54,8 @@ md_parser = markdown.Markdown(
     extensions=['extra', 'nl2br', 'sane_lists']
 )
 
+ANKI_PORT = 8765
+
 
 def write_safe(filename, contents):
     """
@@ -1434,6 +1436,13 @@ class Directory:
 
 
 if __name__ == "__main__":
-    if not os.path.exists(CONFIG_PATH):
-        Config.update_config()
-    App()
+    print("Attempting to connect to Anki...")
+    try:
+        wait_for_port(ANKI_PORT)
+    except TimeoutError:
+        print("Couldn't connect to Anki, quitting...")
+    else:
+        print("Connected!")
+        if not os.path.exists(CONFIG_PATH):
+            Config.update_config()
+        App()
