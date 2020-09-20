@@ -14,7 +14,7 @@ Current features:
 * **[Embedded images](#image-formatting)**. GIFs should work too.
 * **[Audio](#audio-formatting)**.
 * **[Auto-deleting notes](#deleting-notes) from the file**.
-* **Reading from all files in a directory automatically** - not recursively however.
+* **Reading from all files in a directory automatically** - recursively too!
 * **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
 * **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
 * **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
