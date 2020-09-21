@@ -486,7 +486,10 @@ class Note:
         fields = {
             key: FormatConverter.format(
                 value.strip(),
-                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+                cloze=(
+                    self.note_type in CONFIG_DATA["Clozes"]
+                    and CONFIG_DATA["CurlyCloze"]
+                )
             )
             for key, value in fields.items()
         }
@@ -553,7 +556,10 @@ class InlineNote(Note):
         fields = {
             key: FormatConverter.format(
                 value,
-                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+                cloze=(
+                    self.note_type in CONFIG_DATA["Clozes"]
+                    and CONFIG_DATA["CurlyCloze"]
+                )
             )
             for key, value in fields.items()
         }
@@ -592,7 +598,10 @@ class RegexNote:
         fields = {
             key: FormatConverter.format(
                 value,
-                cloze=(self.note_type == "Cloze" and CONFIG_DATA["CurlyCloze"])
+                cloze=(
+                    self.note_type in CONFIG_DATA["Clozes"]
+                    and CONFIG_DATA["CurlyCloze"]
+                )
             )
             for key, value in fields.items()
         }
@@ -647,10 +656,14 @@ class Config:
                 # the 'default' substitution of field + ":" isn't added.
         # Setting up Note Substitutions
         config.setdefault("Note Substitutions", dict())
+        config.setdefault("Cloze Note Types", dict())
         for note in note_types:
             config["Note Substitutions"].setdefault(note, note)
+            config["Cloze Note Types"].setdefault(note, "False")
             # Similar to above - if there's already a substitution present,
             # it isn't overwritten
+        if "Cloze" in note_types:
+            config["Cloze Note Types"]["Cloze"] = "True"
         # Setting up Syntax
         config.setdefault("Syntax", dict())
         config["Syntax"].setdefault(
@@ -729,6 +742,10 @@ class Config:
                 "DEFAULT"
             ]
         }
+        CONFIG_DATA["Clozes"] = list(
+            type for type, value in config["Cloze Note Types"].items()
+            if value
+        )
         CONFIG_DATA["NOTE_PREFIX"] = re.escape(
             config["Syntax"]["Begin Note"]
         )
