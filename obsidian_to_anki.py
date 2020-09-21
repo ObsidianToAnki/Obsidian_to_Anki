@@ -21,9 +21,6 @@ except ModuleNotFoundError:
     print("Gooey not installed, switching to cli...")
     GOOEY = False
 
-MEDIA_PATHS = set()
-MEDIA_NAMES = list()
-MEDIA_DATA = list()
 MEDIA = dict()
 
 ID_PREFIX = "ID: "
