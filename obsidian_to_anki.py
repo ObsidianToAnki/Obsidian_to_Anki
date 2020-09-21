@@ -742,10 +742,10 @@ class Config:
                 "DEFAULT"
             ]
         }
-        CONFIG_DATA["Clozes"] = list(
-            type for type, value in config["Cloze Note Types"].items()
-            if value
-        )
+        CONFIG_DATA["Clozes"] = [
+            type for type in config["Cloze Note Types"]
+            if config.getboolean("Cloze Note Types", type)
+        ]
         CONFIG_DATA["NOTE_PREFIX"] = re.escape(
             config["Syntax"]["Begin Note"]
         )
