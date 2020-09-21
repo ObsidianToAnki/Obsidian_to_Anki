@@ -52,7 +52,14 @@ CONFIG_PATH = os.path.expanduser(
 CONFIG_DATA = dict()
 
 md_parser = markdown.Markdown(
-    extensions=['extra', 'nl2br', 'sane_lists']
+    extensions=[
+        'fenced_code',
+        'footnotes',
+        'md_in_html',
+        'tables',
+        'nl2br',
+        'sane_lists'
+    ]
 )
 
 ANKI_PORT = 8765
