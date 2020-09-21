@@ -17,7 +17,48 @@ Current features:
 * **Reading from all files in a directory automatically** - recursively too!
 * **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
 * **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
-* **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
+* **[Custom syntax](regex.md)** - Using **regular expressions**, add custom syntax to generate **notes that make sense for you.** Some examples:
+  * [RemNote single-line style](regex.md#remnote-single-line-style). `This is how to use::Remnote single-line style`  
+  ![Remnote 1](Images/Remnote_1.png)
+  * [Header paragraph style](regex.md#header-paragraph-style).
+  <pre>
+  # Style
+  This style is suitable for having the header as the front, and the answer as the back
+  </pre>  
+  ![Header 1](Images/Header_1.png)
+  * [Question answer style](regex.md#question-answer-style).
+  <pre>
+  Q: How do you use this style?
+  A: Just like this.
+  </pre>  
+  ![Question 1](Images/Question_1.png)
+  * [Neuracache #flashcard style](regex.md#neuracache-flashcard-style).  
+  <pre>
+  In Neuracache style, to make a flashcard you do #flashcard
+  The next lines then become the back of the flashcard
+  </pre>  
+  ![Neuracache 1](Images/Neuracache_1.png)
+  * [Ruled style](regex.md#ruled-style)  
+  <pre>
+  How do you use ruled style?
+  ---
+  You need at least three '-' between the front and back of the card.
+  </pre>  
+  ![Ruled 1](Images/Ruled_1.png)
+  * [Markdown table style](regex.md#markdown-table-style)  
+  <pre>
+  | Why might this style be useful? |
+  | ------ |
+  | It looks nice when rendered as HTML in a markdown editor. |
+  </pre>
+  ![Table 2](Images/Table_2.png)
+  * [Cloze paragraph style](regex.md#cloze-paragraph-style)  
+  <pre>
+  The idea of {cloze paragraph style} is to be able to recognise any paragraphs that contain {cloze deletions}.
+  </pre>
+  ![Cloze 1](Images/Cloze_1.png)
+
+Note that **all custom syntax is off by default**, and must be programmed into the script via the config file - see [Custom syntax](regex.md) for instructions.
 
 ## Who is this for?
 
@@ -89,11 +130,14 @@ The sections below describe the default syntax of the script (with the 'Regex' o
 
 ### DEFAULT section
 Allows you to change the default deck and tag of the script.  
-New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)  
+New in v2.2.2 - allows you to enable/disable the 'CurlyCloze' option, which is explained in [Cloze formatting](#cloze-formatting)  .
 New in v2.4.0 - allows you to enable/disable the GUI of the script - see [Command line usage](#command-line-usage).  
 New in v2.5.0 - allows you to enable/disable IDs being embedded in HTML comments. The script can read IDs whether or not they are in a HTML comment.  
 New in v2.5.0 - allows you to have regex mode on by default.  
 New in v2.7.0 - Anki Path and Anki Profile. If you supply both the absolute path to the Anki executable, and your profile on Anki, the script will attempt to open Anki when run if it's not already running. Useful for automation - see [Technical](#technical)
+
+### Cloze note types
+New in v2.8.0 - allows you to indicate whether or not a note type should be interpreted as a 'Cloze' type. You must set this to 'True' if you wish to use the 'CurlyCloze' option with this note type - see [Cloze formatting](#cloze-formatting).
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.
@@ -330,17 +374,32 @@ Note that if you manually delete a note in Anki, **you must remove the ID line f
 
 ### Cloze formatting
 
-New in v2.2.2  
+New in v2.8.0  
 In any note, you can do clozes using Anki's standard syntax:  
 `This is a {{c1::cloze note}}`  
-However, by enabling the 'CurlyCloze' option (see [Config](#config)), you can write the above as:  
-`This is a {cloze note}`  
-It'll pick up multiple clozes accordingly:  
-`This is a {cloze note} with {multiple clozes}`  
-Gets translated to:  
-`This is a {{c1::cloze note}} with {{c2::multiple clozes}}`  
-However, simultaneous clozes are NOT supported when using this syntax.  
-Also, you cannot use Anki's regular syntax for clozes if the 'CurlyCloze' option is enabled.
+However, by enabling the 'CurlyCloze' option (see [Config](#config)), you have access to many easier options:
+
+1. `This is a {cloze} note with {two clozes}`
+->
+`This is a {{c1::cloze}} note with {{c2::two clozes}}`
+2. `This is a {2:cloze} note with {1:id syntax}`
+->
+`This is a {{c2::cloze}} note with {{c1::id syntax}}`
+3. `This is a {2|cloze} {3|note} with {1|alternate id syntax}`
+->
+`This is a {{c2::cloze}} {{c3::note}} with {{c1::alternate id syntax}}`
+4. `This is a {c1:cloze} note with {c2:another} type of {c3:id syntax}`
+->
+`This is a {{c1::cloze}} note with {{c2::another}} type of {{c3::id syntax}}`
+5. `This is a {c1|cloze} note with {c2|yet another} type of {c3|id syntax}`
+->
+`This is a {{c1::cloze}} note with {{c2::yet another}} type of {{c3::id syntax}}`
+
+You can also mix and match styles! Note that clozes without an id will always be assigned an id starting from 1, increasing for each new cloze:
+`This is a {cloze} note with {multiple} non-id clozes, as well as {2:some clozes} with {c1|other styles}`
+->
+`This is a {{c1::cloze}} note with {{c2::multiple}} non-id clozes, as well as {{c2::some clozes}} with {{c1::other styles}}`
+
 
 ## Default
 By default, the script:

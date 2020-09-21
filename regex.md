@@ -6,6 +6,8 @@ This page lists templates for custom syntax. In each case, copy-paste the regex 
 * [Question answer style](#question-answer-style)
 * [Neuracache #flashcard style](#neuracache-flashcard-style)
 * [Ruled style](#ruled-style)  
+* [Markdown table style](#markdown-table-style)
+* [Cloze paragraph style](#cloze-paragraph-style)
 
 - [Custom styles?](#custom-styles)
 - [Tagging notes](#tagging-notes)
@@ -213,6 +215,81 @@ Basic = ((?:[^\n][\n]?)+\n)-{3,}\n((?:[^\n][\n]?)+)
 8. You should see these cards in Anki:  
 ![ruled_1](/Images/Ruled_1.png)  
 ![ruled_2](/Images/Ruled_2.png)
+
+## Markdown table style
+
+**Regex line:** `\|([^\n|]+)\|\n\|(?:[^\n|]+)\|\n\|([^\n|]+)\|\n?`
+
+**Example usage:**
+1. Create a file called `test.md`.
+2. Paste the following contents into the file:
+<pre>
+| How do you use this style? |
+| ---- |
+| Just like this |
+
+Of course, the script will ignore anything outside a table.
+
+| Furthermore, the script | should also |
+| ----- | ----- |
+| Ignore any tables | with more than one column |
+
+| Why might this style be useful? |
+| --------- |
+| It looks nice when rendered as HTML in a markdown editor. |
+</pre>
+3. Run the script, and check 'Config' to open up the config file:  
+![GUI](Images/GUI_config.png)
+4. Navigate to the "Custom Regexps" section
+5. Change the line
+<pre>
+Basic =  
+</pre>
+to  
+<pre>
+Basic = \|([^\n|]+)\|\n\|(?:[^\n|]+)\|\n\|([^\n|]+)\|\n?
+</pre>
+6. Save the config file
+7. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI_regex.png)
+8. You should see these cards in Anki:  
+![Table 1](/Images/Table_1.png)  
+![Table 2](/Images/Table_2.png)
+
+
+## Cloze paragraph style
+
+**Regex line:** `((?:.+\n)*(?:.*(?:(?<!\\)(?<!\\\w{1})(?<!\\\w{2})(?<!\\\w{3})(?<!\\\w{4})(?<!\\\w{5})(?<!\\\w{6})(?<!\\\w{7})(?<!\\\w{8})(?<!\\\w{9})(?<!\\\w{10})(?<!\\\w{11})(?<!\\\w{12})(?<!\\\w{13})(?<!\\\w{14})(?<!\\\w{15})(?<!\\\w{16})(?<!\\\w{17})(?<!\\\w{18})(?<!\\\w{19})(?<!\\\w{20})(?<!\])(?<!\$)(?<!}){).*\n?)(?:.+\n)*)`
+
+**Example usage:**
+1. Create a file called `test.md`.
+2. Paste the following contents into the file:
+<pre>
+The idea of {cloze paragraph style} is to be able to recognise any paragraphs that contain {cloze deletions}.
+
+The script should ignore paragraphs that have math formatting like $\frac{3}{4}$ but no actual cloze deletions.
+
+With {2:CurlyCloze} enabled, you can also use the {c1|easier cloze formatting},
+but of course {{c3::Anki}}'s formatting is always an option.
+</pre>
+3. Run the script, and check 'Config' to open up the config file:  
+![GUI](Images/GUI_config.png)
+4. Navigate to the "Custom Regexps" section
+5. Change the line
+<pre>
+Cloze =  
+</pre>  
+to  
+`Cloze = ((?:.+\n)*(?:.*(?:(?<!\\)(?<!\\\w{1})(?<!\\\w{2})(?<!\\\w{3})(?<!\\\w{4})(?<!\\\w{5})(?<!\\\w{6})(?<!\\\w{7})(?<!\\\w{8})(?<!\\\w{9})(?<!\\\w{10})(?<!\\\w{11})(?<!\\\w{12})(?<!\\\w{13})(?<!\\\w{14})(?<!\\\w{15})(?<!\\\w{16})(?<!\\\w{17})(?<!\\\w{18})(?<!\\\w{19})(?<!\\\w{20})(?<!\])(?<!\$)(?<!}){).*\n?)(?:.+\n)*)`  
+
+6. Also set `CurlyCloze = True` to have the above example work properly.
+7. Save the config file
+8. Run the script on the file, with 'Regex' checked:  
+![GUI](Images/GUI_regex.png)
+9. You should see these cards in Anki:  
+![Cloze 1](/Images/Cloze_1.png)  
+![Cloze 2](/Images/Cloze_2.png)
+
 
 ## Custom styles
 The above styles are but a few examples of the endless possible styles you can make using regular expressions.
