@@ -279,20 +279,7 @@ class FormatConverter:
         )
 
     @staticmethod
-    def cloze_repl(string, cloze_number):
-        """Return a Anki-formatted cloze string."""
-        return "".join(
-            [
-                r"{{c",
-                str(cloze_number),
-                r"::",
-                string[1:-1],
-                r"}}"
-            ]
-        )
-
-    @staticmethod
-    def better_cloze_repl(match):
+    def cloze_repl(match):
         id, content = match.group(1), match.group(2)
         if id is None:
             result = "{{{{c{!s}::{}}}}}".format(
@@ -308,7 +295,7 @@ class FormatConverter:
     def curly_to_cloze(text):
         """Change text in curly brackets to Anki-formatted cloze."""
         text = FormatConverter.CLOZE_REGEXP.sub(
-            FormatConverter.better_cloze_repl,
+            FormatConverter.cloze_repl,
             text
         )
         FormatConverter.CLOZE_UNSET_NUM = 1
