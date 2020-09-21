@@ -236,11 +236,15 @@ class FormatConverter:
 
     IMAGE_REGEXP = re.compile(r'<img alt=".*?" src="(.*?)"')
     SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
-    CLOZE_REGEXP = re.compile(r'{(.+?)}')
+    CLOZE_REGEXP = re.compile(
+        r'(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))'
+    )
     URL_REGEXP = re.compile(r'https?://')
 
     PARA_OPEN = "<p>"
     PARA_CLOSE = "</p>"
+
+    CLOZE_UNSET_NUM = 1
 
     @staticmethod
     def inline_anki_repl(matchobject):
@@ -288,34 +292,42 @@ class FormatConverter:
         )
 
     @staticmethod
-    def curly_to_cloze(text):
-        """Change text in curly brackets to Anki-formatted cloze."""
-        for index, cloze_match in enumerate(
-            FormatConverter.CLOZE_REGEXP.finditer(
-                text
-            ), start=1
-        ):
-            text = text.replace(
-                cloze_match.group(0),
-                FormatConverter.cloze_repl(cloze_match.group(0), index),
-                1
+    def better_cloze_repl(match):
+        id, content = match.group(1), match.group(2)
+        if id is None:
+            result = "{{{{c{!s}::{}}}}}".format(
+                FormatConverter.CLOZE_UNSET_NUM,
+                content
             )
-        return text
+            FormatConverter.CLOZE_UNSET_NUM += 1
+            return result
+        else:
+            return "{{{{c{}::{}}}}}".format(id, content)
 
     @staticmethod
+    def curly_to_cloze(text):
+        """Change text in curly brackets to Anki-formatted cloze."""
+        text = FormatConverter.CLOZE_REGEXP.sub(
+            FormatConverter.better_cloze_repl,
+            text
+        )
+        FormatConverter.CLOZE_UNSET_NUM = 1
+        return text
+
+    @ staticmethod
     def markdown_parse(text):
         """Apply markdown conversions to text."""
         text = md_parser.reset().convert(text)
         return text
 
-    @staticmethod
+    @ staticmethod
     def is_url(text):
         """Check whether text looks like a url."""
         return bool(
             FormatConverter.URL_REGEXP.match(text)
         )
 
-    @staticmethod
+    @ staticmethod
     def get_images(html_text):
         """Get all the images that need to be added."""
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
@@ -329,7 +341,7 @@ class FormatConverter:
                 MEDIA[filename] = file_encode(path)
                 # Adds the filename and data to media_names
 
-    @staticmethod
+    @ staticmethod
     def get_audio(html_text):
         """Get all the audio that needs to be added"""
         for match in FormatConverter.SOUND_REGEXP.finditer(html_text):
@@ -340,7 +352,7 @@ class FormatConverter:
                 MEDIA[filename] = file_encode(path)
                 # Adds the filename and data to media_names
 
-    @staticmethod
+    @ staticmethod
     def path_to_filename(matchobject):
         """Replace the src in matchobject appropriately."""
         found_string, found_path = matchobject.group(0), matchobject.group(1)
@@ -351,7 +363,7 @@ class FormatConverter:
         )
         return found_string
 
-    @staticmethod
+    @ staticmethod
     def fix_image_src(html_text):
         """Fix the src of the images so that it's relative to Anki."""
         return FormatConverter.IMAGE_REGEXP.sub(
@@ -359,7 +371,7 @@ class FormatConverter:
             html_text
         )
 
-    @staticmethod
+    @ staticmethod
     def fix_audio_src(html_text):
         """Fix the audio filenames so that it's relative to Anki."""
         return FormatConverter.SOUND_REGEXP.sub(
@@ -367,7 +379,7 @@ class FormatConverter:
             html_text
         )
 
-    @staticmethod
+    @ staticmethod
     def format(note_text, cloze=False):
         """Apply all format conversions to note_text."""
         note_text = FormatConverter.obsidian_to_anki_math(note_text)
@@ -447,17 +459,17 @@ class Note:
         self.subs = Note.field_subs[self.note_type]
         self.field_names = list(self.subs)
 
-    @property
+    @ property
     def current_field(self):
         """Get the field to add text to."""
         return self.field_names[self.current_field_num]
 
-    @property
+    @ property
     def current_sub(self):
         """Get the prefix substitution of the current field."""
         return self.subs[self.current_field]
 
-    @property
+    @ property
     def next_field(self):
         """Attempt to get the next field to add text to."""
         try:
@@ -465,7 +477,7 @@ class Note:
         except IndexError:
             return ""
 
-    @property
+    @ property
     def next_sub(self):
         """Attempt to get the substitution of the next field."""
         try:
@@ -473,7 +485,7 @@ class Note:
         except KeyError:
             return ""
 
-    @property
+    @ property
     def fields(self):
         """Get the fields of the note into a dictionary."""
         fields = dict.fromkeys(self.field_names, "")
@@ -539,7 +551,7 @@ class InlineNote(Note):
         self.field_names = list(self.subs)
         self.text = self.text.strip()
 
-    @property
+    @ property
     def fields(self):
         """Get the fields of the note into a dictionary."""
         fields = dict.fromkeys(self.field_names, "")
@@ -584,7 +596,7 @@ class RegexNote:
             self.tags = list()
         self.field_names = list(Note.field_subs[self.note_type])
 
-    @property
+    @ property
     def fields(self):
         fields = dict.fromkeys(self.field_names, "")
         for name, match in zip(self.field_names, self.groups):
@@ -915,7 +927,7 @@ class App:
         )
 
     if GOOEY:
-        @gooey.Gooey(use_cmd_args=True)
+        @ gooey.Gooey(use_cmd_args=True)
         def setup_gui_parser(self):
             """Set up the GUI argument parser."""
             self.parser = gooey.GooeyParser(
@@ -1103,7 +1115,7 @@ class File:
             else:
                 self.notes_to_edit.append(parsed)
 
-    @staticmethod
+    @ staticmethod
     def id_to_str(id, inline=False, comment=False):
         """Get the string repr of id."""
         result = ID_PREFIX + str(id)
