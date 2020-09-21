@@ -45,6 +45,18 @@ Current features:
   You need at least three '-' between the front and back of the card.
   </pre>  
   ![Ruled 1](Images/Ruled_1.png)
+  * [Markdown table style](regex.md#markdown-table-style)  
+  <pre>
+  | Why might this style be useful? |
+  | ------ |
+  | It looks nice when rendered as HTML in a markdown editor. |
+  </pre>
+  ![Table 2](Images/Table_2.png)
+  * [Cloze paragraph style](regex.md#cloze-paragraph-style)  
+  <pre>
+  The idea of {cloze paragraph style} is to be able to recognise any paragraphs that contain {cloze deletions}.
+  </pre>
+  ![Cloze 1](Images/Cloze_1.png)
 
 Note that **all custom syntax is off by default**, and must be programmed into the script via the config file - see [Custom syntax](regex.md) for instructions.
 
