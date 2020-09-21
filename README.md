@@ -18,7 +18,7 @@ Current features:
 * **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
 * **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
 * **[Custom syntax](regex.md)** - Using **regular expressions**, add custom syntax to generate **notes that make sense for you.** Some examples:
-  * [RemNote single-line style](regex.md#remnote-single-line-style). `This is how to use::Remnote single-line style.`  
+  * [RemNote single-line style](regex.md#remnote-single-line-style). `This is how to use::Remnote single-line style`  
   ![Remnote 1](Images/Remnote_1.png)
   * [Header paragraph style](regex.md#header-paragraph-style).
   <pre>
