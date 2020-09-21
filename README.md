@@ -17,12 +17,36 @@ Current features:
 * **Reading from all files in a directory automatically** - recursively too!
 * **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
 * **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
-* **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
-  * [RemNote single-line style](regex.md#remnote-single-line-style)
-  * [Header paragraph style](regex.md#header-paragraph-style)
-  * [Question answer style](regex.md#question-answer-style)
-  * [Neuracache #flashcard style](regex.md#neuracache-flashcard-style)
+* **[Custom syntax](regex.md)** - Using **regular expressions**, add custom syntax to generate **notes that make sense for you.** Some examples:
+  * [RemNote single-line style](regex.md#remnote-single-line-style). `This is how to use::Remnote single-line style.`  
+  ![Remnote 1](Images/Remnote_1.png)
+  * [Header paragraph style](regex.md#header-paragraph-style).
+  <pre>
+  # Style
+  This style is suitable for having the header as the front, and the answer as the back
+  </pre>  
+  ![Header 1](Images/Header_1.png)
+  * [Question answer style](regex.md#question-answer-style).
+  <pre>
+  Q: How do you use this style?
+  A: Just like this.
+  </pre>  
+  ![Question 1](Images/Question_1.png)
+  * [Neuracache #flashcard style](regex.md#neuracache-flashcard-style).  
+  <pre>
+  In Neuracache style, to make a flashcard you do #flashcard
+  The next lines then become the back of the flashcard
+  </pre>  
+  ![Neuracache 1](Images/Neuracache_1.png)
   * [Ruled style](regex.md#ruled-style)  
+  <pre>
+  How do you use ruled style?
+  ---
+  You need at least three '-' between the front and back of the card.
+  </pre>  
+  ![Ruled 1](Images/Ruled_1.png)
+
+Note that **all custom syntax is off by default**, and must be programmed into the script via the config file - see [Custom syntax](regex.md) for instructions.
 
 ## Who is this for?
 
