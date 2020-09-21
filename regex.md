@@ -265,7 +265,7 @@ Basic = \|([^\n|]+)\|\n\|(?:[^\n|]+)\|\n\|([^\n|]+)\|\n?
 1. Create a file called `test.md`.
 2. Paste the following contents into the file:
 <pre>
-The idea of {cloze paragraph style} is to be able to recognise any paragraphs that contain {{c2::cloze deletions}}.
+The idea of {cloze paragraph style} is to be able to recognise any paragraphs that contain {cloze deletions}.
 
 The script should ignore paragraphs that have math formatting like $\frac{3}{4}$ but no actual cloze deletions.
 
