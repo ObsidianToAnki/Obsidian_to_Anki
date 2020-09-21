@@ -1045,6 +1045,7 @@ class File:
         self.filename = filepath
         with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
+            self.original_file = self.file
             self.file += "\n"  # Adds empty line, useful for ID
         self.target_deck = App.DECK_REGEXP.search(self.file)
         if self.target_deck is not None:
@@ -1148,7 +1149,8 @@ class File:
     def write_file(self):
         """Write to the actual os file"""
         self.file = self.file[:-1]  # Remove newline added
-        write_safe(self.filename, self.file)
+        if self.file != self.original_file:
+            write_safe(self.filename, self.file)
 
     def get_add_notes(self):
         """Get the AnkiConnect-formatted request to add notes."""
