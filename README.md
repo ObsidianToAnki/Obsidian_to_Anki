@@ -18,6 +18,11 @@ Current features:
 * **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
 * **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
 * **[Custom syntax](regex.md)** - Using regular expressions, add custom syntax to generate **notes that make sense for you.**
+  * [RemNote single-line style](regex.md#remnote-single-line-style)
+  * [Header paragraph style](regex.md#header-paragraph-style)
+  * [Question answer style](regex.md#question-answer-style)
+  * [Neuracache #flashcard style](regex.md#neuracache-flashcard-style)
+  * [Ruled style](regex.md#ruled-style)  
 
 ## Who is this for?
 
