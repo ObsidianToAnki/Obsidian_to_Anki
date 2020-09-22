@@ -501,13 +501,16 @@ class Note:
         if not self.delete:
             template["modelName"] = self.note_type
             template["fields"] = self.fields
-            if all(
+            if all([
                 CONFIG_DATA["Add file link"],
                 CONFIG_DATA["Vault"],
                 url
-            ):
+            ]):
                 for key in template["fields"]:
-                    template[key] += url
+                    template["fields"][key] += " " + "".join([
+                        '<a',
+                        ' href="{}">Obsidian</a>'.format(url)
+                    ])
                     break  # So only does first field
             template["tags"] = template["tags"] + self.tags
             template["deckName"] = deck
@@ -620,13 +623,16 @@ class RegexNote:
         template = NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
-        if all(
+        if all([
             CONFIG_DATA["Add file link"],
             CONFIG_DATA["Vault"],
             url
-        ):
+        ]):
             for key in template["fields"]:
-                template[key] += url
+                template["fields"][key] += " " + "".join([
+                    '<a',
+                    ' href="{}">Obsidian</a>'.format(url)
+                ])
                 break  # So only does first field
         template["tags"] = template["tags"] + self.tags
         template["deckName"] = deck
