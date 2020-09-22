@@ -687,6 +687,8 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
+        config.setdefault("Obsidian", dict())
+        config["Obsidian"].setdefault("Vault name", "")
         config["DEFAULT"] = dict()  # Removes DEFAULT if it's there.
         config.setdefault("Defaults", dict())
         config["Defaults"].setdefault(
@@ -786,6 +788,7 @@ class Config:
         )
         CONFIG_DATA["Path"] = config["Defaults"]["Anki Path"]
         CONFIG_DATA["Profile"] = config["Defaults"]["Anki Profile"]
+        CONFIG_DATA["Vault"] = config["Obsidian"]["Vault name"]
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
@@ -1063,6 +1066,7 @@ class File:
     def __init__(self, filepath):
         """Perform initial file reading and attribute setting."""
         self.filename = filepath
+        self.path = os.path.abspath(filepath)
         with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
             self.original_file = self.file
