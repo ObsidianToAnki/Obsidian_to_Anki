@@ -17,6 +17,7 @@ Current features:
 * **Reading from all files in a directory automatically** - recursively too!
 * **[Inline Notes](#inline-note-formatting)** - Shorter syntax for typing out notes on a single line.
 * **[Easy cloze formatting](#cloze-formatting)** - A more compact syntax to do Cloze text
+* **[Obsidian integration](#obsidian)** - Currently, this only includes a link to the file that made the flashcard, appended to the first field of your card.
 * **[Custom syntax](regex.md)** - Using **regular expressions**, add custom syntax to generate **notes that make sense for you.** Some examples:
   * [RemNote single-line style](regex.md#remnote-single-line-style). `This is how to use::Remnote single-line style`  
   ![Remnote 1](Images/Remnote_1.png)
@@ -138,6 +139,11 @@ New in v2.7.0 - Anki Path and Anki Profile. If you supply both the absolute path
 
 ### Cloze note types
 New in v2.8.0 - allows you to indicate whether or not a note type should be interpreted as a 'Cloze' type. You must set this to 'True' if you wish to use the 'CurlyCloze' option with this note type - see [Cloze formatting](#cloze-formatting).
+
+### Obsidian
+This section is new in v2.9.0.  
+Vault name: The name of your obsidian vault that you're adding flashcards from.  
+Add file link: Whether you want to append a link to the associated obsidian file on the first field of the card.  
 
 ### Syntax
 Note that START, END, TARGET DECK, FILE TAGS and DELETE all require an **exact match** on the line - you cannot have spaces afterwards.

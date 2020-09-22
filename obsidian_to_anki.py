@@ -495,12 +495,23 @@ class Note:
         }
         return {key: value.strip() for key, value in fields.items()}
 
-    def parse(self, deck):
+    def parse(self, deck, url=None):
         """Get a properly formatted dictionary of the note."""
         template = NOTE_DICT_TEMPLATE.copy()
         if not self.delete:
             template["modelName"] = self.note_type
             template["fields"] = self.fields
+            if all([
+                CONFIG_DATA["Add file link"],
+                CONFIG_DATA["Vault"],
+                url
+            ]):
+                for key in template["fields"]:
+                    template["fields"][key] += " " + "".join([
+                        '<a',
+                        ' href="{}">Obsidian</a>'.format(url)
+                    ])
+                    break  # So only does first field
             template["tags"] = template["tags"] + self.tags
             template["deckName"] = deck
             return Note_and_id(note=template, id=self.identifier)
@@ -607,11 +618,22 @@ class RegexNote:
         }
         return {key: value.strip() for key, value in fields.items()}
 
-    def parse(self, deck):
+    def parse(self, deck, url=None):
         """Get a properly formatted dictionary of the note."""
         template = NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
         template["fields"] = self.fields
+        if all([
+            CONFIG_DATA["Add file link"],
+            CONFIG_DATA["Vault"],
+            url
+        ]):
+            for key in template["fields"]:
+                template["fields"][key] += " " + "".join([
+                    '<a',
+                    ' href="{}">Obsidian</a>'.format(url)
+                ])
+                break  # So only does first field
         template["tags"] = template["tags"] + self.tags
         template["deckName"] = deck
         return Note_and_id(note=template, id=self.identifier)
@@ -687,6 +709,9 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
+        config.setdefault("Obsidian", dict())
+        config["Obsidian"].setdefault("Vault name", "")
+        config["Obsidian"].setdefault("Add file link", "False")
         config["DEFAULT"] = dict()  # Removes DEFAULT if it's there.
         config.setdefault("Defaults", dict())
         config["Defaults"].setdefault(
@@ -786,6 +811,10 @@ class Config:
         )
         CONFIG_DATA["Path"] = config["Defaults"]["Anki Path"]
         CONFIG_DATA["Profile"] = config["Defaults"]["Anki Profile"]
+        CONFIG_DATA["Vault"] = config["Obsidian"]["Vault name"]
+        CONFIG_DATA["Add file link"] = config.getboolean(
+            "Obsidian", "Add file link"
+        )
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
@@ -1041,6 +1070,12 @@ class App:
                 )
             )
         )
+        setattr(
+            App, "VAULT_PATH_REGEXP",
+            re.compile(
+                CONFIG_DATA["Vault"] + r".*"
+            )
+        )
 
     def get_add_media(self):
         """Get the AnkiConnect-formatted add_media request."""
@@ -1063,6 +1098,13 @@ class File:
     def __init__(self, filepath):
         """Perform initial file reading and attribute setting."""
         self.filename = filepath
+        self.path = os.path.abspath(filepath)
+        if CONFIG_DATA["Vault"]:
+            self.url = "obsidian://vault/{}".format(
+                App.VAULT_PATH_REGEXP.search(self.path).group()
+            ).replace("\\", "/")
+        else:
+            self.url = ""
         with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
             self.original_file = self.file
@@ -1093,7 +1135,7 @@ class File:
         self.inline_id_indexes = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
             note, position = note_match.group(1), note_match.end(1)
-            parsed = Note(note).parse(self.target_deck)
+            parsed = Note(note).parse(self.target_deck, url=self.url)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
                 parsed.note["tags"] += self.global_tags.split(TAG_SEP)
@@ -1107,7 +1149,7 @@ class File:
         for inline_note_match in App.INLINE_REGEXP.finditer(self.file):
             note = inline_note_match.group(1)
             position = inline_note_match.end(1)
-            parsed = InlineNote(note).parse(self.target_deck)
+            parsed = InlineNote(note).parse(self.target_deck, url=self.url)
             if parsed.id is None:
                 # Need to make sure global_tags get added.
                 parsed.note["tags"] += self.global_tags.split(TAG_SEP)
@@ -1302,7 +1344,7 @@ class RegexFile(File):
             self.ignore_spans.append(match.span())
             self.notes_to_edit.append(
                 RegexNote(match, note_type, tags=True, id=True).parse(
-                    self.target_deck
+                    self.target_deck, url=self.url
                 )
             )
         for match in findignore(regexp_id, self.file, self.ignore_spans):
@@ -1310,14 +1352,14 @@ class RegexFile(File):
             self.ignore_spans.append(match.span())
             self.notes_to_edit.append(
                 RegexNote(match, note_type, tags=False, id=True).parse(
-                    self.target_deck
+                    self.target_deck, url=self.url
                 )
             )
         for match in findignore(regexp_tags, self.file, self.ignore_spans):
             # This note has no id, so we update it
             self.ignore_spans.append(match.span())
             parsed = RegexNote(match, note_type, tags=True, id=False).parse(
-                self.target_deck
+                self.target_deck, url=self.url
             )
             parsed.note["tags"] += self.global_tags.split(TAG_SEP)
             self.notes_to_add.append(
@@ -1328,7 +1370,7 @@ class RegexFile(File):
             # This note has no id, so we update it
             self.ignore_spans.append(match.span())
             parsed = RegexNote(match, note_type, tags=False, id=False).parse(
-                self.target_deck
+                self.target_deck, url=self.url
             )
             parsed.note["tags"] += self.global_tags.split(TAG_SEP)
             self.notes_to_add.append(
