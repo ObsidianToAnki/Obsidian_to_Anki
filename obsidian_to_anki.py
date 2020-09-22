@@ -1044,6 +1044,12 @@ class App:
                 )
             )
         )
+        setattr(
+            App, "VAULT_PATH_REGEXP",
+            re.compile(
+                CONFIG_DATA["Vault"] + r".*"
+            )
+        )
 
     def get_add_media(self):
         """Get the AnkiConnect-formatted add_media request."""
@@ -1067,6 +1073,10 @@ class File:
         """Perform initial file reading and attribute setting."""
         self.filename = filepath
         self.path = os.path.abspath(filepath)
+        if CONFIG_DATA["Vault"]:
+            self.url = "obsidian://vault/{}".format(
+                App.VAULT_PATH_REGEXP.search(self.path).group()
+            ).replace("\\", "/")
         with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
             self.original_file = self.file
