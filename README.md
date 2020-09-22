@@ -141,7 +141,7 @@ New in v2.7.0 - Anki Path and Anki Profile. If you supply both the absolute path
 New in v2.8.0 - allows you to indicate whether or not a note type should be interpreted as a 'Cloze' type. You must set this to 'True' if you wish to use the 'CurlyCloze' option with this note type - see [Cloze formatting](#cloze-formatting).
 
 ### Obsidian
-This section is new in v2.9.0.
+This section is new in v2.9.0.  
 Vault name: The name of your obsidian vault that you're adding flashcards from.  
 Add file link: Whether you want to append a link to the associated obsidian file on the first field of the card.  
 
