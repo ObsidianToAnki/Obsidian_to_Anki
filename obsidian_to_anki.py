@@ -247,6 +247,15 @@ class FormatConverter:
     CLOZE_UNSET_NUM = 1
 
     @staticmethod
+    def format_note_with_url(note, url):
+        for key in note["fields"]:
+            note["fields"][key] += "<br>" + "".join([
+                '<a',
+                ' href="{}" class="obsidian-link">Obsidian</a>'.format(url)
+            ])
+            break  # So only does first field
+
+    @staticmethod
     def inline_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted inline math."""
         found_string = matchobject.group(0)
@@ -301,25 +310,24 @@ class FormatConverter:
         FormatConverter.CLOZE_UNSET_NUM = 1
         return text
 
-    @ staticmethod
+    @staticmethod
     def markdown_parse(text):
         """Apply markdown conversions to text."""
         text = md_parser.reset().convert(text)
         return text
 
-    @ staticmethod
+    @staticmethod
     def is_url(text):
         """Check whether text looks like a url."""
         return bool(
             FormatConverter.URL_REGEXP.match(text)
         )
 
-    @ staticmethod
+    @staticmethod
     def get_images(html_text):
         """Get all the images that need to be added."""
         for match in FormatConverter.IMAGE_REGEXP.finditer(html_text):
             path = match.group(1)
-            print(path)
             if FormatConverter.is_url(path):
                 continue  # Skips over images web-hosted.
             filename = os.path.basename(path)
@@ -328,7 +336,7 @@ class FormatConverter:
                 MEDIA[filename] = file_encode(path)
                 # Adds the filename and data to media_names
 
-    @ staticmethod
+    @staticmethod
     def get_audio(html_text):
         """Get all the audio that needs to be added"""
         for match in FormatConverter.SOUND_REGEXP.finditer(html_text):
@@ -339,7 +347,7 @@ class FormatConverter:
                 MEDIA[filename] = file_encode(path)
                 # Adds the filename and data to media_names
 
-    @ staticmethod
+    @staticmethod
     def path_to_filename(matchobject):
         """Replace the src in matchobject appropriately."""
         found_string, found_path = matchobject.group(0), matchobject.group(1)
@@ -350,7 +358,7 @@ class FormatConverter:
         )
         return found_string
 
-    @ staticmethod
+    @staticmethod
     def fix_image_src(html_text):
         """Fix the src of the images so that it's relative to Anki."""
         return FormatConverter.IMAGE_REGEXP.sub(
@@ -358,7 +366,7 @@ class FormatConverter:
             html_text
         )
 
-    @ staticmethod
+    @staticmethod
     def fix_audio_src(html_text):
         """Fix the audio filenames so that it's relative to Anki."""
         return FormatConverter.SOUND_REGEXP.sub(
@@ -366,7 +374,7 @@ class FormatConverter:
             html_text
         )
 
-    @ staticmethod
+    @staticmethod
     def format(note_text, cloze=False):
         """Apply all format conversions to note_text."""
         note_text = FormatConverter.obsidian_to_anki_math(note_text)
@@ -506,12 +514,7 @@ class Note:
                 CONFIG_DATA["Vault"],
                 url
             ]):
-                for key in template["fields"]:
-                    template["fields"][key] += " " + "".join([
-                        '<a',
-                        ' href="{}">Obsidian</a>'.format(url)
-                    ])
-                    break  # So only does first field
+                FormatConverter.format_note_with_url(template, url)
             template["tags"] = template["tags"] + self.tags
             template["deckName"] = deck
             return Note_and_id(note=template, id=self.identifier)
@@ -628,12 +631,7 @@ class RegexNote:
             CONFIG_DATA["Vault"],
             url
         ]):
-            for key in template["fields"]:
-                template["fields"][key] += " " + "".join([
-                    '<a',
-                    ' href="{}">Obsidian</a>'.format(url)
-                ])
-                break  # So only does first field
+            FormatConverter.format_note_with_url(template, url)
         template["tags"] = template["tags"] + self.tags
         template["deckName"] = deck
         return Note_and_id(note=template, id=self.identifier)
@@ -883,9 +881,17 @@ class App:
                     ]
                 os.chdir(current)
             else:
+                # Still need to get to directory of file for image resolving
+                # So, go to directory where file is (hopefully)
+                # But, if just file name is given (e.g. cli), don't want to
+                # Break anything.
+                if os.path.dirname(self.path):
+                    file_dir = os.path.dirname(self.path)
+                else:
+                    file_dir = current
                 directories = [
                     Directory(
-                        current, regex=args.regex, onefile=self.path
+                        file_dir, regex=args.regex, onefile=self.path
                     )
                 ]
             requests = list()
