@@ -71,7 +71,7 @@ def has_clozes(text):
 
 def note_has_clozes(note):
     """Checks whether a note has cloze deletions in any of its fields."""
-    return any(has_clozes(field) for field in note["fields"])
+    return any(has_clozes(field) for field in note["fields"].values())
 
 
 def write_safe(filename, contents):
@@ -466,17 +466,17 @@ class Note:
         self.subs = Note.field_subs[self.note_type]
         self.field_names = list(self.subs)
 
-    @ property
+    @property
     def current_field(self):
         """Get the field to add text to."""
         return self.field_names[self.current_field_num]
 
-    @ property
+    @property
     def current_sub(self):
         """Get the prefix substitution of the current field."""
         return self.subs[self.current_field]
 
-    @ property
+    @property
     def next_field(self):
         """Attempt to get the next field to add text to."""
         try:
@@ -484,7 +484,7 @@ class Note:
         except IndexError:
             return ""
 
-    @ property
+    @property
     def next_sub(self):
         """Attempt to get the substitution of the next field."""
         try:
@@ -492,7 +492,7 @@ class Note:
         except KeyError:
             return ""
 
-    @ property
+    @property
     def fields(self):
         """Get the fields of the note into a dictionary."""
         fields = dict.fromkeys(self.field_names, "")
@@ -567,7 +567,7 @@ class InlineNote(Note):
         self.field_names = list(self.subs)
         self.text = self.text.strip()
 
-    @ property
+    @property
     def fields(self):
         """Get the fields of the note into a dictionary."""
         fields = dict.fromkeys(self.field_names, "")
@@ -615,7 +615,7 @@ class RegexNote:
             self.tags = list()
         self.field_names = list(Note.field_subs[self.note_type])
 
-    @ property
+    @property
     def fields(self):
         fields = dict.fromkeys(self.field_names, "")
         for name, match in zip(self.field_names, self.groups):
@@ -646,6 +646,10 @@ class RegexNote:
             FormatConverter.format_note_with_url(template, url)
         template["tags"] = template["tags"] + self.tags
         template["deckName"] = deck
+        if self.note_type in CONFIG_DATA["Clozes"] and CONFIG_DATA[
+            "CurlyCloze"
+        ] and not note_has_clozes(template):
+            return 1  # Like an error code
         return Note_and_id(note=template, id=self.identifier)
 
 
@@ -1379,6 +1383,9 @@ class RegexFile(File):
             parsed = RegexNote(match, note_type, tags=True, id=False).parse(
                 self.target_deck, url=self.url
             )
+            if parsed == 1:
+                # Error code
+                continue
             parsed.note["tags"] += self.global_tags.split(TAG_SEP)
             self.notes_to_add.append(
                 parsed.note
@@ -1390,6 +1397,9 @@ class RegexFile(File):
             parsed = RegexNote(match, note_type, tags=False, id=False).parse(
                 self.target_deck, url=self.url
             )
+            if parsed == 1:
+                # Error code
+                continue
             parsed.note["tags"] += self.global_tags.split(TAG_SEP)
             self.notes_to_add.append(
                 parsed.note
