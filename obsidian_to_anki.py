@@ -61,6 +61,18 @@ md_parser = markdown.Markdown(
 
 ANKI_PORT = 8765
 
+ANKI_CLOZE_REGEXP = re.compile(r'{{c\d+::[\s\S]+?}}')
+
+
+def has_clozes(text):
+    """Checks whether text actually has cloze deletions."""
+    return bool(ANKI_CLOZE_REGEXP.search(text))
+
+
+def note_has_clozes(note):
+    """Checks whether a note has cloze deletions in any of its fields."""
+    return any(has_clozes(field) for field in note["fields"])
+
 
 def write_safe(filename, contents):
     """
