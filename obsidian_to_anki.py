@@ -419,10 +419,13 @@ class Note:
         r"(?:<!--)?" + ID_PREFIX + r"(\d+)"
     )
 
+    BLOCK_REGEXP = re.compile(r"\s\^[0-9a-z]+$")
+
     def __init__(self, note_text):
         """Set up useful variables."""
         self.text = note_text
         self.lines = self.text.splitlines()
+        self.lines = [self.BLOCK_REGEXP.sub("", l) for l in self.lines]
         self.current_field_num = 0
         self.delete = False
         if Note.ID_REGEXP.match(self.lines[-1]):
