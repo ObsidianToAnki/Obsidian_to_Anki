@@ -110,6 +110,7 @@ If you set 'GUI' in the config file to False, the script is then run from the co
 * Use `-m` to force the script to add all media files detected, instead of lazy addition of media files. Useful if you've e.g. resized the image, and want the changes to be reflected in Anki.
 * Use `-r` to use custom regex syntax, ignoring the default syntax of the script.
 * Use `-R` to recursively scan subfolders.
+* Use `-F` to skip scanning files that have not been modified since the last scan (It's much faster). This must be used with the `-R` flag.
 
 ## New users
 

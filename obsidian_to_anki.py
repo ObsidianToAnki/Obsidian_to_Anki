@@ -14,6 +14,7 @@ import html
 import time
 import socket
 import subprocess
+import hashlib
 try:
     import gooey
     GOOEY = True
@@ -22,6 +23,7 @@ except ModuleNotFoundError:
     GOOEY = False
 
 MEDIA = dict()
+FILES = []
 
 ID_PREFIX = "ID: "
 TAG_PREFIX = "Tags: "
@@ -744,6 +746,8 @@ class Config:
             config["Custom Regexps"].setdefault(note, "")
         # Setting up media files
         config.setdefault("Added Media", dict())
+        # setting up file hashes
+        config.setdefault("File Hashes", dict())
         with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
         print("Configuration file updated!")
@@ -790,6 +794,7 @@ class Config:
             config["Syntax"]["File Tags Line"]
         )
         CONFIG_DATA["Added Media"] = config["Added Media"]
+        CONFIG_DATA["File Hashes"] = config["File Hashes"]
         RegexFile.EMPTY_REGEXP = re.compile(
             re.escape(
                 config["Syntax"]["Delete Regex Note Line"]
@@ -853,6 +858,8 @@ class App:
         if args.mediaupdate:
             no_args = False
             CONFIG_DATA["Added Media"].clear()
+        if args.fastupdate:
+            no_args = False
         self.gen_regexp()
         if args.config:
             no_args = False
@@ -869,7 +876,7 @@ class App:
                     directories = list()
                     for root, dirs, files in os.walk(os.getcwd()):
                         directories.append(
-                            Directory(root, regex=args.regex)
+                            Directory(root, regex=args.regex, fastupdate=args.fastupdate)
                         )
                         for dir in dirs:
                             if dir.startswith("."):
@@ -878,7 +885,7 @@ class App:
                 else:
                     directories = [
                         Directory(
-                            os.getcwd(), regex=args.regex
+                            os.getcwd(), regex=args.regex, fastupdate=args.fastupdate
                         )
                     ]
                 os.chdir(current)
@@ -909,6 +916,14 @@ class App:
                 CONFIG_DATA["Added Media"].setdefault(
                     filename, "True"
                 )
+
+            if os.path.isdir(self.path) and args.recurse:
+                # update file hashes
+                CONFIG_DATA["File Hashes"].clear()
+                for file_hash in FILES:
+                    CONFIG_DATA["File Hashes"].setdefault(
+                        file_hash, "True"
+                    )
             with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
                 Config.config.write(configfile)
             tags = AnkiConnect.parse(result[0])
@@ -957,6 +972,12 @@ class App:
             action="store_true",
             dest="recurse",
             help="Recursively scan subfolders."
+        )
+        self.parser.add_argument(
+            "-F", "--fastupdate",
+            action="store_true",
+            dest="fastupdate",
+            help="In recursive mode, skip scanning of files that haven't been updated since last scan."
         )
 
     if GOOEY:
@@ -1412,7 +1433,7 @@ class RegexFile(File):
 class Directory:
     """Class for managing a directory of files at a time."""
 
-    def __init__(self, abspath, regex=False, onefile=None):
+    def __init__(self, abspath, regex=False, onefile=None, fastupdate=False):
         """Scan directory for files."""
         self.path = abspath
         self.parent = os.getcwd()
@@ -1426,17 +1447,21 @@ class Directory:
             self.files = [self.file_class(onefile)]
         else:
             with os.scandir() as it:
-                self.files = sorted(
-                    [
-                        self.file_class(entry.path)
-                        for entry in it
-                        if entry.is_file() and os.path.splitext(
-                            entry.path
-                        )[1] in App.SUPPORTED_EXTS
-                    ], key=lambda file: [
-                        int(part) if part.isdigit() else part.lower()
-                        for part in re.split(r'(\d+)', file.filename)]
-                )
+                self.files = []
+                for entry in it:
+                    if entry.is_file() and os.path.splitext(entry.path)[1] in App.SUPPORTED_EXTS:
+                        with open(entry.path, "r") as f:
+                            file_hash: str = hashlib.sha1(f.read().encode("utf-8")).hexdigest()
+                            FILES.append(file_hash)
+                            if not fastupdate or file_hash not in CONFIG_DATA["File Hashes"].keys():
+                                self.files.append(self.file_class(entry.path))
+                            else:
+                                print(f"{entry.path} not updated. Skipping...")
+                self.files.sort(
+                    key=lambda file: [
+                    int(part) if part.isdigit() else part.lower()
+                    for part in re.split(r'(\d+)', file.filename)])
+
         for file in self.files:
             file.scan_file()
         os.chdir(self.parent)
