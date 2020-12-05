@@ -441,7 +441,7 @@ New in v2.7.0 - the script can now automatically open Anki if Anki Path and Anki
 
 Note that the script will never close Anki by itself, so you may find Anki open when you return to your computer!
 
-For those having issues installing on Ubuntu, check out #99.
+For those having issues installing on Ubuntu, check out [#99](https://github.com/Pseudonium/Obsidian_to_Anki/issues/99).
 
 ### Scheduling
 
