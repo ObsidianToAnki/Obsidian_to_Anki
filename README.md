@@ -441,6 +441,8 @@ New in v2.7.0 - the script can now automatically open Anki if Anki Path and Anki
 
 Note that the script will never close Anki by itself, so you may find Anki open when you return to your computer!
 
+For those having issues installing on Ubuntu, check out #99.
+
 ### Scheduling
 
 On Windows, check out [Task Scheduler](https://www.windowscentral.com/how-create-automated-task-using-task-scheduler-windows-10).
