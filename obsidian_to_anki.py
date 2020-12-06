@@ -670,6 +670,9 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
+        config["Syntax"].setdefault(
+            "Frozen Fields Line", "FROZEN"
+        )
 
     @staticmethod
     def setup_defaults(config):
@@ -751,6 +754,9 @@ class Config:
             re.escape(
                 config["Syntax"]["Delete Regex Note Line"]
             ) + RegexNote.ID_REGEXP_STR
+        )
+        CONFIG_DATA["FROZEN_LINE"] = re.escape(
+            config["Syntax"]["Frozen Fields Line"]
         )
 
     @staticmethod
