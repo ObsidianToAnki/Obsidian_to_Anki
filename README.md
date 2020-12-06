@@ -7,7 +7,6 @@ See the [Trello](https://trello.com/b/6MXEizGg/obsidiantoanki) for planned featu
 Current features:
 * **[Custom note types](#note-formatting)** - You're not limited to the 6 built-in note types of Anki.
 * **Updating notes from file** - Your text files are the canonical source of the notes.
-* **Substitutions** - see [Config](#config). Makes typing out long names easier.
 * **[Tags](#tag-formatting)**, including **[tags for an entire file](#file-tag-formatting)**.
 * **Adding to user-specified [decks](#deck-formatting),** on a *per-file* basis.
 * **[Markdown formatting](#markdown-formatting)**, including **[math formatting](#math-formatting)**
@@ -156,58 +155,6 @@ As of v1.2, the Config file now allows you to change the syntax of the script:
 * File Tags Line - The string that signals "the line beneath me is the set of tags that should be added to all notes from this file". Defaults to FILE TAGS.
 * Delete Regex Note Line - The string that signals "the line beneath me is an id string for a regex note that should be deleted." Defaults to DELETE.
 
-### Field substitutions
-The substitutions for field prefixes. For example, under the section ['Basic'], you'll see something like this:
-<pre>
-Front = Front:
-Back = Back:
-</pre>
-If you edit and save this to say
-<pre>
-Front = Front:
-Back = A:
-</pre>
-Then you now format your notes like this:
-<pre>
-START
-Basic
-This is a test.
-A: Test successful!
-END
-</pre>
-As an inline note:
-<pre>
-STARTI [Basic] This is a test. A: Test successful! ENDI
-</pre>
-
-### Note Type Substitutions
-These are under the section ['Note Substitutions']. Similar to the above, you'll see something like this:
-<pre>
-...
-Basic = Basic
-Basic (and reversed card) = Basic (and reversed card)
-...
-</pre>
-If you edit and save this to say  
-<pre>
-...
-Basic = B
-Basic (and reversed card) = Basic (and reversed card)
-...
-</pre>
-Then you now format your notes like this:  
-<pre>
-START
-B
-This is a test.
-Back: Test successful!
-END
-</pre>
-As an inline note:
-<pre>
-STARTI [B] This is a test. Back: Test successful! ENDI
-</pre>
-
 ### Added Media
 This section is reserved for the script to keep track of what media files it has added. You can clear this by running the script with the `-m` flag.
 
@@ -234,6 +181,8 @@ START
 Tags:
 END
 </pre>
+
+
 ### Markdown formatting
 
 Standard markdown formatting is supported.
@@ -315,6 +264,7 @@ This is a test.
 Back: Test successful!
 END
 </pre>
+
 Note that you must start new fields on a new line for non-inline notes.  
 When the script successfully adds a note, it will append an ID to the Note Data. This allows you to *update existing notes by running the script again*.
 
@@ -327,6 +277,7 @@ Back: Test successful!
 &lt;!--ID: 1566052191670--&gt;
 END
 </pre>
+
 ### Deleting notes
 
 The script can delete notes that *it has added* automatically. To do this:
@@ -351,6 +302,7 @@ Note that if you manually delete a note in Anki, **you must remove the ID line f
 See [Deleting inline notes](#deleting-inline-notes) for how to do this with inline notes.
 
 ## Inline note formatting
+
 *v1.2 feature*
 v1.2 of the script introduces **inline notes** - notes which are entirely on a single line. They are formatted as such:  
 <pre>
