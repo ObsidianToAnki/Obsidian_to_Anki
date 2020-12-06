@@ -1049,7 +1049,7 @@ class App:
                     [
                         r"^",
                         CONFIG_DATA["DECK_LINE"],
-                        r"\n(.*)",
+                        r"(?:\n|: )(.*)",
                     ]
                 ), flags=re.MULTILINE
             )
@@ -1072,7 +1072,7 @@ class App:
         setattr(
             App, "TAG_REGEXP",
             re.compile(
-                r"^" + CONFIG_DATA["TAG_LINE"] + r"\n(.*)\n",
+                r"^" + CONFIG_DATA["TAG_LINE"] + r"(?:\n|: )(.*)",
                 flags=re.MULTILINE
             )
         )
