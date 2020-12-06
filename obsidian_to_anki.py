@@ -801,7 +801,7 @@ class Data:
         """Creates the data file for the script."""
         print("Creating data file...")
         with open(DATA_PATH, "w") as f:
-            json.dump(set(), f)
+            json.dump(list(), f)
 
     def update_data_file(data):
         """Updates the data file for the script with the given data."""
@@ -917,7 +917,9 @@ class App:
                 "multi",
                 actions=requests
             )
+            App.ADDED_MEDIA = set(App.ADDED_MEDIA)
             App.ADDED_MEDIA.update(MEDIA.keys())
+            App.ADDED_MEDIA = list(App.ADDED_MEDIA)
             Data.update_data_file(App.ADDED_MEDIA)
             tags = AnkiConnect.parse(result[0])
             directory_responses = result[2:]
