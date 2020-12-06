@@ -494,7 +494,7 @@ class Note:
         fields = {field: "" for field in self.field_names}
         for line in self.lines[1:]:
             line, self.current_field = self.field_from_line(line)
-            fields[self.current_field] += line
+            fields[self.current_field] += line + "\n"
         fields = {
             key: FormatConverter.format(
                 value.strip(),
