@@ -1186,11 +1186,11 @@ class File:
 
     def setup_frozen_fields_dict(self):
         self.frozen_fields_dict = {
-            note_type: dict.fromkeys(AnkiConnect.parse(fields), "")
+            note_type: dict.fromkeys(fields, "")
             for note_type, fields in App.FIELDS_DICT.items()
         }
         for match in App.FROZEN_REGEXP.finditer(self.file):
-            note_type, fields = match.group(0), match.group(1)
+            note_type, fields = match.group(1), match.group(2)
             virtual_note = note_type + "\n" + fields
             parsed_fields = Note(virtual_note).fields
             self.frozen_fields_dict[note_type] = parsed_fields
