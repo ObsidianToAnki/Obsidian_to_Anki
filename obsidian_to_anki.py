@@ -657,25 +657,6 @@ class Config:
     """Deals with saving and loading the configuration file."""
 
     @staticmethod
-    def get_fields_dict(note_types):
-        """Get the fields dictionary for the user."""
-        fields_request = [
-            AnkiConnect.request(
-                "modelFieldNames", modelName=note
-            )
-            for note in note_types
-        ]
-        return {
-            note_type: AnkiConnect.parse(fields)
-            for note_type, fields in zip(
-                note_types,
-                AnkiConnect.invoke(
-                    "multi", actions=fields_request
-                )
-            )
-        }
-
-    @staticmethod
     def setup_syntax(config):
         """Sets up default syntax in the config object."""
         config.setdefault("Syntax", dict())
@@ -1103,6 +1084,28 @@ class App:
                 )
                 for key, value in MEDIA.items()
             ]
+        )
+
+    def get_fields(self):
+        """Get the user's current note types and fields."""
+        note_types = AnkiConnect.invoke("modelNames")
+        fields_request = [
+            AnkiConnect.request(
+                "modelFieldNames", modelName=note
+            )
+            for note in note_types
+        ]
+        setattr(
+            App, "FIELDS_DICT",
+            {
+                note_type: AnkiConnect.parse(fields)
+                for note_type, fields in zip(
+                    note_types,
+                    AnkiConnect.invoke(
+                        "multi", actions=fields_request
+                    )
+                )
+            }
         )
 
 
