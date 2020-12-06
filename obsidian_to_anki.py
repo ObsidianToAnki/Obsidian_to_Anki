@@ -357,6 +357,7 @@ class FormatConverter:
             path = match.group(1)
             if FormatConverter.is_url(path):
                 continue  # Skips over images web-hosted.
+            path = urllib.parse.unquote(path)
             filename = os.path.basename(path)
             if filename not in CONFIG_DATA["Added Media"].keys(
             ) and filename not in MEDIA:
@@ -381,7 +382,7 @@ class FormatConverter:
         if FormatConverter.is_url(found_path):
             return found_string  # So urls should not be altered.
         found_string = found_string.replace(
-            found_path, os.path.basename(found_path)
+            found_path, os.path.basename(urllib.parse.unquote(found_path))
         )
         return found_string
 
