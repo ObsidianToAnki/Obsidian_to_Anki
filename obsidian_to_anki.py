@@ -657,9 +657,8 @@ class Config:
     """Deals with saving and loading the configuration file."""
 
     @staticmethod
-    def get_fields_dict():
+    def get_fields_dict(note_types):
         """Get the fields dictionary for the user."""
-        note_types = AnkiConnect.invoke("modelNames")
         fields_request = [
             AnkiConnect.request(
                 "modelFieldNames", modelName=note
@@ -685,38 +684,10 @@ class Config:
             print("Config file exists, reading...")
             config.read(CONFIG_PATH, encoding='utf-8-sig')
         note_types = AnkiConnect.invoke("modelNames")
-        fields_request = [
-            AnkiConnect.request(
-                "modelFieldNames", modelName=note
-            )
-            for note in note_types
-        ]
-        subs = {
-            note: {
-                field: field + ":"
-                for field in AnkiConnect.parse(fields)
-            }
-            for note, fields in zip(
-                note_types,
-                AnkiConnect.invoke(
-                    "multi", actions=fields_request
-                )
-            )
-        }
-        for note, note_field_subs in subs.items():
-            config.setdefault(note, dict())
-            for field, sub in note_field_subs.items():
-                config[note].setdefault(field, sub)
-                # This means that, if there's already a substitution present,
-                # the 'default' substitution of field + ":" isn't added.
-        # Setting up Note Substitutions
-        config.setdefault("Note Substitutions", dict())
+        fields_dict = Config.get_fields_dict(note_types)
         config.setdefault("Cloze Note Types", dict())
         for note in note_types:
-            config["Note Substitutions"].setdefault(note, note)
             config["Cloze Note Types"].setdefault(note, "False")
-            # Similar to above - if there's already a substitution present,
-            # it isn't overwritten
         if "Cloze" in note_types:
             config["Cloze Note Types"]["Cloze"] = "True"
         # Setting up Syntax
