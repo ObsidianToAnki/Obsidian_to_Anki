@@ -48,6 +48,13 @@ CONFIG_PATH = os.path.expanduser(
 )
 CONFIG_DATA = dict()
 
+DATA_PATH = os.path.expanduser(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "obsidian_to_anki_data.json"
+    )
+)
+
 md_parser = markdown.Markdown(
     extensions=[
         'fenced_code',
@@ -788,6 +795,16 @@ class Config:
         CONFIG_DATA["Added Media"] = config["Added Media"]
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
+
+
+class Data:
+    """Class for managing the data file (not meant to be changed by users.)"""
+
+    def update_data():
+        print("Updating data file...")
+        if not os.path.exists(DATA_PATH):
+            with open(DATA_PATH, "w") as f:
+                f.write(json.dumps(list()))
 
 
 class App:
@@ -1573,6 +1590,7 @@ class Directory:
 
 
 if __name__ == "__main__":
+    """
     print("Attempting to connect to Anki...")
     try:
         wait_for_port(ANKI_PORT)
@@ -1583,3 +1601,5 @@ if __name__ == "__main__":
     else:
         print("Connected!")
         main()
+    """
+    Data.update_data()
