@@ -656,6 +656,26 @@ class RegexNote:
 class Config:
     """Deals with saving and loading the configuration file."""
 
+    @staticmethod
+    def get_fields_dict():
+        """Get the fields dictionary for the user."""
+        note_types = AnkiConnect.invoke("modelNames")
+        fields_request = [
+            AnkiConnect.request(
+                "modelFieldNames", modelName=note
+            )
+            for note in note_types
+        ]
+        return {
+            note_type: AnkiConnect.parse(fields)
+            for note_type, fields in zip(
+                note_types,
+                AnkiConnect.invoke(
+                    "multi", actions=fields_request
+                )
+            )
+        }
+
     def update_config():
         """Update config with new notes."""
         print("Updating configuration file...")
@@ -664,7 +684,6 @@ class Config:
         if os.path.exists(CONFIG_PATH):
             print("Config file exists, reading...")
             config.read(CONFIG_PATH, encoding='utf-8-sig')
-        # Setting up field substitutions
         note_types = AnkiConnect.invoke("modelNames")
         fields_request = [
             AnkiConnect.request(
