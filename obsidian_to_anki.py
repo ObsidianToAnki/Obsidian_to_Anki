@@ -540,7 +540,7 @@ class InlineNote(Note):
         else:
             self.tags = list()
         TYPE = InlineNote.TYPE_REGEXP.search(self.text)
-        self.note_type = Note.note_subs[TYPE.group(1)]
+        self.note_type = TYPE.group(1)
         self.text = self.text[TYPE.end():]
         self.field_names = App.FIELDS_DICT[self.note_type]
         self.current_field = self.field_names[0]
@@ -552,9 +552,9 @@ class InlineNote(Note):
         for word in self.text.split(" "):
             for field in self.field_names:
                 if word == field + ":":
-                    self.current_field = word
+                    self.current_field = field
                     word = ""
-            fields[self.current_field] += word
+            fields[self.current_field] += word + " "
         fields = {
             key: FormatConverter.format(
                 value,
