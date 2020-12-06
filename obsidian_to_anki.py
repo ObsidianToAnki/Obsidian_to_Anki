@@ -542,22 +542,19 @@ class InlineNote(Note):
         TYPE = InlineNote.TYPE_REGEXP.search(self.text)
         self.note_type = Note.note_subs[TYPE.group(1)]
         self.text = self.text[TYPE.end():]
-        self.subs = Note.field_subs[self.note_type]
-        self.field_names = list(self.subs)
-        self.text = self.text.strip()
+        self.field_names = App.FIELDS_DICT[self.note_type]
+        self.current_field = self.field_names[0]
 
     @property
     def fields(self):
         """Get the fields of the note into a dictionary."""
-        fields = dict.fromkeys(self.field_names, "")
-        while self.next_sub:
-            # So, we're expecting a new field
-            end = self.text.find(self.next_sub)
-            fields[self.current_field] += self.text[:end]
-            self.text = self.text[end + len(self.next_sub):]
-            self.current_field_num += 1
-        # For last field:
-        fields[self.current_field] += self.text
+        fields = {field: "" for field in self.field_names}
+        for word in self.text.split(" "):
+            for field in self.field_names:
+                if word == field + ":":
+                    self.current_field = word
+                    word = ""
+            fields[self.current_field] += word
         fields = {
             key: FormatConverter.format(
                 value,
