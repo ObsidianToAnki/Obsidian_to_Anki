@@ -743,7 +743,6 @@ class Config:
             print("Config file exists, reading...")
             config.read(CONFIG_PATH, encoding='utf-8-sig')
         note_types = AnkiConnect.invoke("modelNames")
-        fields_dict = Config.get_fields_dict(note_types)
         config.setdefault("Cloze Note Types", dict())
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
@@ -758,29 +757,9 @@ class Config:
             config.write(configfile)
         print("Configuration file updated!")
 
-    def load_config():
-        """Load from an existing config file (assuming it exists)."""
-        print("Loading configuration file...")
-        config = configparser.ConfigParser()
-        config.optionxform = str  # Allows for case sensitivity
-        config.read(CONFIG_PATH, encoding='utf-8-sig')
-        note_subs = config["Note Substitutions"]
-        Note.note_subs = {v: k for k, v in note_subs.items()}
-        Note.field_subs = {
-            note: dict(config[note]) for note in config
-            if note not in [
-                "Note Substitutions",
-                "Defaults",
-                "Syntax",
-                "Custom Regexps",
-                "Added Media",
-                "DEFAULT"
-            ]
-        }
-        CONFIG_DATA["Clozes"] = [
-            type for type in config["Cloze Note Types"]
-            if config.getboolean("Cloze Note Types", type)
-        ]
+    @staticmethod
+    def load_syntax(config):
+        """Reads and loads syntax from the config object."""
         CONFIG_DATA["NOTE_PREFIX"] = re.escape(
             config["Syntax"]["Begin Note"]
         )
@@ -799,12 +778,19 @@ class Config:
         CONFIG_DATA["TAG_LINE"] = re.escape(
             config["Syntax"]["File Tags Line"]
         )
-        CONFIG_DATA["Added Media"] = config["Added Media"]
         RegexFile.EMPTY_REGEXP = re.compile(
             re.escape(
                 config["Syntax"]["Delete Regex Note Line"]
             ) + RegexNote.ID_REGEXP_STR
         )
+
+    @staticmethod
+    def load_defaults(config):
+        """Loads default values not to do with syntax from config object."""
+        CONFIG_DATA["Clozes"] = [
+            type for type in config["Cloze Note Types"]
+            if config.getboolean("Cloze Note Types", type)
+        ]
         NOTE_DICT_TEMPLATE["tags"] = [config["Defaults"]["Tag"]]
         NOTE_DICT_TEMPLATE["deckName"] = config["Defaults"]["Deck"]
         CONFIG_DATA["CurlyCloze"] = config.getboolean(
@@ -825,6 +811,16 @@ class Config:
         CONFIG_DATA["Add file link"] = config.getboolean(
             "Obsidian", "Add file link"
         )
+
+    def load_config():
+        """Load from an existing config file (assuming it exists)."""
+        print("Loading configuration file...")
+        config = configparser.ConfigParser()
+        config.optionxform = str  # Allows for case sensitivity
+        config.read(CONFIG_PATH, encoding='utf-8-sig')
+        Config.load_syntax(config)
+        Config.load_defaults(config)
+        CONFIG_DATA["Added Media"] = config["Added Media"]
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
