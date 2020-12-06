@@ -478,7 +478,7 @@ class Note:
     @property
     def fields(self):
         """Get the fields of the note into a dictionary."""
-        fields = dict()
+        fields = {field: "" for field in self.field_names}
         for line in self.lines[1:]:
             line, self.current_field = self.field_from_line(line)
             fields[self.current_field] += line
