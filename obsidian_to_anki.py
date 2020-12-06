@@ -857,6 +857,7 @@ class App:
             Data.create_data_file()
             Data.load_data_file()
         self.get_fields()
+        self.get_ids()
         if CONFIG_DATA["GUI"] and GOOEY:
             self.setup_gui_parser()
         else:
@@ -1150,6 +1151,10 @@ class App:
             }
         )
 
+    def get_ids(self):
+        """Get a list of the currently used card IDs."""
+        setattr(App, "EXISTING_IDS", AnkiConnect.invoke("findNotes", query=""))
+
 
 class File:
     """Class for performing script operations at the file-level."""
@@ -1219,6 +1224,14 @@ class File:
             elif not parsed.note:
                 # This indicates a delete action
                 self.notes_to_delete.append(parsed.id)
+            elif parsed.id not in App.EXISTING_IDS:
+                print(
+                    "Warning! Note with id ",
+                    parsed.id,
+                    " in file ",
+                    self.filename,
+                    " does not exist in Anki!"
+                )
             else:
                 self.notes_to_edit.append(parsed)
         for inline_note_match in App.INLINE_REGEXP.finditer(self.file):
@@ -1237,6 +1250,14 @@ class File:
             elif not parsed.note:
                 # This indicates a delete action
                 self.notes_to_delete.append(parsed.id)
+            elif parsed.id not in App.EXISTING_IDS:
+                print(
+                    "Warning! Note with id ",
+                    parsed.id,
+                    " in file ",
+                    self.filename,
+                    " does not exist in Anki!"
+                )
             else:
                 self.notes_to_edit.append(parsed)
 
@@ -1437,25 +1458,41 @@ class RegexFile(File):
         for match in findignore(regexp_tags_id, self.file, self.ignore_spans):
             # This note has id, so we update it
             self.ignore_spans.append(match.span())
-            self.notes_to_edit.append(
-                RegexNote(match, note_type, tags=True, id=True).parse(
-                    self.target_deck,
-                    url=self.url,
-                    frozen_fields_dict=self.frozen_fields_dict
-                )
+            parsed = RegexNote(match, note_type, tags=True, id=True).parse(
+                self.target_deck,
+                url=self.url,
+                frozen_fields_dict=self.frozen_fields_dict
             )
+            if parsed.id not in App.EXISTING_IDS:
+                print(
+                    "Warning! Note with id ",
+                    parsed.id,
+                    " in file ",
+                    self.filename,
+                    " does not exist in Anki!"
+                )
+            else:
+                self.notes_to_edit.append(parsed)
         for match in findignore(regexp_id, self.file, self.ignore_spans):
             # This note has id, so we update it
             self.ignore_spans.append(match.span())
-            self.notes_to_edit.append(
-                RegexNote(match, note_type, tags=False, id=True).parse(
-                    self.target_deck,
-                    url=self.url,
-                    frozen_fields_dict=self.frozen_fields_dict
-                )
+            parsed = RegexNote(match, note_type, tags=False, id=True).parse(
+                self.target_deck,
+                url=self.url,
+                frozen_fields_dict=self.frozen_fields_dict
             )
+            if parsed.id not in App.EXISTING_IDS:
+                print(
+                    "Warning! Note with id ",
+                    parsed.id,
+                    " in file ",
+                    self.filename,
+                    " does not exist in Anki!"
+                )
+            else:
+                self.notes_to_edit.append(parsed)
         for match in findignore(regexp_tags, self.file, self.ignore_spans):
-            # This note has no id, so we update it
+            # This note has no id, so we add it
             self.ignore_spans.append(match.span())
             parsed = RegexNote(match, note_type, tags=True, id=False).parse(
                 self.target_deck,
