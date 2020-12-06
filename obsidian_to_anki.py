@@ -1163,7 +1163,7 @@ class File:
         """Perform initial file reading and attribute setting."""
         self.filename = filepath
         self.path = os.path.abspath(filepath)
-        if CONFIG_DATA["Vault"]:
+        if CONFIG_DATA["Vault"] and App.VAULT_PATH_REGEXP.search(self.path):
             self.url = "obsidian://vault/{}".format(
                 App.VAULT_PATH_REGEXP.search(self.path).group()
             ).replace("\\", "/")
