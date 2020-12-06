@@ -122,14 +122,6 @@ def spans(pattern, string):
     return [match.span() for match in pattern.finditer(string)]
 
 
-def overlap(span, spans):
-    """Determine whether span overlaps with anything in spans."""
-    return any(
-        start <= span[0] < end or start < span[1] <= end
-        for start, end in spans
-    )
-
-
 def contained_in(span, spans):
     """Return whether span is contained in spans (+- 1 leeway)"""
     return any(
