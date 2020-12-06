@@ -130,12 +130,20 @@ def overlap(span, spans):
     )
 
 
+def contained_in(span, spans):
+    """Return whether span is contained in spans (+- 1 leeway)"""
+    return any(
+        span[0] >= start - 1 and span[1] <= end + 1
+        for start, end in spans
+    )
+
+
 def findignore(pattern, string, ignore_spans):
     """Yield all matches for pattern in string not in ignore_spans."""
     return (
         match
         for match in pattern.finditer(string)
-        if not overlap(match.span(), ignore_spans)
+        if not contained_in(match.span(), ignore_spans)
     )
 
 
@@ -235,6 +243,13 @@ class FormatConverter:
         r"(?<!\$)\$(?=[\S])(?=[^$])[\s\S]*?\S\$"
     )
     OBS_DISPLAY_MATH_REGEXP = re.compile(r"\$\$[\s\S]*?\$\$")
+
+    OBS_CODE_REGEXP = re.compile(
+        r"(?<!`)`(?=[^`])[\s\S]*?`"
+    )
+    OBS_DISPLAY_CODE_REGEXP = re.compile(
+        r"```[\s\S]*?```"
+    )
 
     ANKI_INLINE_START = r"\("
     ANKI_INLINE_END = r"\)"
@@ -589,7 +604,7 @@ class RegexNote:
             )
         else:
             self.tags = list()
-        self.field_names = list(Note.field_subs[self.note_type])
+        self.field_names = App.FIELDS_DICT[self.note_type]
 
     @property
     def fields(self):
@@ -1287,6 +1302,23 @@ class File:
 
 class RegexFile(File):
 
+    def add_spans_to_ignore(self):
+        """Mark sections of the file as places not to expect a note."""
+        self.ignore_spans += spans(App.NOTE_REGEXP, self.file)
+        self.ignore_spans += spans(App.INLINE_REGEXP, self.file)
+        self.ignore_spans += spans(
+            FormatConverter.OBS_INLINE_MATH_REGEXP, self.file
+        )
+        self.ignore_spans += spans(
+            FormatConverter.OBS_DISPLAY_MATH_REGEXP, self.file
+        )
+        self.ignore_spans += spans(
+            FormatConverter.OBS_CODE_REGEXP, self.file
+        )
+        self.ignore_spans += spans(
+            FormatConverter.OBS_DISPLAY_CODE_REGEXP, self.file
+        )
+
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
         print("Scanning file", self.filename, " for notes...")
@@ -1298,8 +1330,7 @@ class RegexFile(File):
         self.notes_to_edit = list()
         self.notes_to_delete = list()
         self.inline_notes_to_add = list()  # To avoid overriding get_add_notes
-        self.ignore_spans += spans(App.NOTE_REGEXP, self.file)
-        self.ignore_spans += spans(App.INLINE_REGEXP, self.file)
+        self.add_spans_to_ignore()
         for note_type, regexp in Config.config["Custom Regexps"].items():
             if regexp:
                 self.search(note_type, regexp)
