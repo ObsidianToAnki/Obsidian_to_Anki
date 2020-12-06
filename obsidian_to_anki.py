@@ -462,47 +462,26 @@ class Note:
             )
         else:
             self.tags = list()
-        self.note_type = Note.note_subs[self.lines[0]]
-        self.subs = Note.field_subs[self.note_type]
-        self.field_names = list(self.subs)
+        self.note_type = self.lines[0]
+        self.field_names = App.FIELDS_DICT[self.note_type]
+        self.current_field = self.field_names[0]
 
-    @property
-    def current_field(self):
-        """Get the field to add text to."""
-        return self.field_names[self.current_field_num]
+    def field_from_line(self, line):
+        """From a given line, determine the next field to add text into.
 
-    @property
-    def current_sub(self):
-        """Get the prefix substitution of the current field."""
-        return self.subs[self.current_field]
-
-    @property
-    def next_field(self):
-        """Attempt to get the next field to add text to."""
-        try:
-            return self.field_names[self.current_field_num + 1]
-        except IndexError:
-            return ""
-
-    @property
-    def next_sub(self):
-        """Attempt to get the substitution of the next field."""
-        try:
-            return self.subs[self.next_field]
-        except KeyError:
-            return ""
+        Then, return the stripped line, and the field."""
+        for field in self.field_names:
+            if line.startswith(field + ":"):
+                return (line[len(field + ":"):], field)
+        return (line, self.current_field)
 
     @property
     def fields(self):
         """Get the fields of the note into a dictionary."""
-        fields = dict.fromkeys(self.field_names, "")
+        fields = dict()
         for line in self.lines[1:]:
-            if self.next_sub and line.startswith(self.next_sub):
-                # This means we're entering a new field.
-                # So, we should format the text in the current field
-                self.current_field_num += 1
-                line = line[len(self.current_sub):]
-            fields[self.current_field] += line + "\n"
+            line, self.current_field = self.field_from_line(line)
+            fields[self.current_field] += line
         fields = {
             key: FormatConverter.format(
                 value.strip(),
@@ -820,6 +799,7 @@ class App:
             print("Attempting to fix config file...")
             Config.update_config()
             Config.load_config()
+        self.get_fields()
         if CONFIG_DATA["GUI"] and GOOEY:
             self.setup_gui_parser()
         else:
