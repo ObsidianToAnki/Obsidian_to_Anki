@@ -675,22 +675,9 @@ class Config:
             )
         }
 
-    def update_config():
-        """Update config with new notes."""
-        print("Updating configuration file...")
-        config = configparser.ConfigParser()
-        config.optionxform = str
-        if os.path.exists(CONFIG_PATH):
-            print("Config file exists, reading...")
-            config.read(CONFIG_PATH, encoding='utf-8-sig')
-        note_types = AnkiConnect.invoke("modelNames")
-        fields_dict = Config.get_fields_dict(note_types)
-        config.setdefault("Cloze Note Types", dict())
-        for note in note_types:
-            config["Cloze Note Types"].setdefault(note, "False")
-        if "Cloze" in note_types:
-            config["Cloze Note Types"]["Cloze"] = "True"
-        # Setting up Syntax
+    @staticmethod
+    def setup_syntax(config):
+        """Sets up default syntax in the config object."""
         config.setdefault("Syntax", dict())
         config["Syntax"].setdefault(
             "Begin Note", "START"
@@ -713,6 +700,10 @@ class Config:
         config["Syntax"].setdefault(
             "Delete Regex Note Line", "DELETE"
         )
+
+    @staticmethod
+    def setup_defaults(config):
+        """Sets up default values in the config file, not to do with syntax."""
         config.setdefault("Obsidian", dict())
         config["Obsidian"].setdefault("Vault name", "")
         config["Obsidian"].setdefault("Add file link", "False")
@@ -742,11 +733,26 @@ class Config:
         config["Defaults"].setdefault(
             "Anki Profile", ""
         )
-        # Setting up Custom Regexps
+
+    def update_config():
+        """Update config with new notes."""
+        print("Updating configuration file...")
+        config = configparser.ConfigParser()
+        config.optionxform = str
+        if os.path.exists(CONFIG_PATH):
+            print("Config file exists, reading...")
+            config.read(CONFIG_PATH, encoding='utf-8-sig')
+        note_types = AnkiConnect.invoke("modelNames")
+        fields_dict = Config.get_fields_dict(note_types)
+        config.setdefault("Cloze Note Types", dict())
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
+            config["Cloze Note Types"].setdefault(note, "False")
             config["Custom Regexps"].setdefault(note, "")
-        # Setting up media files
+            if note == "Cloze":
+                config["Cloze Note Types"][note] = "True"
+        Config.setup_syntax(config)
+        Config.setup_defaults(config)
         config.setdefault("Added Media", dict())
         with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
