@@ -282,6 +282,13 @@ class FormatConverter:
             break  # So only does first field
 
     @staticmethod
+    def format_note_with_frozen_fields(note, frozen_fields_dict):
+        for field in note["fields"].keys():
+            note["fields"][field] += frozen_fields_dict[
+                note["modelName"]
+            ][field]
+
+    @staticmethod
     def inline_anki_repl(matchobject):
         """Get replacement string for Obsidian-formatted inline math."""
         found_string = matchobject.group(0)
@@ -507,7 +514,7 @@ class Note:
         }
         return {key: value.strip() for key, value in fields.items()}
 
-    def parse(self, deck, url=None):
+    def parse(self, deck, url=None, frozen_fields_dict=None):
         """Get a properly formatted dictionary of the note."""
         template = NOTE_DICT_TEMPLATE.copy()
         if not self.delete:
@@ -519,6 +526,10 @@ class Note:
                 url
             ]):
                 FormatConverter.format_note_with_url(template, url)
+            if frozen_fields_dict:
+                FormatConverter.format_note_with_frozen_fields(
+                    template, frozen_fields_dict
+                )
             template["tags"] = template["tags"] + self.tags
             template["deckName"] = deck
             return Note_and_id(note=template, id=self.identifier)
@@ -622,7 +633,7 @@ class RegexNote:
         }
         return {key: value.strip() for key, value in fields.items()}
 
-    def parse(self, deck, url=None):
+    def parse(self, deck, url=None, frozen_fields_dict=None):
         """Get a properly formatted dictionary of the note."""
         template = NOTE_DICT_TEMPLATE.copy()
         template["modelName"] = self.note_type
@@ -633,6 +644,10 @@ class RegexNote:
             url
         ]):
             FormatConverter.format_note_with_url(template, url)
+        if frozen_fields_dict:
+            FormatConverter.format_note_with_frozen_fields(
+                template, frozen_fields_dict
+            )
         template["tags"] = template["tags"] + self.tags
         template["deckName"] = deck
         if self.note_type in CONFIG_DATA["Clozes"] and CONFIG_DATA[
@@ -1091,6 +1106,12 @@ class App:
                 CONFIG_DATA["Vault"] + r".*"
             )
         )
+        setattr(
+            App, "FROZEN_REGEXP",
+            re.compile(
+                CONFIG_DATA["FROZEN_LINE"] + r" - (.*?):\n((?:[^\n][\n]?)+)"
+            )
+        )
 
     def get_add_media(self):
         """Get the AnkiConnect-formatted add_media request."""
@@ -1115,15 +1136,16 @@ class App:
             )
             for note in note_types
         ]
+        result = AnkiConnect.invoke(
+            "multi", actions=fields_request
+        )
         setattr(
             App, "FIELDS_DICT",
             {
                 note_type: AnkiConnect.parse(fields)
                 for note_type, fields in zip(
                     note_types,
-                    AnkiConnect.invoke(
-                        "multi", actions=fields_request
-                    )
+                    result
                 )
             }
         )
@@ -1160,6 +1182,18 @@ class File:
             self.global_tags = self.global_tags.group(1)
         else:
             self.global_tags = ""
+        self.setup_frozen_fields_dict()
+
+    def setup_frozen_fields_dict(self):
+        self.frozen_fields_dict = {
+            note_type: dict.fromkeys(AnkiConnect.parse(fields), "")
+            for note_type, fields in App.FIELDS_DICT.items()
+        }
+        for match in App.FROZEN_REGEXP.finditer(self.file):
+            note_type, fields = match.group(0), match.group(1)
+            virtual_note = note_type + "\n" + fields
+            parsed_fields = Note(virtual_note).fields
+            self.frozen_fields_dict[note_type] = parsed_fields
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
@@ -1172,7 +1206,11 @@ class File:
         self.inline_id_indexes = list()
         for note_match in App.NOTE_REGEXP.finditer(self.file):
             note, position = note_match.group(1), note_match.end(1)
-            parsed = Note(note).parse(self.target_deck, url=self.url)
+            parsed = Note(note).parse(
+                self.target_deck,
+                url=self.url,
+                frozen_fields_dict=self.frozen_fields_dict
+            )
             if parsed.id is None:
                 # Need to make sure global_tags get added.
                 parsed.note["tags"] += self.global_tags.split(TAG_SEP)
@@ -1186,7 +1224,11 @@ class File:
         for inline_note_match in App.INLINE_REGEXP.finditer(self.file):
             note = inline_note_match.group(1)
             position = inline_note_match.end(1)
-            parsed = InlineNote(note).parse(self.target_deck, url=self.url)
+            parsed = InlineNote(note).parse(
+                self.target_deck,
+                url=self.url,
+                frozen_fields_dict=self.frozen_fields_dict
+            )
             if parsed.id is None:
                 # Need to make sure global_tags get added.
                 parsed.note["tags"] += self.global_tags.split(TAG_SEP)
@@ -1397,7 +1439,9 @@ class RegexFile(File):
             self.ignore_spans.append(match.span())
             self.notes_to_edit.append(
                 RegexNote(match, note_type, tags=True, id=True).parse(
-                    self.target_deck, url=self.url
+                    self.target_deck,
+                    url=self.url,
+                    frozen_fields_dict=self.frozen_fields_dict
                 )
             )
         for match in findignore(regexp_id, self.file, self.ignore_spans):
@@ -1405,14 +1449,18 @@ class RegexFile(File):
             self.ignore_spans.append(match.span())
             self.notes_to_edit.append(
                 RegexNote(match, note_type, tags=False, id=True).parse(
-                    self.target_deck, url=self.url
+                    self.target_deck,
+                    url=self.url,
+                    frozen_fields_dict=self.frozen_fields_dict
                 )
             )
         for match in findignore(regexp_tags, self.file, self.ignore_spans):
             # This note has no id, so we update it
             self.ignore_spans.append(match.span())
             parsed = RegexNote(match, note_type, tags=True, id=False).parse(
-                self.target_deck, url=self.url
+                self.target_deck,
+                url=self.url,
+                frozen_fields_dict=self.frozen_fields_dict
             )
             if parsed == 1:
                 # Error code
@@ -1426,7 +1474,9 @@ class RegexFile(File):
             # This note has no id, so we update it
             self.ignore_spans.append(match.span())
             parsed = RegexNote(match, note_type, tags=False, id=False).parse(
-                self.target_deck, url=self.url
+                self.target_deck,
+                url=self.url,
+                frozen_fields_dict=self.frozen_fields_dict
             )
             if parsed == 1:
                 # Error code
