@@ -722,7 +722,6 @@ class Config:
                 config["Cloze Note Types"][note] = "True"
         Config.setup_syntax(config)
         Config.setup_defaults(config)
-        config.setdefault("Added Media", dict())
         with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
             config.write(configfile)
         print("Configuration file updated!")
@@ -790,7 +789,7 @@ class Config:
         config.read(CONFIG_PATH, encoding='utf-8-sig')
         Config.load_syntax(config)
         Config.load_defaults(config)
-        Config.config = config  # Can access later if need be
+        CONFIG_DATA["CUSTOM_REGEXPS"] = config["Custom Regexps"]
         print("Loaded successfully!")
 
 
@@ -1354,7 +1353,7 @@ class RegexFile(File):
         self.notes_to_delete = list()
         self.inline_notes_to_add = list()  # To avoid overriding get_add_notes
         self.add_spans_to_ignore()
-        for note_type, regexp in Config.config["Custom Regexps"].items():
+        for note_type, regexp in CONFIG_DATA["CUSTOM_REGEXPS"].items():
             if regexp:
                 self.search(note_type, regexp)
         # Finally, scan for deleting notes
