@@ -358,8 +358,7 @@ class FormatConverter:
                 continue  # Skips over images web-hosted.
             path = urllib.parse.unquote(path)
             filename = os.path.basename(path)
-            if filename not in CONFIG_DATA["Added Media"].keys(
-            ) and filename not in MEDIA:
+            if filename not in App.ADDED_MEDIA and filename not in MEDIA:
                 MEDIA[filename] = file_encode(path)
                 # Adds the filename and data to media_names
 
@@ -369,8 +368,7 @@ class FormatConverter:
         for match in FormatConverter.SOUND_REGEXP.finditer(html_text):
             path = match.group(1)
             filename = os.path.basename(path)
-            if filename not in CONFIG_DATA["Added Media"].keys(
-            ) and filename not in MEDIA:
+            if filename not in App.ADDED_MEDIA and filename not in MEDIA:
                 MEDIA[filename] = file_encode(path)
                 # Adds the filename and data to media_names
 
@@ -792,7 +790,6 @@ class Config:
         config.read(CONFIG_PATH, encoding='utf-8-sig')
         Config.load_syntax(config)
         Config.load_defaults(config)
-        CONFIG_DATA["Added Media"] = config["Added Media"]
         Config.config = config  # Can access later if need be
         print("Loaded successfully!")
 
@@ -800,11 +797,23 @@ class Config:
 class Data:
     """Class for managing the data file (not meant to be changed by users.)"""
 
-    def update_data():
+    def create_data_file():
+        """Creates the data file for the script."""
+        print("Creating data file...")
+        with open(DATA_PATH, "w") as f:
+            json.dump(set(), f)
+
+    def update_data_file(data):
+        """Updates the data file for the script with the given data."""
         print("Updating data file...")
-        if not os.path.exists(DATA_PATH):
-            with open(DATA_PATH, "w") as f:
-                f.write(json.dumps(list()))
+        with open(DATA_PATH, "w") as f:
+            json.dump(data, f)
+
+    def load_data_file():
+        """Loads the data file into memory"""
+        with open(DATA_PATH, "r") as f:
+            data = json.load(f)
+        App.ADDED_MEDIA = data
 
 
 class App:
@@ -821,6 +830,12 @@ class App:
             print("Attempting to fix config file...")
             Config.update_config()
             Config.load_config()
+        try:
+            Data.load_data_file()
+        except Exception as e:
+            print("Error:", e)
+            Data.create_data_file()
+            Data.load_data_file()
         self.get_fields()
         if CONFIG_DATA["GUI"] and GOOEY:
             self.setup_gui_parser()
@@ -841,7 +856,7 @@ class App:
             Config.load_config()
         if args.mediaupdate:
             no_args = False
-            CONFIG_DATA["Added Media"].clear()
+            Data.create_data_file()
         self.gen_regexp()
         if args.config:
             no_args = False
@@ -902,12 +917,8 @@ class App:
                 "multi",
                 actions=requests
             )
-            for filename in MEDIA.keys():
-                CONFIG_DATA["Added Media"].setdefault(
-                    filename, "True"
-                )
-            with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
-                Config.config.write(configfile)
+            App.ADDED_MEDIA.update(MEDIA.keys())
+            Data.update_data_file(App.ADDED_MEDIA)
             tags = AnkiConnect.parse(result[0])
             directory_responses = result[2:]
             for directory, response in zip(directories, directory_responses):
@@ -1590,7 +1601,6 @@ class Directory:
 
 
 if __name__ == "__main__":
-    """
     print("Attempting to connect to Anki...")
     try:
         wait_for_port(ANKI_PORT)
@@ -1601,5 +1611,3 @@ if __name__ == "__main__":
     else:
         print("Connected!")
         main()
-    """
-    Data.update_data()
