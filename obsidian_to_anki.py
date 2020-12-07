@@ -1224,7 +1224,7 @@ class File:
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
-        logging.info("Scanning file", self.filename, " for notes...")
+        logging.info("Scanning file " + self.filename + " for notes...")
         self.setup_frozen_fields_dict()
         self.setup_target_deck()
         self.setup_global_tags()
@@ -1300,7 +1300,7 @@ class File:
 
     def write_ids(self):
         """Write the identifiers to self.file."""
-        logging.info("Writing new note IDs to file,", self.filename, "...")
+        logging.info("Writing new note IDs to file," + self.filename + "...")
         self.file = string_insert(
             self.file, list(
                 zip(
@@ -1437,7 +1437,7 @@ class RegexFile(File):
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
-        logging.info("Scanning file", self.filename, " for notes...")
+        logging.info("Scanning file" + self.filename + " for notes...")
         self.setup_frozen_fields_dict()
         self.setup_target_deck()
         self.setup_global_tags()
@@ -1564,7 +1564,7 @@ class RegexFile(File):
 
     def write_ids(self):
         """Write the identifiers to self.file."""
-        logging.info("Writing new note IDs to file,", self.filename, "...")
+        logging.info("Writing new note IDs to file," + self.filename + "...")
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
@@ -1625,7 +1625,7 @@ class Directory:
 
     def requests_1(self):
         """Get the 1st HTTP request for this directory."""
-        logging.info("Forming request 1 for directory", self.path)
+        logging.info("Forming request 1 for directory" + self.path)
         requests = list()
         logging.info("Adding notes into Anki...")
         requests.append(
@@ -1686,14 +1686,14 @@ class Directory:
         for file in self.files:
             file.get_cards()
             file.write_ids()
-            logging.info("Removing empty notes for file", file.filename)
+            logging.info("Removing empty notes for file " + file.filename)
             file.remove_empties()
             file.write_file()
         os.chdir(self.parent)
 
     def requests_2(self):
         """Get 2nd big request."""
-        logging.info("Forming request 2 for directory", self.path)
+        logging.info("Forming request 2 for directory " + self.path)
         requests = list()
         logging.info("Moving cards to target deck...")
         requests.append(
