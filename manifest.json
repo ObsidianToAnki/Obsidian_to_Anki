@@ -1,0 +1,8 @@
+{
+  "id": "obsidian-sample-plugin",
+  "name": "Sample Plugin",
+  "version": "1.0.0",
+  "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+  "author": "Licat",
+  "isDesktopOnly": false
+}
