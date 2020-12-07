@@ -844,7 +844,8 @@ class Data:
         """Loads the data file into memory"""
         with open(DATA_PATH, "r") as f:
             data = json.load(f)
-        App.ADDED_MEDIA = data
+        App.ADDED_MEDIA = data.get("Added Media", list())
+        App.FILE_HASHES = data.get("File Hashes", dict())
 
 
 class App:
@@ -949,10 +950,6 @@ class App:
                 "multi",
                 actions=requests
             )
-            App.ADDED_MEDIA = set(App.ADDED_MEDIA)
-            App.ADDED_MEDIA.update(MEDIA.keys())
-            App.ADDED_MEDIA = list(App.ADDED_MEDIA)
-            Data.update_data_file(App.ADDED_MEDIA)
             tags = AnkiConnect.parse(result[0])
             directory_responses = result[2:]
             for directory, response in zip(directories, directory_responses):
@@ -964,6 +961,9 @@ class App:
                 "multi",
                 actions=requests
             )
+            App.ADDED_MEDIA = set(App.ADDED_MEDIA)
+            App.ADDED_MEDIA.update(MEDIA.keys())
+            App.ADDED_MEDIA = list(App.ADDED_MEDIA)
         if no_args:
             self.parser.print_help()
 
@@ -1184,21 +1184,6 @@ class File:
             self.file = f.read()
             self.original_file = self.file
             self.file += "\n"  # Adds empty line, useful for ID
-        self.target_deck = App.DECK_REGEXP.search(self.file)
-        if self.target_deck is not None:
-            self.target_deck = self.target_deck.group(1)
-        else:
-            self.target_deck = NOTE_DICT_TEMPLATE["deckName"]
-        logging.info(
-            "Identified target deck for", self.filename,
-            "as", self.target_deck
-        )
-        self.global_tags = App.TAG_REGEXP.search(self.file)
-        if self.global_tags is not None:
-            self.global_tags = self.global_tags.group(1)
-        else:
-            self.global_tags = ""
-        self.setup_frozen_fields_dict()
 
     def setup_frozen_fields_dict(self):
         self.frozen_fields_dict = {
@@ -1211,6 +1196,20 @@ class File:
             parsed_fields = Note(virtual_note).fields
             self.frozen_fields_dict[note_type] = parsed_fields
 
+    def setup_target_deck(self):
+        result = App.DECK_REGEXP.search(self.file)
+        if result is not None:
+            self.target_deck = result.group(1)
+        else:
+            self.target_deck = NOTE_DICT_TEMPLATE["deckName"]
+
+    def setup_global_tags(self):
+        result = App.TAG_REGEXP.search(self.file)
+        if result is not None:
+            self.global_tags = result.group(1)
+        else:
+            self.global_tags = ""
+
     @property
     def hash(self):
         return hashlib.sha256(self.file).hexdigest()
@@ -1218,6 +1217,9 @@ class File:
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
         logging.info("Scanning file", self.filename, " for notes...")
+        self.setup_frozen_fields_dict()
+        self.setup_target_deck()
+        self.setup_global_tags()
         self.notes_to_add = list()
         self.id_indexes = list()
         self.notes_to_edit = list()
@@ -1428,6 +1430,9 @@ class RegexFile(File):
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
         logging.info("Scanning file", self.filename, " for notes...")
+        self.setup_frozen_fields_dict()
+        self.setup_target_deck()
+        self.setup_global_tags()
         self.ignore_spans = list()
         # The above ensures that the script won't match a RegexNote inside
         # a Note or InlineNote
