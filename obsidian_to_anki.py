@@ -14,12 +14,20 @@ import html
 import time
 import socket
 import subprocess
+import logging
+import hashlib
 try:
     import gooey
     GOOEY = True
 except ModuleNotFoundError:
     print("Gooey not installed, switching to cli...")
     GOOEY = False
+
+logging.basicConfig(
+    filename='obsidian_to_anki_log.log',
+    level=logging.DEBUG,
+    format='%(asctime)s:::%(levelname)s:::%(funcName)s:::%(message)s'
+)
 
 MEDIA = dict()
 
@@ -187,7 +195,9 @@ def load_anki():
         try:
             wait_for_port(ANKI_PORT)
         except TimeoutError:
-            print("Opened Anki, but can't connect! Is AnkiConnect working?")
+            print(
+                "Opened Anki, but can't connect! Is AnkiConnect working?"
+            )
             return False
         else:
             print("Opened and connected to Anki successfully!")
@@ -197,6 +207,7 @@ def load_anki():
             "Must provide both Anki Path and Anki Profile",
             "in order to open Anki automatically"
         )
+        return False
 
 
 def main():
@@ -593,7 +604,7 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n(?:<!--)?(?:" + ID_PREFIX + r"(\d+).*)"
+    ID_REGEXP_STR = r"\n?(?:<!--)?(?:" + ID_PREFIX + r"(\d+).*)"
     TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".*)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
@@ -821,7 +832,7 @@ class Data:
         """Creates the data file for the script."""
         print("Creating data file...")
         with open(DATA_PATH, "w") as f:
-            json.dump(list(), f)
+            json.dump(dict(), f)
 
     def update_data_file(data):
         """Updates the data file for the script with the given data."""
@@ -833,7 +844,8 @@ class Data:
         """Loads the data file into memory"""
         with open(DATA_PATH, "r") as f:
             data = json.load(f)
-        App.ADDED_MEDIA = data
+        App.ADDED_MEDIA = data.get("Added Media", list())
+        App.FILE_HASHES = data.get("File Hashes", dict())
 
 
 class App:
@@ -938,10 +950,6 @@ class App:
                 "multi",
                 actions=requests
             )
-            App.ADDED_MEDIA = set(App.ADDED_MEDIA)
-            App.ADDED_MEDIA.update(MEDIA.keys())
-            App.ADDED_MEDIA = list(App.ADDED_MEDIA)
-            Data.update_data_file(App.ADDED_MEDIA)
             tags = AnkiConnect.parse(result[0])
             directory_responses = result[2:]
             for directory, response in zip(directories, directory_responses):
@@ -952,6 +960,17 @@ class App:
             AnkiConnect.invoke(
                 "multi",
                 actions=requests
+            )
+            App.ADDED_MEDIA = set(App.ADDED_MEDIA)
+            App.ADDED_MEDIA.update(MEDIA.keys())
+            App.ADDED_MEDIA = list(App.ADDED_MEDIA)
+            for directory in directories:
+                App.FILE_HASHES.update(directory.hashes())
+            Data.update_data_file(
+                {
+                    "Added Media": App.ADDED_MEDIA,
+                    "File Hashes": App.FILE_HASHES
+                }
             )
         if no_args:
             self.parser.print_help()
@@ -1172,22 +1191,6 @@ class File:
         with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
             self.original_file = self.file
-            self.file += "\n"  # Adds empty line, useful for ID
-        self.target_deck = App.DECK_REGEXP.search(self.file)
-        if self.target_deck is not None:
-            self.target_deck = self.target_deck.group(1)
-        else:
-            self.target_deck = NOTE_DICT_TEMPLATE["deckName"]
-        print(
-            "Identified target deck for", self.filename,
-            "as", self.target_deck
-        )
-        self.global_tags = App.TAG_REGEXP.search(self.file)
-        if self.global_tags is not None:
-            self.global_tags = self.global_tags.group(1)
-        else:
-            self.global_tags = ""
-        self.setup_frozen_fields_dict()
 
     def setup_frozen_fields_dict(self):
         self.frozen_fields_dict = {
@@ -1200,9 +1203,30 @@ class File:
             parsed_fields = Note(virtual_note).fields
             self.frozen_fields_dict[note_type] = parsed_fields
 
+    def setup_target_deck(self):
+        result = App.DECK_REGEXP.search(self.file)
+        if result is not None:
+            self.target_deck = result.group(1)
+        else:
+            self.target_deck = NOTE_DICT_TEMPLATE["deckName"]
+
+    def setup_global_tags(self):
+        result = App.TAG_REGEXP.search(self.file)
+        if result is not None:
+            self.global_tags = result.group(1)
+        else:
+            self.global_tags = ""
+
+    @property
+    def hash(self):
+        return hashlib.sha256(self.file.encode('utf-8')).hexdigest()
+
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
-        print("Scanning file", self.filename, " for notes...")
+        logging.info("Scanning file " + self.filename + " for notes...")
+        self.setup_frozen_fields_dict()
+        self.setup_target_deck()
+        self.setup_global_tags()
         self.notes_to_add = list()
         self.id_indexes = list()
         self.notes_to_edit = list()
@@ -1261,7 +1285,7 @@ class File:
             else:
                 self.notes_to_edit.append(parsed)
 
-    @ staticmethod
+    @staticmethod
     def id_to_str(id, inline=False, comment=False):
         """Get the string repr of id."""
         result = ID_PREFIX + str(id)
@@ -1275,7 +1299,7 @@ class File:
 
     def write_ids(self):
         """Write the identifiers to self.file."""
-        print("Writing new note IDs to file,", self.filename, "...")
+        logging.info("Writing new note IDs to file," + self.filename + "...")
         self.file = string_insert(
             self.file, list(
                 zip(
@@ -1310,7 +1334,6 @@ class File:
 
     def write_file(self):
         """Write to the actual os file"""
-        self.file = self.file[:-1]  # Remove newline added
         if self.file != self.original_file:
             write_safe(self.filename, self.file)
 
@@ -1355,7 +1378,7 @@ class File:
 
     def get_cards(self):
         """Get the card IDs for all notes that need to be edited."""
-        print("Getting card IDs")
+        logging.info("Getting card IDs")
         self.cards = list()
         for info in self.card_ids:
             self.cards += info["cards"]
@@ -1412,7 +1435,10 @@ class RegexFile(File):
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
-        print("Scanning file", self.filename, " for notes...")
+        logging.info("Scanning file" + self.filename + " for notes...")
+        self.setup_frozen_fields_dict()
+        self.setup_target_deck()
+        self.setup_global_tags()
         self.ignore_spans = list()
         # The above ensures that the script won't match a RegexNote inside
         # a Note or InlineNote
@@ -1536,7 +1562,7 @@ class RegexFile(File):
 
     def write_ids(self):
         """Write the identifiers to self.file."""
-        print("Writing new note IDs to file,", self.filename, "...")
+        logging.info("Writing new note IDs to file," + self.filename + "...")
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
@@ -1584,14 +1610,23 @@ class Directory:
                         for part in re.split(r'(\d+)', file.filename)]
                 )
         for file in self.files:
-            file.scan_file()
+            if file.filename in App.FILE_HASHES and (
+                file.hash == App.FILE_HASHES[file.filename]
+            ):
+                # Indicates we've seen this in a scan before,
+                # And that it hasn't changed.
+                # So, we don't need to do anything with it!
+                print("Skipping", file.filename, "as we've scanned it before.")
+                self.files.remove(file)
+            else:
+                file.scan_file()
         os.chdir(self.parent)
 
     def requests_1(self):
         """Get the 1st HTTP request for this directory."""
-        print("Forming request 1 for directory", self.path)
+        logging.info("Forming request 1 for directory" + self.path)
         requests = list()
-        print("Adding notes into Anki...")
+        logging.info("Adding notes into Anki...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1601,7 +1636,7 @@ class Directory:
                 ]
             )
         )
-        print("Updating fields of existing notes...")
+        logging.info("Updating fields of existing notes...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1611,7 +1646,7 @@ class Directory:
                 ]
             )
         )
-        print("Getting card IDs of notes to be edited...")
+        logging.info("Getting card IDs of notes to be edited...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1621,7 +1656,7 @@ class Directory:
                 ]
             )
         )
-        print("Removing empty notes...")
+        logging.info("Removing empty notes...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1650,16 +1685,16 @@ class Directory:
         for file in self.files:
             file.get_cards()
             file.write_ids()
-            print("Removing empty notes for file", file.filename)
+            logging.info("Removing empty notes for file " + file.filename)
             file.remove_empties()
             file.write_file()
         os.chdir(self.parent)
 
     def requests_2(self):
         """Get 2nd big request."""
-        print("Forming request 2 for directory", self.path)
+        logging.info("Forming request 2 for directory " + self.path)
         requests = list()
-        print("Moving cards to target deck...")
+        logging.info("Moving cards to target deck...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1669,7 +1704,7 @@ class Directory:
                 ]
             )
         )
-        print("Replacing tags...")
+        logging.info("Replacing tags...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1692,6 +1727,10 @@ class Directory:
             "multi",
             actions=requests
         )
+
+    def hashes(self):
+        """Return a dictionary of file hashes to use."""
+        return {file.filename: file.hash for file in self.files}
 
 
 if __name__ == "__main__":
