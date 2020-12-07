@@ -1191,7 +1191,6 @@ class File:
         with open(self.filename, encoding='utf_8') as f:
             self.file = f.read()
             self.original_file = self.file
-            self.file += "\n"  # Adds empty line, useful for ID
 
     def setup_frozen_fields_dict(self):
         self.frozen_fields_dict = {
@@ -1335,7 +1334,6 @@ class File:
 
     def write_file(self):
         """Write to the actual os file"""
-        self.file = self.file[:-1]  # Remove newline added
         if self.file != self.original_file:
             write_safe(self.filename, self.file)
 
