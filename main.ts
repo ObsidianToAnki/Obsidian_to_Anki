@@ -1,5 +1,41 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
+/* Declaring initial variables*/
+
+let MEDIA: Record<string, string> = {};
+
+let ID_PREFIX: string = "ID: ";
+let TAG_PREFIX: string = "Tags: ";
+let TAG_SEP: string = " ";
+
+interface NOTE_DICT_OPTIONS {
+	allowDuplicate: boolean,
+	duplicateScope: string,
+};
+
+interface NOTE_DICT {
+	deckName: string,
+	modelName: string,
+	fields: Record<string, string>,
+	options: NOTE_DICT_OPTIONS,
+	tags: Array<string>,
+	audio: Array<any>
+};
+
+let NOTE_DICT_TEMPLATE: NOTE_DICT = {
+	deckName: "",
+	modelName: "",
+	fields: {},
+	options: {
+		allowDuplicate: false,
+		duplicateScope: "deck",
+	},
+	tags: ["Obsidian_to_Anki"],
+	audio: [],
+};
+
+
+
 export default class MyPlugin extends Plugin {
 	onload() {
 		console.log('loading plugin');
@@ -7,6 +43,10 @@ export default class MyPlugin extends Plugin {
 		this.addRibbonIcon('dice', 'Sample Plugin', () => {
 			new Notice('This is a notice!');
 		});
+
+		this.saveData(10)
+
+		console.log(this.loadData())
 
 		this.addStatusBarItem().setText('Status Bar Text');
 
