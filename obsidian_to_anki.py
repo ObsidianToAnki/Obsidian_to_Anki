@@ -15,6 +15,7 @@ import time
 import socket
 import subprocess
 import logging
+import hashlib
 try:
     import gooey
     GOOEY = True
@@ -831,7 +832,7 @@ class Data:
         """Creates the data file for the script."""
         print("Creating data file...")
         with open(DATA_PATH, "w") as f:
-            json.dump(list(), f)
+            json.dump(dict(), f)
 
     def update_data_file(data):
         """Updates the data file for the script with the given data."""
@@ -1210,6 +1211,10 @@ class File:
             parsed_fields = Note(virtual_note).fields
             self.frozen_fields_dict[note_type] = parsed_fields
 
+    @property
+    def hash(self):
+        return hashlib.sha256(self.file).hexdigest()
+
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
         logging.info("Scanning file", self.filename, " for notes...")
@@ -1271,7 +1276,7 @@ class File:
             else:
                 self.notes_to_edit.append(parsed)
 
-    @ staticmethod
+    @staticmethod
     def id_to_str(id, inline=False, comment=False):
         """Get the string repr of id."""
         result = ID_PREFIX + str(id)
