@@ -1220,7 +1220,7 @@ class File:
 
     @property
     def hash(self):
-        return hashlib.sha256(self.file.encode('utf-8')).hexdigest()
+        return hashlib.sha256(self.original_file.encode('utf-8')).hexdigest()
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
@@ -1611,6 +1611,7 @@ class Directory:
                         int(part) if part.isdigit() else part.lower()
                         for part in re.split(r'(\d+)', file.filename)]
                 )
+        files_changed = []
         for file in self.files:
             if file.filename in App.FILE_HASHES and (
                 file.hash == App.FILE_HASHES[file.filename]
@@ -1619,9 +1620,10 @@ class Directory:
                 # And that it hasn't changed.
                 # So, we don't need to do anything with it!
                 print("Skipping", file.filename, "as we've scanned it before.")
-                self.files.remove(file)
             else:
                 file.scan_file()
+                files_changed.append(file)
+        self.files = files_changed
         os.chdir(self.parent)
 
     def requests_1(self):
