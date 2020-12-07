@@ -964,6 +964,14 @@ class App:
             App.ADDED_MEDIA = set(App.ADDED_MEDIA)
             App.ADDED_MEDIA.update(MEDIA.keys())
             App.ADDED_MEDIA = list(App.ADDED_MEDIA)
+            for directory in directories:
+                App.FILE_HASHES.update(directory.hashes())
+            Data.update_data_file(
+                {
+                    "Added Media": App.ADDED_MEDIA,
+                    "File Hashes": App.FILE_HASHES
+                }
+            )
         if no_args:
             self.parser.print_help()
 
@@ -1604,7 +1612,15 @@ class Directory:
                         for part in re.split(r'(\d+)', file.filename)]
                 )
         for file in self.files:
-            file.scan_file()
+            if file.filename in App.FILE_HASHES and (
+                file.hash == App.FILE_HASHES[file.filename]
+            ):
+                # Indicates we've seen this in a scan before,
+                # And that it hasn't changed.
+                # So, we don't need to do anything with it!
+                self.files.remove(file)
+            else:
+                file.scan_file()
         os.chdir(self.parent)
 
     def requests_1(self):
@@ -1712,6 +1728,10 @@ class Directory:
             "multi",
             actions=requests
         )
+
+    def hashes(self):
+        """Return a dictionary of file hashes to use."""
+        return {file.filename: file.hash for file in self.files}
 
 
 if __name__ == "__main__":
