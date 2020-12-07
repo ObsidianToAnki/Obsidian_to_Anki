@@ -1365,7 +1365,7 @@ class File:
 
     def get_cards(self):
         """Get the card IDs for all notes that need to be edited."""
-        print("Getting card IDs")
+        logging.info("Getting card IDs")
         self.cards = list()
         for info in self.card_ids:
             self.cards += info["cards"]
