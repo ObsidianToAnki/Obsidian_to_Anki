@@ -604,7 +604,7 @@ class InlineNote(Note):
 
 
 class RegexNote:
-    ID_REGEXP_STR = r"\n(?:<!--)?(?:" + ID_PREFIX + r"(\d+).*)"
+    ID_REGEXP_STR = r"\n?(?:<!--)?(?:" + ID_PREFIX + r"(\d+).*)"
     TAG_REGEXP_STR = r"(" + TAG_PREFIX + r".*)"
 
     def __init__(self, matchobject, note_type, tags=False, id=False):
@@ -1220,7 +1220,7 @@ class File:
 
     @property
     def hash(self):
-        return hashlib.sha256(self.file).hexdigest()
+        return hashlib.sha256(self.file.encode('utf-8')).hexdigest()
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
