@@ -1618,6 +1618,7 @@ class Directory:
                 # Indicates we've seen this in a scan before,
                 # And that it hasn't changed.
                 # So, we don't need to do anything with it!
+                print("Skipping", file.filename, "as we've scanned it before.")
                 self.files.remove(file)
             else:
                 file.scan_file()
