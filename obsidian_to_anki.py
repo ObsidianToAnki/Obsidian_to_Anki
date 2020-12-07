@@ -1219,7 +1219,7 @@ class File:
 
     @property
     def hash(self):
-        return hashlib.sha256(self.original_file.encode('utf-8')).hexdigest()
+        return hashlib.sha256(self.file.encode('utf-8')).hexdigest()
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
