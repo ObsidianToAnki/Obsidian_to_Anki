@@ -14,12 +14,19 @@ import html
 import time
 import socket
 import subprocess
+import logging
 try:
     import gooey
     GOOEY = True
 except ModuleNotFoundError:
     print("Gooey not installed, switching to cli...")
     GOOEY = False
+
+logging.basicConfig(
+    filename='obsidian_to_anki_log.log',
+    level=logging.DEBUG,
+    format='%(asctime)s:::%(levelname)s:::%(funcName)s:::%(message)s'
+)
 
 MEDIA = dict()
 
@@ -187,7 +194,9 @@ def load_anki():
         try:
             wait_for_port(ANKI_PORT)
         except TimeoutError:
-            print("Opened Anki, but can't connect! Is AnkiConnect working?")
+            print(
+                "Opened Anki, but can't connect! Is AnkiConnect working?"
+            )
             return False
         else:
             print("Opened and connected to Anki successfully!")
@@ -197,6 +206,7 @@ def load_anki():
             "Must provide both Anki Path and Anki Profile",
             "in order to open Anki automatically"
         )
+        return False
 
 
 def main():
@@ -1178,7 +1188,7 @@ class File:
             self.target_deck = self.target_deck.group(1)
         else:
             self.target_deck = NOTE_DICT_TEMPLATE["deckName"]
-        print(
+        logging.info(
             "Identified target deck for", self.filename,
             "as", self.target_deck
         )
@@ -1202,7 +1212,7 @@ class File:
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
-        print("Scanning file", self.filename, " for notes...")
+        logging.info("Scanning file", self.filename, " for notes...")
         self.notes_to_add = list()
         self.id_indexes = list()
         self.notes_to_edit = list()
@@ -1275,7 +1285,7 @@ class File:
 
     def write_ids(self):
         """Write the identifiers to self.file."""
-        print("Writing new note IDs to file,", self.filename, "...")
+        logging.info("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
             self.file, list(
                 zip(
@@ -1412,7 +1422,7 @@ class RegexFile(File):
 
     def scan_file(self):
         """Sort notes from file into adding vs editing."""
-        print("Scanning file", self.filename, " for notes...")
+        logging.info("Scanning file", self.filename, " for notes...")
         self.ignore_spans = list()
         # The above ensures that the script won't match a RegexNote inside
         # a Note or InlineNote
@@ -1536,7 +1546,7 @@ class RegexFile(File):
 
     def write_ids(self):
         """Write the identifiers to self.file."""
-        print("Writing new note IDs to file,", self.filename, "...")
+        logging.info("Writing new note IDs to file,", self.filename, "...")
         self.file = string_insert(
             self.file, zip(
                 self.id_indexes, [
@@ -1589,9 +1599,9 @@ class Directory:
 
     def requests_1(self):
         """Get the 1st HTTP request for this directory."""
-        print("Forming request 1 for directory", self.path)
+        logging.info("Forming request 1 for directory", self.path)
         requests = list()
-        print("Adding notes into Anki...")
+        logging.info("Adding notes into Anki...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1601,7 +1611,7 @@ class Directory:
                 ]
             )
         )
-        print("Updating fields of existing notes...")
+        logging.info("Updating fields of existing notes...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1611,7 +1621,7 @@ class Directory:
                 ]
             )
         )
-        print("Getting card IDs of notes to be edited...")
+        logging.info("Getting card IDs of notes to be edited...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1621,7 +1631,7 @@ class Directory:
                 ]
             )
         )
-        print("Removing empty notes...")
+        logging.info("Removing empty notes...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1650,16 +1660,16 @@ class Directory:
         for file in self.files:
             file.get_cards()
             file.write_ids()
-            print("Removing empty notes for file", file.filename)
+            logging.info("Removing empty notes for file", file.filename)
             file.remove_empties()
             file.write_file()
         os.chdir(self.parent)
 
     def requests_2(self):
         """Get 2nd big request."""
-        print("Forming request 2 for directory", self.path)
+        logging.info("Forming request 2 for directory", self.path)
         requests = list()
-        print("Moving cards to target deck...")
+        logging.info("Moving cards to target deck...")
         requests.append(
             AnkiConnect.request(
                 "multi",
@@ -1669,7 +1679,7 @@ class Directory:
                 ]
             )
         )
-        print("Replacing tags...")
+        logging.info("Replacing tags...")
         requests.append(
             AnkiConnect.request(
                 "multi",
