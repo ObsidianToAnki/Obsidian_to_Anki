@@ -39,6 +39,7 @@ Current features (check out the wiki for more details):
 * **Reading from all files in a directory automatically** - recursively too!
 * **Inline Notes** - Shorter syntax for typing out notes on a single line.
 * **Easy cloze formatting** - A more compact syntax to do Cloze text
+* **Frozen Fields**
 * **Obsidian integration** - Currently, this only includes a link to the file that made the flashcard, appended to the first field of your card.
 * **Custom syntax** - Using **regular expressions**, add custom syntax to generate **notes that make sense for you.** Some examples:
   * RemNote single-line style. `This is how to use::Remnote single-line style`  
