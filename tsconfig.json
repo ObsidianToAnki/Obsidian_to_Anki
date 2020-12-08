@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-    "lib": ["es2020.string"],
+    "lib": ["esnext", "dom"],
     "downlevelIteration": true,
     }
 }
