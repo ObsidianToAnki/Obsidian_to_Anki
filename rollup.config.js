@@ -5,7 +5,7 @@ import typescript from '@rollup/plugin-typescript';
 export default {
   input: 'main.ts',
   output: {
-    file: 'main.js',
+    file: 'C:/Users/rubai/Documents/Obsidian/Obsidianzk/.obsidian/plugins/sample-plugin/main.js',
     format: 'cjs'
   },
   plugins: [nodeResolve(), commonjs(), typescript()]

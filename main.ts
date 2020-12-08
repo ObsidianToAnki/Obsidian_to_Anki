@@ -1,4 +1,7 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import {Converter} from 'showdown'
+
+let converter = new Converter()
 
 /* Declaring initial variables*/
 
@@ -94,10 +97,135 @@ function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number,
 	}
 }
 
+interface AnkiConnectRequest {
+	action: string,
+	params: any,
+	version: number
+}
+
+class AnkiConnect {
+	static request(action: string, params={}) {
+		return {action, version:6, params}
+	}
+
+	static invoke(action: string, params={}) {
+	    return new Promise((resolve, reject) => {
+	        const xhr = new XMLHttpRequest();
+	        xhr.addEventListener('error', () => reject('failed to issue request'));
+	        xhr.addEventListener('load', () => {
+	            try {
+	                const response = JSON.parse(xhr.responseText);
+	                if (Object.getOwnPropertyNames(response).length != 2) {
+	                    throw 'response has an unexpected number of fields';
+	                }
+	                if (!response.hasOwnProperty('error')) {
+	                    throw 'response is missing required error field';
+	                }
+	                if (!response.hasOwnProperty('result')) {
+	                    throw 'response is missing required result field';
+	                }
+	                if (response.error) {
+	                    throw response.error;
+	                }
+	                resolve(response.result);
+	            } catch (e) {
+	                reject(e);
+	            }
+	        });
+
+	        xhr.open('POST', 'http://127.0.0.1:8765');
+	        xhr.send(JSON.stringify({action, version: 6, params}));
+	    });
+	}
+}
+
+class FormatConverter {
+	static OBS_INLINE_MATH_REGEXP = /(?<!\$)\$((?=[\S])(?=[^$])[\s\S]*?\S)\$/g
+	static OBS_DISPLAY_MATH_REGEXP = /\$\$([\s\S]*?)\$\$/g
+	static OBS_CODE_REGEXP = /(?<!`)`(?=[^`])[\s\S]*?`/g
+	static OBS_DISPLAY_CODE_REGEXP = /```[\s\S]*?```/g
+
+	static ANKI_MATH_REGEXP = /(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))/g
+
+	static MATH_REPLACE = "OBSTOANKIMATH"
+
+	static IMAGE_REGEXP = /<img alt=".*?" src="(.*?)"/g
+	static SOUND_REGEXP = /\[sound:(.+)\]/g
+	static CLOZE_REGEXP = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
+	static URL_REGEXP = /https?:///g
+
+	static PARA_OPEN = "<p>"
+	static PARA_CLOSE = "</p>"
+
+	static CLOZE_UNSET_NUM = 1
+
+	static format_note_with_url(note: NOTE, url: string): void {
+		for (let field in note.fields) {
+			note.fields[field] += '<br><a href="' + url + '" class="obsidian-link">Obsidian</a>'
+		}
+	}
+
+	static format_note_with_frozen_fields(note: NOTE, frozen_fields_dict): void {
+		for (let field in note.fields) {
+			note.fields[field] += frozen_fields_dict[note.modelName][field]
+		}
+	}
+
+	static obsidian_to_anki_math(note_text: string): string {
+		return note_text.replace(
+				FormatConverter.OBS_DISPLAY_MATH_REGEXP, "\\[$1\\]"
+		).replace(
+			FormatConverter.OBS_INLINE_MATH_REGEXP,
+			"\\($1\\)"
+		)
+	}
+
+	static cloze_repl(match: string, match_id: string, match_content: string): string {
+		if (match_id == undefined) {
+			let result = "{{c" + FormatConverter.CLOZE_UNSET_NUM.toString() + "::" + match_content + "}}"
+			FormatConverter.CLOZE_UNSET_NUM += 1
+			return result
+		}
+		let result = "{{c" + match_id + "::" + match_content + "}}"
+		return result
+	}
+
+	static curly_to_cloze(text: string): string {
+		/*Change text in curly brackets to Anki-formatted cloze.*/
+		text = text.replaceAll(FormatConverter.CLOZE_REGEXP, FormatConverter.cloze_repl)
+		FormatConverter.CLOZE_UNSET_NUM = 1
+		return text
+	}
+
+
+}
+
+let test = `# This is some markdown testing!`
+
+let testtable = `<table style="width:100%">
+  <tr>
+    <th>Firstname</th>
+    <th>Lastname</th>
+    <th>Age</th>
+  </tr>
+  <tr>
+    <td>Jill</td>
+    <td>Smith</td>
+    <td>50</td>
+  </tr>
+  <tr>
+    <td>Eve</td>
+    <td>Jackson</td>
+    <td>94</td>
+  </tr>
+</table>`
 
 export default class MyPlugin extends Plugin {
-	onload() {
+	async onload() {
 		console.log('loading plugin');
+
+		const result = await AnkiConnect.invoke('modelNames')
+		console.log(result)
 
 		this.addRibbonIcon('dice', 'Sample Plugin', () => {
 			new Notice('This is a notice!');
@@ -163,6 +291,7 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		/*
 		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings.'});
 
 		new Setting(containerEl)
@@ -173,6 +302,7 @@ class SampleSettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					console.log('Secret: ' + value);
 				}));
+		*/
 
 	}
 }
