@@ -8,21 +8,21 @@ let ID_PREFIX: string = "ID: ";
 let TAG_PREFIX: string = "Tags: ";
 let TAG_SEP: string = " ";
 
-interface NOTE_DICT_OPTIONS {
+interface NOTE_OPTIONS {
 	allowDuplicate: boolean,
 	duplicateScope: string,
 };
 
-interface NOTE_DICT {
+interface NOTE {
 	deckName: string,
 	modelName: string,
 	fields: Record<string, string>,
-	options: NOTE_DICT_OPTIONS,
+	options: NOTE_OPTIONS,
 	tags: Array<string>,
 	audio: Array<any>
 };
 
-let NOTE_DICT_TEMPLATE: NOTE_DICT = {
+let NOTE_DICT_TEMPLATE: NOTE = {
 	deckName: "",
 	modelName: "",
 	fields: {},
@@ -34,6 +34,35 @@ let NOTE_DICT_TEMPLATE: NOTE_DICT = {
 	audio: [],
 };
 
+let CONFIG_DATA = {}
+
+const ANKI_PORT: number = 8765
+
+const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
+
+function has_clozes(text: string): boolean {
+	return ANKI_CLOZE_REGEXP.test(text)
+}
+
+function note_has_clozes(note: NOTE): boolean {
+	return Array(note.fields.values).some(has_clozes)
+}
+
+function string_insert(text: string, position_inserts: Array<[number, string]>): string {
+	let offset = 0
+	let sorted_inserts: Array<[number, string]> = position_inserts.sort((a, b):number => a[0] - b[0])
+	for (let insertion of sorted_inserts) {
+		let position = insertion[0]
+		let insert_str = insertion[1]
+		text = text.slice(0, position + offset) + insert_str + text.slice(position + offset)
+		offset += insert_str.length
+	}
+	return text
+}
+
+function spans(pattern: RegExp, text: string): Array<[number, number]> {
+
+}
 
 
 export default class MyPlugin extends Plugin {
@@ -43,10 +72,6 @@ export default class MyPlugin extends Plugin {
 		this.addRibbonIcon('dice', 'Sample Plugin', () => {
 			new Notice('This is a notice!');
 		});
-
-		this.saveData(10)
-
-		console.log(this.loadData())
 
 		this.addStatusBarItem().setText('Status Bar Text');
 
@@ -108,7 +133,7 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings.'});
 
 		new Setting(containerEl)
 			.setName('Setting #1')
