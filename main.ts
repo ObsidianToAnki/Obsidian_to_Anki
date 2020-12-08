@@ -224,8 +224,6 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		console.log('loading plugin');
 
-		const result = await AnkiConnect.invoke('modelNames')
-		console.log(result)
 
 		this.addRibbonIcon('dice', 'Sample Plugin', () => {
 			new Notice('This is a notice!');
@@ -286,13 +284,49 @@ class SampleModal extends Modal {
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	display(): void {
+	async display() {
 		let {containerEl} = this;
 
 		containerEl.empty();
+		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings'});
+
+		containerEl.createEl('h3', {text: 'Note type settings'})
+		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"})
+		console.log(getComputedStyle(note_type_table).getPropertyValue('--background-modifier-border'))
+		let head = note_type_table.createTHead()
+		let header_row = head.insertRow()
+		for (let header of ["Note Types", "Cloze Type?", "Custom Regexp"]) {
+			let th = document.createElement("th")
+			th.appendChild(document.createTextNode(header))
+			header_row.appendChild(th)
+		}
+		let main_body = note_type_table.createTBody()
+		for (let note_type of await AnkiConnect.invoke('modelNames') as Array<string>) {
+			let row = main_body.insertRow()
+			row.insertCell()
+			row.insertCell()
+			row.insertCell()
+			let row_cells = row.children
+			row_cells[0].innerHTML = note_type
+
+			let cloze_type = new Setting(row_cells[1] as HTMLElement)
+			cloze_type.settingEl = row_cells[1] as HTMLElement
+			cloze_type.infoEl.remove()
+			cloze_type.addToggle( toggle => toggle.setValue(note_type === "Cloze"))
+			cloze_type.controlEl.className = "setting-item-control anki-center"
+
+			let custom_regexp = new Setting(row_cells[2] as HTMLElement)
+			custom_regexp.settingEl = row_cells[2] as HTMLElement
+			custom_regexp.infoEl.remove()
+			custom_regexp.addText(text => text.setValue(""))
+			custom_regexp.controlEl.className = "setting-item-control anki-center"
+		}
+
+		let syntax_settings = containerEl.createEl('h3', {text: 'Syntax Settings'})
+		let NOTE_PREFIX = new Setting(syntax_settings).setName("Begin Note").addText(text => text.setValue("START"))
+
 
 		/*
-		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings.'});
 
 		new Setting(containerEl)
 			.setName('Setting #1')
