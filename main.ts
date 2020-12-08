@@ -41,14 +41,20 @@ const ANKI_PORT: number = 8765
 const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
 
 function has_clozes(text: string): boolean {
+	/*Checks whether text actually has cloze deletions.*/
 	return ANKI_CLOZE_REGEXP.test(text)
 }
 
 function note_has_clozes(note: NOTE): boolean {
+	/*Checks whether a note has cloze deletions in any of its fields.*/
 	return Array(note.fields.values).some(has_clozes)
 }
 
 function string_insert(text: string, position_inserts: Array<[number, string]>): string {
+	/*Insert strings in position_inserts into text, at indices.
+
+    position_inserts will look like:
+    [(0, "hi"), (3, "hello"), (5, "beep")]*/
 	let offset = 0
 	let sorted_inserts: Array<[number, string]> = position_inserts.sort((a, b):number => a[0] - b[0])
 	for (let insertion of sorted_inserts) {
@@ -61,7 +67,31 @@ function string_insert(text: string, position_inserts: Array<[number, string]>):
 }
 
 function spans(pattern: RegExp, text: string): Array<[number, number]> {
+	/*Return a list of span-tuples for matches of pattern in text.*/
+	let output: Array<[number, number]> = []
+	let matches = text.matchAll(pattern)
+	for (let match of matches) {
+		output.push(
+			[match.index, match.index + match.length]
+		)
+	}
+	return output
+}
 
+function contained_in(span: [number, number], spans: Array<[number, number]>): boolean {
+	/*Return whether span is contained in spans (+- 1 leeway)*/
+	return spans.some(
+		(element) => span[0] >= element[0] - 1 && span[1] <= element[1] + 1
+	)
+}
+
+function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number, number]>): IterableIterator<RegExpMatchArray> {
+	let matches = text.matchAll(pattern)
+	for (let match of matches) {
+		if (!(contained_in([match.index, match.index + match.length], ignore_spans))) {
+			yield match
+		}
+	}
 }
 
 
