@@ -517,7 +517,7 @@ class Note:
             key: FormatConverter.format(
                 value.strip(),
                 cloze=(
-                    self.note_type in CONFIG_DATA["Clozes"]
+                    "Cloze" in self.note_type
                     and CONFIG_DATA["CurlyCloze"]
                 )
             )
@@ -594,7 +594,7 @@ class InlineNote(Note):
             key: FormatConverter.format(
                 value,
                 cloze=(
-                    self.note_type in CONFIG_DATA["Clozes"]
+                    "Cloze" in self.note_type
                     and CONFIG_DATA["CurlyCloze"]
                 )
             )
@@ -636,7 +636,7 @@ class RegexNote:
             key: FormatConverter.format(
                 value,
                 cloze=(
-                    self.note_type in CONFIG_DATA["Clozes"]
+                    "Cloze" in self.note_type
                     and CONFIG_DATA["CurlyCloze"]
                 )
             )
@@ -661,10 +661,11 @@ class RegexNote:
             )
         template["tags"] = template["tags"] + self.tags
         template["deckName"] = deck
-        if self.note_type in CONFIG_DATA["Clozes"] and CONFIG_DATA[
+        if "Cloze" in self.note_type and CONFIG_DATA[
             "CurlyCloze"
         ] and not note_has_clozes(template):
-            return 1  # Like an error code
+            return 1  # Like an error code, only for this note type
+            # Since we can accidentally recognise { in the wrong places.
         return Note_and_id(note=template, id=self.identifier)
 
 
@@ -742,13 +743,9 @@ class Config:
             print("Config file exists, reading...")
             config.read(CONFIG_PATH, encoding='utf-8-sig')
         note_types = AnkiConnect.invoke("modelNames")
-        config.setdefault("Cloze Note Types", dict())
         config.setdefault("Custom Regexps", dict())
         for note in note_types:
-            config["Cloze Note Types"].setdefault(note, "False")
             config["Custom Regexps"].setdefault(note, "")
-            if note == "Cloze":
-                config["Cloze Note Types"][note] = "True"
         Config.setup_syntax(config)
         Config.setup_defaults(config)
         with open(CONFIG_PATH, "w", encoding='utf_8') as configfile:
@@ -788,10 +785,6 @@ class Config:
     @staticmethod
     def load_defaults(config):
         """Loads default values not to do with syntax from config object."""
-        CONFIG_DATA["Clozes"] = [
-            type for type in config["Cloze Note Types"]
-            if config.getboolean("Cloze Note Types", type)
-        ]
         NOTE_DICT_TEMPLATE["tags"] = [config["Defaults"]["Tag"]]
         NOTE_DICT_TEMPLATE["deckName"] = config["Defaults"]["Deck"]
         CONFIG_DATA["CurlyCloze"] = config.getboolean(
