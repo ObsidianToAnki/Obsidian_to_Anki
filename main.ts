@@ -1,11 +1,11 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian'
 import { NOTE } from './src/interfaces/note'
-import { Converter } from 'showdown'
 import { basename } from 'path'
-
-let converter = new Converter()
+import { Converter } from 'showdown'
 
 /* Declaring initial variables*/
+
+let converter = new Converter();
 
 let MEDIA: Record<string, string> = {};
 
@@ -98,7 +98,7 @@ class AnkiConnect {
 
 	static invoke(action: string, params={}) {
 	    return new Promise((resolve, reject) => {
-	        const xhr = new XMLHttpRequest();
+	        const xhr = new XMLHttpRequest()
 	        xhr.addEventListener('error', () => reject('failed to issue request'));
 	        xhr.addEventListener('load', () => {
 	            try {
@@ -148,6 +148,14 @@ interface PluginSettings {
 		"ID Comments": boolean,
 	}
 }
+
+let test = `This is a big paragraph
+WeEee
+EWweqwe
+EWewqqewqw
+`
+
+console.log(converter.makeHtml(test))
 
 export default class MyPlugin extends Plugin {
 

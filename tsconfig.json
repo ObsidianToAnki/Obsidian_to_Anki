@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-    "lib": ["es2020.string"],
-    "downlevelIteration": true,
-    "module": "es2015",
-    "target": "es6"
+        "lib": ["esnext", "dom"],
+        "downlevelIteration": true,
+        "target": "esnext",
+        "moduleResolution": "node"
     }
 }
