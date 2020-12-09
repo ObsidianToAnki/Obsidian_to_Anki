@@ -220,10 +220,92 @@ let testtable = `<table style="width:100%">
   </tr>
 </table>`
 
+interface PluginSettings {
+	CUSTOM_REGEXPS: Record<string, string>,
+	Syntax: {
+		"Begin Note": string,
+		"End Note": string,
+		"Begin Inline Note": string,
+		"End Inline Note": string,
+		"Target Deck Line": string,
+		"File Tags Line": string,
+		"Delete Regex Note Line": string,
+		"Frozen Fields Line": string
+	},
+	Obsidian: {
+		"Add File Link": boolean,
+	},
+	Defaults: {
+		"Tag": string,
+		"Deck": string,
+		"CurlyCloze": boolean,
+		"Regex": boolean,
+		"ID Comments": boolean,
+	}
+}
+
 export default class MyPlugin extends Plugin {
+
+	settings: PluginSettings
+
+	async own_saveData(data_key: string, data: any) {
+		let current_data = await this.loadData()
+		current_data[data_key] = data
+		this.saveData(current_data)
+	}
+
+	async getDefaultSettings() {
+		let settings: PluginSettings = {
+			CUSTOM_REGEXPS: {},
+			Syntax: {
+				"Begin Note": "START",
+				"End Note": "END",
+				"Begin Inline Note": "STARTI",
+				"End Inline Note": "ENDI",
+				"Target Deck Line": "TARGET DECK",
+				"File Tags Line": "FILE TAGS",
+				"Delete Regex Note Line": "DELETE",
+				"Frozen Fields Line": "FROZEN"
+			},
+			Obsidian: {
+				"Add File Link": false,
+			},
+			Defaults: {
+				"Tag": "Obsidian_to_Anki",
+				"Deck": "Default",
+				"CurlyCloze": false,
+				"Regex": false,
+				"ID Comments": true,
+			}
+		}
+		for (let note_type of await AnkiConnect.invoke('modelNames') as Array<string>) {
+			settings["CUSTOM_REGEXPS"][note_type] = ""
+		}
+		return settings
+	}
+
+	async loadSettings() {
+		let current_data = await this.loadData()
+		if (current_data == null) {
+			const default_sets = await this.getDefaultSettings()
+			await this.saveData(
+				{
+					settings: default_sets,
+					"Added Media": [],
+					"File Hashes": {}
+				}
+			)
+			return default_sets
+		} else {
+			return current_data.settings
+		}
+	}
+
 	async onload() {
 		console.log('loading plugin');
 
+		this.settings = await this.loadSettings()
+		console.log(this.settings)
 
 		this.addRibbonIcon('dice', 'Sample Plugin', () => {
 			new Notice('This is a notice!');
@@ -284,6 +366,11 @@ class SampleModal extends Modal {
 }
 
 class SampleSettingTab extends PluginSettingTab {
+
+	constructor(app: App, plugin) {
+		super(app, plugin)
+	}
+
 	async display() {
 		let {containerEl} = this;
 
@@ -291,7 +378,7 @@ class SampleSettingTab extends PluginSettingTab {
 		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings'});
 
 		containerEl.createEl('h3', {text: 'Note type settings'})
-		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"})
+		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"});
 		console.log(getComputedStyle(note_type_table).getPropertyValue('--background-modifier-border'))
 		let head = note_type_table.createTHead()
 		let header_row = head.insertRow()
@@ -320,7 +407,6 @@ class SampleSettingTab extends PluginSettingTab {
 
 
 		/*
-
 		new Setting(containerEl)
 			.setName('Setting #1')
 			.setDesc('It\'s a secret')
