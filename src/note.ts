@@ -26,7 +26,7 @@ abstract class AbstractNote {
     split_text: string[]
     current_field_num: number
     delete: boolean
-    identifier: number | null
+    identifier: number
     tags: string[]
     note_type: string
     field_names: string[]

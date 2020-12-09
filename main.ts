@@ -9,6 +9,7 @@ import { Note, InlineNote } from './src/note'
 /* Declaring initial variables*/
 
 let ID_PREFIX: string = "ID: ";
+
 let TAG_PREFIX: string = "Tags: ";
 let TAG_SEP: string = " ";
 
