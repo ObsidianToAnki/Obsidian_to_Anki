@@ -10,7 +10,7 @@ export class Note {
     split_text: string[]
     current_field_num: number
     delete: boolean
-    identifier: number | null
+    identifier: number
     tags: string[]
     note_type: string
     field_names: string[]
@@ -24,6 +24,13 @@ export class Note {
         this.delete = false
         this.split_text = this.getSplitText()
         this.identifier = this.getIdentifier()
+        if (!this.split_text) {
+            //This indicates a delete action. So!
+            this.delete = true
+            return
+        }
+
+
     }
 
     getSplitText(): string[] {

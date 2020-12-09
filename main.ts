@@ -10,7 +10,6 @@ import { SettingsTab } from './src/settings'
 
 let converter = new Converter();
 
-let ID_PREFIX: string = "ID: ";
 let TAG_PREFIX: string = "Tags: ";
 let TAG_SEP: string = " ";
 
