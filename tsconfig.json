@@ -1,6 +1,8 @@
 {
     "compilerOptions": {
-    "lib": ["esnext", "dom"],
-    "downlevelIteration": true,
+        "lib": ["esnext", "dom"],
+        "downlevelIteration": true,
+        "target": "esnext",
+        "moduleResolution": "node"
     }
 }
