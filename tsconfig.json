@@ -3,6 +3,6 @@
         "lib": ["esnext", "dom"],
         "downlevelIteration": true,
         "target": "esnext",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
     }
 }

@@ -1,4 +1,4 @@
-import { NOTE } from './interfaces/note'
+import { NOTE } from './interfaces/note-interface'
 import { basename } from 'path'
 import { bytesToBase64 } from 'byte-base64'
 import { App } from 'obsidian'
