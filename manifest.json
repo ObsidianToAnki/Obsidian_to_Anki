@@ -1,0 +1,8 @@
+{
+  "id": "obsidian-to-anki-plugin",
+  "name": "Obsidian_to_Anki",
+  "version": "3.0.0",
+  "description": "This is an Anki integration plugin!",
+  "author": "Pseudonium",
+  "isDesktopOnly": false
+}
