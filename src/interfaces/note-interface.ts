@@ -14,5 +14,5 @@ export interface NOTE {
 
 export interface NOTE_AND_ID {
 	note: NOTE,
-	identifier: number
+	identifier: number | null
 }

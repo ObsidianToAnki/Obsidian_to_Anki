@@ -1,29 +1,17 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian'
 import { NOTE } from './src/interfaces/note-interface'
 import { basename } from 'path'
-import { Converter } from 'showdown'
 import * as AnkiConnect from './src/anki'
 import { PluginSettings } from './src/interfaces/settings-interface'
 import { SettingsTab } from './src/settings'
+import { Note, InlineNote } from './src/note'
 
 /* Declaring initial variables*/
 
-let converter = new Converter();
+let ID_PREFIX: string = "ID: ";
 
 let TAG_PREFIX: string = "Tags: ";
 let TAG_SEP: string = " ";
-
-let NOTE_DICT_TEMPLATE: NOTE = {
-	deckName: "",
-	modelName: "",
-	fields: {},
-	options: {
-		allowDuplicate: false,
-		duplicateScope: "deck",
-	},
-	tags: ["Obsidian_to_Anki"],
-	audio: [],
-};
 
 const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
 
@@ -79,6 +67,23 @@ function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number,
 			yield match
 		}
 	}
+}
+
+const test = `Basic
+This is a test.
+Back: Test successful!
+Front: More content
+and even more!!!
+$x = 5$ stuff too.
+# and a markdown heading...
+
+Tags: Help halp holp
+<!--ID: 124090124940-->`
+
+const test2 = "[Basic] This is a test. Back: Test successful! Front: More content Tags: Help halp <!--ID: 124901421-->"
+
+const fields_dict = {
+	Basic: ['Front', 'Back']
 }
 
 export default class MyPlugin extends Plugin {
