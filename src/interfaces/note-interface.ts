@@ -11,3 +11,8 @@ export interface NOTE {
 	tags: Array<string>,
 	audio: Array<any>
 }
+
+export interface NOTE_AND_ID {
+	note: NOTE,
+	identifier: number
+}
