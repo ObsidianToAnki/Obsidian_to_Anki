@@ -232,10 +232,8 @@ interface PluginSettings {
 		"Delete Regex Note Line": string,
 		"Frozen Fields Line": string
 	},
-	Obsidian: {
-		"Add File Link": boolean,
-	},
 	Defaults: {
+		"Add File Link": boolean,
 		"Tag": string,
 		"Deck": string,
 		"CurlyCloze": boolean,
@@ -247,6 +245,7 @@ interface PluginSettings {
 export default class MyPlugin extends Plugin {
 
 	settings: PluginSettings
+	note_types: Array<string>
 
 	async own_saveData(data_key: string, data: any) {
 		let current_data = await this.loadData()
@@ -267,10 +266,8 @@ export default class MyPlugin extends Plugin {
 				"Delete Regex Note Line": "DELETE",
 				"Frozen Fields Line": "FROZEN"
 			},
-			Obsidian: {
-				"Add File Link": false,
-			},
 			Defaults: {
+				"Add File Link": false,
 				"Tag": "Obsidian_to_Anki",
 				"Deck": "Default",
 				"CurlyCloze": false,
@@ -278,6 +275,7 @@ export default class MyPlugin extends Plugin {
 				"ID Comments": true,
 			}
 		}
+		/*Making settings from scratch, so need note types*/
 		for (let note_type of await AnkiConnect.invoke('modelNames') as Array<string>) {
 			settings["CUSTOM_REGEXPS"][note_type] = ""
 		}
@@ -288,7 +286,7 @@ export default class MyPlugin extends Plugin {
 		let current_data = await this.loadData()
 		if (current_data == null) {
 			const default_sets = await this.getDefaultSettings()
-			await this.saveData(
+			this.saveData(
 				{
 					settings: default_sets,
 					"Added Media": [],
@@ -301,11 +299,35 @@ export default class MyPlugin extends Plugin {
 		}
 	}
 
+	async saveSettings() {
+		this.saveData(
+				{
+					settings: this.settings,
+					"Added Media": [],
+					"File Hashes": {}
+				}
+		)
+	}
+
+	regenerateSettingsRegexps() {
+		let regexp_section = this.settings["CUSTOM_REGEXPS"]
+		// For new note types
+		for (let note_type of this.note_types) {
+			this.settings["CUSTOM_REGEXPS"][note_type] = regexp_section.hasOwnProperty(note_type) ? regexp_section[note_type] : ""
+		}
+		// Removing old note types
+		for (let note_type of Object.keys(this.settings["CUSTOM_REGEXPS"])) {
+			if (!this.note_types.includes(note_type)) {
+				delete this.settings["CUSTOM_REGEXPS"][note_type]
+			}
+		}
+	}
+
 	async onload() {
-		console.log('loading plugin');
+		console.log('loading Obsidian_to_Anki...');
 
 		this.settings = await this.loadSettings()
-		console.log(this.settings)
+		this.note_types = Object.keys(this.settings["CUSTOM_REGEXPS"])
 
 		this.addRibbonIcon('dice', 'Sample Plugin', () => {
 			new Notice('This is a notice!');
@@ -344,8 +366,10 @@ export default class MyPlugin extends Plugin {
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
-	onunload() {
-		console.log('unloading plugin');
+	async onunload() {
+		console.log("Saving settings for Obsidian_to_Anki...")
+		this.saveSettings()
+		console.log('unloading Obsidian_to_Anki...');
 	}
 }
 
@@ -367,19 +391,11 @@ class SampleModal extends Modal {
 
 class SampleSettingTab extends PluginSettingTab {
 
-	constructor(app: App, plugin) {
-		super(app, plugin)
-	}
-
-	async display() {
+	setup_table() {
 		let {containerEl} = this;
-
-		containerEl.empty();
-		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings'});
-
+		const plugin = (this as any).plugin
 		containerEl.createEl('h3', {text: 'Note type settings'})
-		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"});
-		console.log(getComputedStyle(note_type_table).getPropertyValue('--background-modifier-border'))
+		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"})
 		let head = note_type_table.createTHead()
 		let header_row = head.insertRow()
 		for (let header of ["Note Type", "Custom Regexp"]) {
@@ -388,34 +404,108 @@ class SampleSettingTab extends PluginSettingTab {
 			header_row.appendChild(th)
 		}
 		let main_body = note_type_table.createTBody()
-		for (let note_type of await AnkiConnect.invoke('modelNames') as Array<string>) {
+		for (let note_type of plugin.note_types) {
 			let row = main_body.insertRow()
 			row.insertCell()
 			row.insertCell()
 			let row_cells = row.children
 			row_cells[0].innerHTML = note_type
-
+			let regexp_section = plugin.settings["CUSTOM_REGEXPS"]
 			let custom_regexp = new Setting(row_cells[1] as HTMLElement)
+				.addText(
+						text => text.setValue(
+						regexp_section.hasOwnProperty(note_type) ? regexp_section[note_type] : ""
+						)
+						.onChange((value) => {
+							plugin.settings["CUSTOM_REGEXPS"][note_type] = value
+							plugin.saveSettings()
+						})
+				)
 			custom_regexp.settingEl = row_cells[1] as HTMLElement
 			custom_regexp.infoEl.remove()
-			custom_regexp.addText(text => text.setValue(""))
 			custom_regexp.controlEl.className += " anki-center"
 		}
+	}
 
+	setup_syntax() {
+		let {containerEl} = this;
+		const plugin = (this as any).plugin
 		let syntax_settings = containerEl.createEl('h3', {text: 'Syntax Settings'})
-		let NOTE_PREFIX = new Setting(syntax_settings).setName("Begin Note").addText(text => text.setValue("START"))
+		for (let key of Object.keys(plugin.settings["Syntax"])) {
+			new Setting(syntax_settings)
+				.setName(key)
+				.addText(
+						text => text.setValue(plugin.settings["Syntax"][key])
+						.onChange((value) => {
+							plugin.settings["Syntax"][key] = value
+							plugin.saveSettings()
+						})
+				)
+		}
+	}
 
+	setup_defaults() {
+		let {containerEl} = this;
+		const plugin = (this as any).plugin
+		let defaults_settings = containerEl.createEl('h3', {text: 'Defaults'})
+		for (let key of Object.keys(plugin.settings["Defaults"])) {
+			if (typeof plugin.settings["Defaults"][key] === "string") {
+				new Setting(defaults_settings)
+					.setName(key)
+					.addText(
+						text => text.setValue(plugin.settings["Defaults"][key])
+						.onChange((value) => {
+							plugin.settings["Defaults"][key] = value
+							plugin.saveSettings()
+						})
+				)
+			} else {
+				new Setting(defaults_settings)
+					.setName(key)
+					.addToggle(
+						toggle => toggle.setValue(plugin.settings["Defaults"][key])
+						.onChange((value) => {
+							plugin.settings["Defaults"][key] = value
+							plugin.saveSettings()
+						})
+					)
+			}
+		}
+	}
 
-		/*
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text.setPlaceholder('Enter your secret')
-				.setValue('')
-				.onChange((value) => {
-					console.log('Secret: ' + value);
-				}));
-		*/
+	setup_buttons() {
+		let {containerEl} = this
+		const plugin = (this as any).plugin
+		let action_buttons = containerEl.createEl('h3', {text: 'Actions'})
+		new Setting(action_buttons)
+			.setName("Regenerate Table")
+			.setDesc("Connect to Anki to regenerate the table with new note types, or get rid of deleted note types.")
+			.addButton(
+				button => {
+					button.setButtonText("Regenerate")
+					.onClick(async () => {
+						plugin.note_types = await AnkiConnect.invoke('modelNames')
+						plugin.regenerateSettingsRegexps()
+						plugin.saveSettings()
+						this.setup_display()
+					})
+				}
+			)
+	}
+
+	setup_display() {
+		let {containerEl} = this
+
+		containerEl.empty()
+		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings'})
+		this.setup_table()
+		this.setup_syntax()
+		this.setup_defaults()
+		this.setup_buttons()
+	}
+
+	async display() {
+		this.setup_display()
 
 	}
 }
