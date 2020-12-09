@@ -28,6 +28,7 @@ let PARA_CLOSE:string = "</p>"
 export class FormatConverter {
 
 	cloze_unset_num:number = 1
+	/*
     media_to_add = {}
     ADDED_MEDIA: string[] = []
     app: App
@@ -36,6 +37,7 @@ export class FormatConverter {
         this.ADDED_MEDIA = ADDED_MEDIA
         this.app = app
     }
+	*/
 
 	format_note_with_url(note: NOTE, url: string): void {
 		for (let field in note.fields) {
@@ -80,8 +82,9 @@ export class FormatConverter {
 		return URL_REGEXP.test(text)
 	}
 
+	/*
 	async get_images(html_text: string) {
-        /*Get all the images that need to be added.*/
+        //Get all the images that need to be added.
 		for (let match of html_text.matchAll(IMAGE_REGEXP)) {
 			let path = match[1]
 			if (this.is_url(path)) {
@@ -101,7 +104,7 @@ export class FormatConverter {
 	}
 
     async get_audio(html_text: string) {
-        /*Get all the audio that needs to be added.*/
+        //Get all the audio that needs to be added.
         for (let match of html_text.matchAll(SOUND_REGEXP)) {
             let path = match[1]
             let filename = basename(path)
@@ -114,6 +117,7 @@ export class FormatConverter {
             }
         }
     }
+	*/
 
     path_to_filename(match: string, path: string): string {
 		/*Replace the src in match appropriately.*/
@@ -166,10 +170,11 @@ export class FormatConverter {
 		note_text = this.decensor(note_text, INLINE_CODE_REPLACE, inline_code_matches)
 		note_text = this.decensor(note_text, DISPLAY_CODE_REPLACE, display_code_matches)
 		note_text = converter.makeHtml(note_text)
-		note_text = this.decensor(note_text, MATH_REPLACE, math_matches)
+		note_text = this.decensor(note_text, MATH_REPLACE, math_matches).trim()
+		/* Need to figure out another way to do this
 		this.get_images(note_text)
 		this.get_audio(note_text)
-		note_text = note_text.trim()
+		*/
 		// Remove unnecessary paragraph tag
 		if (note_text.startsWith(PARA_OPEN) && note_text.endsWith(PARA_CLOSE)) {
 			note_text = note_text.slice(PARA_OPEN.length, -1 * PARA_CLOSE.length)
