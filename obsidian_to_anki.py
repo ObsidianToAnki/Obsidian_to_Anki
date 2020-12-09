@@ -384,7 +384,7 @@ class FormatConverter:
 
     @staticmethod
     def get_audio(html_text):
-        """Get all the audio that needs to be added"""
+        """Get all the audio that needs to be added."""
         for match in FormatConverter.SOUND_REGEXP.finditer(html_text):
             path = match.group(1)
             filename = os.path.basename(path)
