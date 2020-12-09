@@ -1,5 +1,5 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian'
-import { NOTE } from './src/interfaces/note'
+import { NOTE } from './src/interfaces/note-interface'
 import { basename } from 'path'
 import { Converter } from 'showdown'
 import * as AnkiConnect from './src/anki'
