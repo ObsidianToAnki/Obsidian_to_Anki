@@ -13,18 +13,6 @@ let ID_PREFIX: string = "ID: ";
 let TAG_PREFIX: string = "Tags: ";
 let TAG_SEP: string = " ";
 
-const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
-
-function has_clozes(text: string): boolean {
-	/*Checks whether text actually has cloze deletions.*/
-	return ANKI_CLOZE_REGEXP.test(text)
-}
-
-function note_has_clozes(note: NOTE): boolean {
-	/*Checks whether a note has cloze deletions in any of its fields.*/
-	return Array(note.fields.values).some(has_clozes)
-}
-
 function string_insert(text: string, position_inserts: Array<[number, string]>): string {
 	/*Insert strings in position_inserts into text, at indices.
 

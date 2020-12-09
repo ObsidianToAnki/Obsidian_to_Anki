@@ -21,12 +21,24 @@ const NOTE_DICT_TEMPLATE: NOTE = {
 	audio: [],
 }
 
+const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
+
+function has_clozes(text: string): boolean {
+	/*Checks whether text actually has cloze deletions.*/
+	return ANKI_CLOZE_REGEXP.test(text)
+}
+
+function note_has_clozes(note: NOTE): boolean {
+	/*Checks whether a note has cloze deletions in any of its fields.*/
+	return Array(note.fields.values).some(has_clozes)
+}
+
 abstract class AbstractNote {
     text: string
     split_text: string[]
     current_field_num: number
     delete: boolean
-    identifier: number
+    identifier: number | null
     tags: string[]
     note_type: string
     field_names: string[]
@@ -135,8 +147,6 @@ export class Note extends AbstractNote {
 
 }
 
-
-
 export class InlineNote extends AbstractNote {
 
     static TAG_REGEXP: RegExp = /Tags: (.*)/;
@@ -197,4 +207,68 @@ export class InlineNote extends AbstractNote {
     }
 
 
+}
+
+export class RegexNote {
+	ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
+	TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
+
+	match: RegExpMatchArray
+	note_type: string
+	groups: Array<string>
+	identifier: number | null
+	tags: string[]
+    field_names: string[]
+	curly_cloze: boolean
+	formatter: FormatConverter
+
+	constructor(
+			match: RegExpMatchArray,
+			note_type: string,
+			FIELDS_DICT: Record<string, string[]>,
+			tags: boolean = false,
+			id: boolean = false,
+			curly_cloze:boolean = false
+	) {
+		this.match = match
+		this.note_type = note_type
+		this.identifier = id ? parseInt(this.match.pop()) : null
+		this.tags = tags ? this.match.pop().slice(TAG_PREFIX.length).split(TAG_SEP) : []
+		this.field_names = FIELDS_DICT[note_type]
+		this.curly_cloze = curly_cloze
+		this.formatter = new FormatConverter()
+	}
+
+	getFields(): Record<string, string> {
+		let fields: Record<string, string> = {}
+        for (let field of this.field_names) {
+            fields[field] = ""
+        }
+		for (let index in this.match) {
+			fields[this.field_names[index]] = this.match[index]
+		}
+		for (let key in fields) {
+            fields[key] = this.formatter.format(
+                fields[key].trim(),
+                this.note_type.includes("Cloze") && this.curly_cloze
+            ).trim()
+        }
+        return fields
+	}
+
+	parse(deck: string, url: string = "", frozen_fields_dict: Record<string, Record<string, string>>): NOTE_AND_ID {
+		let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
+		template["modelName"] = this.note_type
+		template["fields"] = this.getFields()
+		if (url) {
+            this.formatter.format_note_with_url(template, url)
+        }
+        if (Object.keys(frozen_fields_dict).length) {
+            this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)
+        }
+		if (this.note_type.includes("Cloze") && !note_has_clozes(template)) {
+			this.identifier = 42 //An error code that says "don't add this note!"
+		}
+		return {note: template, identifier: this.identifier}
+	}
 }
