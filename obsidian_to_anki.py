@@ -508,7 +508,6 @@ class Note:
         self.text = note_text
         self.lines = self.text.splitlines()
         self.current_field_num = 0
-        self.delete = False
         if Note.ID_REGEXP.match(self.lines[-1]):
             self.identifier = int(
                 Note.ID_REGEXP.match(self.lines.pop()).group(1)
@@ -516,11 +515,7 @@ class Note:
             # The above removes the identifier line, for convenience of parsing
         else:
             self.identifier = None
-        if not self.lines:
-            # This indicates a delete action.
-            self.delete = True
-            return
-        elif self.lines[-1].startswith(TAG_PREFIX):
+        if self.lines[-1].startswith(TAG_PREFIX):
             self.tags = self.lines.pop()[len(TAG_PREFIX):].split(
                 TAG_SEP
             )
@@ -561,24 +556,21 @@ class Note:
     def parse(self, deck, url=None, frozen_fields_dict=None):
         """Get a properly formatted dictionary of the note."""
         template = NOTE_DICT_TEMPLATE.copy()
-        if not self.delete:
-            template["modelName"] = self.note_type
-            template["fields"] = self.fields
-            if all([
-                CONFIG_DATA["Add file link"],
-                CONFIG_DATA["Vault"],
-                url
-            ]):
-                FormatConverter.format_note_with_url(template, url)
-            if frozen_fields_dict:
-                FormatConverter.format_note_with_frozen_fields(
-                    template, frozen_fields_dict
-                )
-            template["tags"] = template["tags"] + self.tags
-            template["deckName"] = deck
-            return Note_and_id(note=template, id=self.identifier)
-        else:
-            return Note_and_id(note=False, id=self.identifier)
+        template["modelName"] = self.note_type
+        template["fields"] = self.fields
+        if all([
+            CONFIG_DATA["Add file link"],
+            CONFIG_DATA["Vault"],
+            url
+        ]):
+            FormatConverter.format_note_with_url(template, url)
+        if frozen_fields_dict:
+            FormatConverter.format_note_with_frozen_fields(
+                template, frozen_fields_dict
+            )
+        template["tags"] = template["tags"] + self.tags
+        template["deckName"] = deck
+        return Note_and_id(note=template, id=self.identifier)
 
 
 class InlineNote(Note):
@@ -590,17 +582,12 @@ class InlineNote(Note):
     def __init__(self, note_text):
         self.text = note_text.strip()
         self.current_field_num = 0
-        self.delete = False
         ID = InlineNote.ID_REGEXP.search(self.text)
         if ID is not None:
             self.identifier = int(ID.group(1))
             self.text = self.text[:ID.start()]  # Removes identifier
         else:
             self.identifier = None
-        if not self.text:
-            # This indicates a delete action
-            self.delete = True
-            return
         TAGS = InlineNote.TAG_REGEXP.search(self.text)
         if TAGS is not None:
             self.tags = TAGS.group(1).split(TAG_SEP)
@@ -728,7 +715,7 @@ class Config:
             "File Tags Line", "FILE TAGS"
         )
         config["Syntax"].setdefault(
-            "Delete Regex Note Line", "DELETE"
+            "Delete Note Line", "DELETE"
         )
         config["Syntax"].setdefault(
             "Frozen Fields Line", "FROZEN"
@@ -808,7 +795,12 @@ class Config:
         )
         RegexFile.EMPTY_REGEXP = re.compile(
             re.escape(
-                config["Syntax"]["Delete Regex Note Line"]
+                config["Syntax"]["Delete Note Line"]
+            ) + RegexNote.ID_REGEXP_STR
+        )
+        CONFIG_DATA["EMPTY_REGEXP"] = re.compile(
+            re.escape(
+                config["Syntax"]["Delete Note Line"]
             ) + RegexNote.ID_REGEXP_STR
         )
         CONFIG_DATA["FROZEN_LINE"] = re.escape(
@@ -1271,9 +1263,6 @@ class File:
                 parsed.note["tags"] += self.global_tags.split(TAG_SEP)
                 self.notes_to_add.append(parsed.note)
                 self.id_indexes.append(position)
-            elif not parsed.note:
-                # This indicates a delete action
-                self.notes_to_delete.append(parsed.id)
             elif parsed.id not in App.EXISTING_IDS:
                 print(
                     "Warning! Note with id ",
@@ -1297,9 +1286,6 @@ class File:
                 parsed.note["tags"] += self.global_tags.split(TAG_SEP)
                 self.inline_notes_to_add.append(parsed.note)
                 self.inline_id_indexes.append(position)
-            elif not parsed.note:
-                # This indicates a delete action
-                self.notes_to_delete.append(parsed.id)
             elif parsed.id not in App.EXISTING_IDS:
                 print(
                     "Warning! Note with id ",
@@ -1310,6 +1296,11 @@ class File:
                 )
             else:
                 self.notes_to_edit.append(parsed)
+        # Finally, scan for deleting notes
+        for match in RegexFile.EMPTY_REGEXP.finditer(self.file):
+            self.notes_to_delete.append(
+                int(match.group(1))
+            )
 
     @staticmethod
     def id_to_str(id, inline=False, comment=False):
