@@ -2,12 +2,11 @@ import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian'
 import { NOTE } from './src/interfaces/note'
 import { basename } from 'path'
 import { Converter } from 'showdown'
+import * as AnkiConnect from './src/anki'
 
 /* Declaring initial variables*/
 
 let converter = new Converter();
-
-let MEDIA: Record<string, string> = {};
 
 let ID_PREFIX: string = "ID: ";
 let TAG_PREFIX: string = "Tags: ";
@@ -24,10 +23,6 @@ let NOTE_DICT_TEMPLATE: NOTE = {
 	tags: ["Obsidian_to_Anki"],
 	audio: [],
 };
-
-let CONFIG_DATA = {}
-
-const ANKI_PORT: number = 8765
 
 const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
 
@@ -82,48 +77,6 @@ function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number,
 		if (!(contained_in([match.index, match.index + match.length], ignore_spans))) {
 			yield match
 		}
-	}
-}
-
-interface AnkiConnectRequest {
-	action: string,
-	params: any,
-	version: number
-}
-
-class AnkiConnect {
-	static request(action: string, params={}) {
-		return {action, version:6, params}
-	}
-
-	static invoke(action: string, params={}) {
-	    return new Promise((resolve, reject) => {
-	        const xhr = new XMLHttpRequest()
-	        xhr.addEventListener('error', () => reject('failed to issue request'));
-	        xhr.addEventListener('load', () => {
-	            try {
-	                const response = JSON.parse(xhr.responseText);
-	                if (Object.getOwnPropertyNames(response).length != 2) {
-	                    throw 'response has an unexpected number of fields';
-	                }
-	                if (!response.hasOwnProperty('error')) {
-	                    throw 'response is missing required error field';
-	                }
-	                if (!response.hasOwnProperty('result')) {
-	                    throw 'response is missing required result field';
-	                }
-	                if (response.error) {
-	                    throw response.error;
-	                }
-	                resolve(response.result);
-	            } catch (e) {
-	                reject(e);
-	            }
-	        });
-
-	        xhr.open('POST', 'http://127.0.0.1:8765');
-	        xhr.send(JSON.stringify({action, version: 6, params}));
-	    });
 	}
 }
 
