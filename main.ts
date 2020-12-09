@@ -1,10 +1,11 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian'
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, addIcon } from 'obsidian'
 import { NOTE } from './src/interfaces/note-interface'
 import { basename } from 'path'
 import * as AnkiConnect from './src/anki'
 import { PluginSettings } from './src/interfaces/settings-interface'
 import { SettingsTab } from './src/settings'
 import { Note, InlineNote } from './src/note'
+import { ANKI_ICON } from './src/constants'
 
 /* Declaring initial variables*/
 
@@ -55,23 +56,6 @@ function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number,
 			yield match
 		}
 	}
-}
-
-const test = `Basic
-This is a test.
-Back: Test successful!
-Front: More content
-and even more!!!
-$x = 5$ stuff too.
-# and a markdown heading...
-
-Tags: Help halp holp
-<!--ID: 124090124940-->`
-
-const test2 = "[Basic] This is a test. Back: Test successful! Front: More content Tags: Help halp <!--ID: 124901421-->"
-
-const fields_dict = {
-	Basic: ['Front', 'Back']
 }
 
 export default class MyPlugin extends Plugin {
@@ -157,11 +141,12 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		console.log('loading Obsidian_to_Anki...');
+		addIcon('anki', ANKI_ICON)
 
 		this.settings = await this.loadSettings()
 		this.note_types = Object.keys(this.settings["CUSTOM_REGEXPS"])
 
-		this.addRibbonIcon('dice', 'Sample Plugin', () => {
+		this.addRibbonIcon('anki', 'Sample Plugin', () => {
 			new Notice('This is a notice!');
 		});
 
