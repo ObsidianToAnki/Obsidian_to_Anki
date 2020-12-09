@@ -58,7 +58,7 @@ export class FormatConverter {
 		)
 	}
 
-	cloze_repl(match: string, match_id: string, match_content: string): string {
+	cloze_repl(_1: string, match_id: string, match_content: string): string {
 		if (match_id == undefined) {
 			let result = "{{c" + this.cloze_unset_num.toString() + "::" + match_content + "}}"
 			this.cloze_unset_num += 1
