@@ -270,6 +270,8 @@ class FormatConverter:
     ANKI_MATH_REGEXP = re.compile(r"(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))")
 
     MATH_REPLACE = "OBSTOANKIMATH"
+    INLINE_CODE_REPLACE = "OBSTOANKICODEINLINE"
+    DISPLAY_CODE_REPLACE = "OBSTOANKICODEDISPLAY"
 
     IMAGE_REGEXP = re.compile(r'<img alt=".*?" src="(.*?)"')
     SOUND_REGEXP = re.compile(r'\[sound:(.+)\]')
@@ -433,8 +435,39 @@ class FormatConverter:
         note_text = FormatConverter.ANKI_MATH_REGEXP.sub(
             FormatConverter.MATH_REPLACE, note_text
         )
+        # Now same with code!
+        inline_code_matches = [
+            code_match.group(0)
+            for code_match in FormatConverter.OBS_CODE_REGEXP.finditer(
+                note_text
+            )
+        ]
+        note_text = FormatConverter.OBS_CODE_REGEXP.sub(
+            FormatConverter.INLINE_CODE_REPLACE, note_text
+        )
+        display_code_matches = [
+            code_match.group(0)
+            for code_match in FormatConverter.OBS_DISPLAY_CODE_REGEXP.finditer(
+                note_text
+            )
+        ]
+        note_text = FormatConverter.OBS_DISPLAY_CODE_REGEXP.sub(
+            FormatConverter.DISPLAY_CODE_REPLACE, note_text
+        )
         if cloze:
             note_text = FormatConverter.curly_to_cloze(note_text)
+        for code_match in inline_code_matches:
+            note_text = note_text.replace(
+                FormatConverter.INLINE_CODE_REPLACE,
+                html.escape(code_match),
+                1
+            )
+        for code_match in display_code_matches:
+            note_text = note_text.replace(
+                FormatConverter.DISPLAY_CODE_REPLACE,
+                html.escape(code_match),
+                1
+            )
         note_text = FormatConverter.markdown_parse(note_text)
         # Add back the parts that are anki math
         for math_match in math_matches:
