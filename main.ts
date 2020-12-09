@@ -149,14 +149,6 @@ interface PluginSettings {
 	}
 }
 
-let test = `This is a big paragraph
-WeEee
-EWweqwe
-EWewqqewqw
-`
-
-console.log(converter.makeHtml(test))
-
 export default class MyPlugin extends Plugin {
 
 	settings: PluginSettings
