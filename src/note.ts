@@ -232,9 +232,10 @@ export class RegexNote {
 			match: RegExpMatchArray,
 			note_type: string,
 			fields_dict: FIELDS_DICT,
-			tags: boolean = false,
-			id: boolean = false,
-			curly_cloze:boolean = false
+			tags: boolean,
+			id: boolean,
+			curly_cloze: boolean,
+			formatter: FormatConverter
 	) {
 		this.match = match
 		this.note_type = note_type
@@ -242,7 +243,7 @@ export class RegexNote {
 		this.tags = tags ? this.match.pop().slice(TAG_PREFIX.length).split(TAG_SEP) : []
 		this.field_names = fields_dict[note_type]
 		this.curly_cloze = curly_cloze
-		this.formatter = new FormatConverter()
+		this.formatter = formatter
 	}
 
 	getFields(): Record<string, string> {

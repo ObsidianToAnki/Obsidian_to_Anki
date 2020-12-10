@@ -8,6 +8,7 @@ import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
 import * as c from './constants'
 import { FormatConverter } from './format'
+import { CachedMetadata } from 'obsidian'
 
 const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?ID: \d+)/
 
@@ -91,13 +92,13 @@ abstract class AbstractFile {
 
     formatter: FormatConverter
 
-    constructor(file_contents: string, path:string, url: string, data: FileData) {
+    constructor(file_contents: string, path:string, url: string, data: FileData, file_cache: CachedMetadata) {
         this.data = data
         this.file = file_contents
         this.path = path
         this.url = url
         this.original_file = this.file
-        this.formatter = new FormatConverter()
+        this.formatter = new FormatConverter(file_cache, this.data.vault_name)
     }
 
     setup_frozen_fields_dict() {
@@ -306,8 +307,8 @@ export class RegexFile extends AbstractFile {
     ignore_spans: [number, number][]
     custom_regexps: Record<string, string>
 
-    constructor(file_contents: string, path:string, url: string, data: FileData) {
-        super(file_contents, path, url, data)
+    constructor(file_contents: string, path:string, url: string, data: FileData, file_cache: CachedMetadata) {
+        super(file_contents, path, url, data, file_cache)
         this.custom_regexps = data.custom_regexps
     }
 
@@ -361,7 +362,7 @@ export class RegexFile extends AbstractFile {
             this.ignore_spans.push([match.index, match.index + match[0].length])
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
-                true, true, this.data.curly_cloze
+                true, true, this.data.curly_cloze, this.formatter
             ).parse(this.target_deck,this.url,this.frozen_fields_dict)
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
@@ -377,7 +378,7 @@ export class RegexFile extends AbstractFile {
             this.ignore_spans.push([match.index, match.index + match[0].length])
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
-                false, true, this.data.curly_cloze
+                false, true, this.data.curly_cloze, this.formatter
             ).parse(this.target_deck, this.url, this.frozen_fields_dict)
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
@@ -393,7 +394,7 @@ export class RegexFile extends AbstractFile {
             this.ignore_spans.push([match.index, match.index + match[0].length])
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
-                true, false, this.data.curly_cloze
+                true, false, this.data.curly_cloze, this.formatter
             ).parse(this.target_deck, this.url, this.frozen_fields_dict)
             if (parsed.identifier == CLOZE_ERROR) {
                 continue
@@ -410,7 +411,7 @@ export class RegexFile extends AbstractFile {
             this.ignore_spans.push([match.index, match.index + match[0].length])
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
-                false, false, this.data.curly_cloze
+                false, false, this.data.curly_cloze, this.formatter
             ).parse(this.target_deck, this.url, this.frozen_fields_dict)
             if (parsed.identifier == CLOZE_ERROR) {
                 console.log("Note has no cloze deletions!")

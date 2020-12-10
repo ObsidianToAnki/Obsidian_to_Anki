@@ -132,6 +132,14 @@ export default class MyPlugin extends Plugin {
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
+		const data: ExternalAppData = await settingToData(this.settings, this.app)
+
+		const testFile = this.app.vault.getAbstractFileByPath("hap.md") as TFile
+		const manager = new FileManager(this.app, data, [testFile], {})
+
+		await manager.initialiseFiles()
+		await manager.requests_1()
+
 		/*
 		this.registerEvent(this.app.on('codemirror', (cm: CodeMirror.Editor) => {
 			console.log('codemirror', cm);

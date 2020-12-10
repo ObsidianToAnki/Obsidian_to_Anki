@@ -1,6 +1,6 @@
 /*Class for managing a list of files, and their Anki requests.*/
 import { ExternalAppData } from './interfaces/settings-interface'
-import { App, TFile } from 'obsidian'
+import { App, TFile, CachedMetadata } from 'obsidian'
 import { RegexFile, File} from './file'
 import * as AnkiConnect from './anki'
 
@@ -83,12 +83,14 @@ export class FileManager {
     async genRegexFiles() {
         for (let file of this.files) {
             const content: string = await this.app.vault.read(file)
+            const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
             this.ownFiles.push(
                 new RegexFile(
                     content,
                     file.path,
                     this.data.add_file_link ? this.getUrl(file) : "",
                     this.data,
+                    cache
                 )
             )
         }
@@ -97,12 +99,14 @@ export class FileManager {
     async genFiles() {
         for (let file of this.files) {
             const content: string = await this.app.vault.read(file)
+            const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
             this.ownFiles.push(
                 new File(
                     content,
                     file.path,
                     this.data.add_file_link ? this.getUrl(file) : "",
-                    this.data
+                    this.data,
+                    cache
                 )
             )
         }
@@ -136,6 +140,10 @@ export class FileManager {
             temp.push(file.getDeleteNotes())
         }
         requests.push(AnkiConnect.multi(temp))
+        console.log("MEDIA CHECK")
+        for (let file of this.ownFiles) {
+            console.log(file.formatter.detectedMedia)
+        }
         this.requests_1_result = await AnkiConnect.invoke('multi', {actions: requests})
         this.parse_requests_1()
     }

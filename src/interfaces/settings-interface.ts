@@ -29,6 +29,7 @@ export interface FileData {
 	custom_regexps: Record<string, string>
 	template: AnkiConnectNote
 	EXISTING_IDS: number[]
+	vault_name: string
 
 	FROZEN_REGEXP: RegExp
 	DECK_REGEXP: RegExp
@@ -42,7 +43,6 @@ export interface FileData {
 }
 
 export interface ExternalAppData extends FileData {
-    vault_name: string
     add_file_link: boolean
 	regex: boolean
 }
