@@ -1664,22 +1664,22 @@ class Directory:
                 ]
             )
         )
-        logging.info("Updating fields of existing notes...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_update_fields()
-                    for file in self.files
-                ]
-            )
-        )
         logging.info("Getting card IDs of notes to be edited...")
         requests.append(
             AnkiConnect.request(
                 "multi",
                 actions=[
                     file.get_note_info()
+                    for file in self.files
+                ]
+            )
+        )
+        logging.info("Updating fields of existing notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_update_fields()
                     for file in self.files
                 ]
             )
@@ -1702,7 +1702,8 @@ class Directory:
     def parse_requests_1(self, requests_1_response, tags):
         response = requests_1_response
         notes_ids = AnkiConnect.parse(response[0])
-        cards_ids = AnkiConnect.parse(response[2])
+        print(notes_ids)
+        cards_ids = AnkiConnect.parse(response[1])
         for note_ids, file in zip(notes_ids, self.files):
             file.note_ids = [
                 AnkiConnect.parse(response)
