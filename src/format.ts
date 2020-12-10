@@ -11,20 +11,10 @@ const MATH_REPLACE:string = "OBSTOANKIMATH"
 const INLINE_CODE_REPLACE:string = "OBSTOANKICODEINLINE"
 const DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
 
-/*
-const HTML_IMAGE_REGEXP:RegExp = /<img alt=".*?" src="(.*?)"/g
-const OB_IMAGE_REGEXP:RegExp = /!\[\[[^[]*?\]\]/g
-const SOUND_REGEXP:RegExp = /\[sound:(.+)\]/g
-*/
-
-const MD_WEB_IMAGE_REGEXP:RegExp = /!\[(.*?)\]\((https?:\/\/.*?)\)/g
-const MD_WEB_LINK_REGEXP:RegExp = /(?<!!)\[(.*?)\]\((https?:\/\/.*?)\)/g
-
 const CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
-const URL_REGEXP:RegExp = /https?:\/\//g
 
 const IMAGE_EXTS: string[] = ["png", "jpg", "jpeg", "gif", "bmp", "svg", "tiff"]
-const AUDIO_EXTS: string[] = ["wav", "m4a", "flac", "mp3", "wma", "aac"]
+const AUDIO_EXTS: string[] = ["wav", "m4a", "flac", "mp3", "wma", "aac", "webm"]
 
 const PARA_OPEN:string = "<p>"
 const PARA_CLOSE:string = "</p>"
