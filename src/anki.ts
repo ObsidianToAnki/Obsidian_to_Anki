@@ -1,6 +1,12 @@
 const ANKI_PORT: number = 8765
 
-export function request(action: string, params={}) {
+export interface AnkiConnectRequest {
+	action: string,
+	version: 6,
+	params: any
+}
+
+export function request(action: string, params={}): AnkiConnectRequest {
 	return {action, version:6, params}
 }
 
