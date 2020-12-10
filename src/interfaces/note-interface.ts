@@ -7,7 +7,6 @@ export interface AnkiConnectNote {
 		duplicateScope: string
 	}
 	tags: Array<string>,
-	audio: Array<any>
 }
 
 export interface AnkiConnectNoteAndID {

@@ -19,7 +19,6 @@ const NOTE_DICT_TEMPLATE: AnkiConnectNote = {
 		duplicateScope: "deck",
 	},
 	tags: ["Obsidian_to_Anki"],
-	audio: [],
 }
 
 const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
