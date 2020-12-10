@@ -1,8 +1,9 @@
 /*Performing script operations on markdown file contents*/
 
 import { FIELDS_DICT, FROZEN_FIELDS_DICT } from './interfaces/field-interface'
-import { Note, InlineNote, RegexNote, CLOZE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'
+import { ExternalAppData } from './interfaces/settings-interface'
+import { Note, InlineNote, RegexNote, CLOZE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
 import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
 import * as format from './format'
@@ -66,29 +67,9 @@ function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number,
 	}
 }
 
-interface ExternalAppData {
-    file_contents: string
-    path: string
-    vault_name: string
-    fields_dict: FIELDS_DICT
-    frozen_fields_dict: FROZEN_FIELDS_DICT
-
-    FROZEN_REGEXP: RegExp
-    DECK_REGEXP: RegExp
-    TAG_REGEXP: RegExp
-    NOTE_REGEXP: RegExp
-    INLINE_REGEXP: RegExp
-    EMPTY_REGEXP: RegExp
-
-    curly_cloze: boolean
-    template: AnkiConnectNote
-    EXISTING_IDS: number[]
-    add_file_link: boolean
-    comment: boolean
-}
-
 abstract class AbstractFile {
     file: string
+    path: string
     url: string
     original_file: string
     data: ExternalAppData
@@ -107,10 +88,11 @@ abstract class AbstractFile {
     card_ids: number[]
     tags: string[]
 
-    constructor(data: ExternalAppData) {
+    constructor(file_contents: string, path:string, data: ExternalAppData) {
         this.data = data
-        this.file = data.file_contents
-        this.url = data.add_file_link ? "obsidian://open?vault=" + encodeURIComponent(data.vault_name) + "&file=" + encodeURIComponent(data.path) : ""
+        this.file = file_contents
+        this.path = path
+        this.url = data.add_file_link ? "obsidian://open?vault=" + encodeURIComponent(data.vault_name) + "&file=" + encodeURIComponent(this.path) : ""
         this.original_file = this.file
     }
 
@@ -262,7 +244,7 @@ export class File extends AbstractFile {
                 this.id_indexes.push(position)
             } else if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 // Need to show an error
-                console.log("Warning! note with id", parsed.identifier, " in file ", this.data.path, " does not exist in Anki!")
+                console.log("Warning! note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -285,7 +267,7 @@ export class File extends AbstractFile {
                 this.inline_id_indexes.push(position)
             } else if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 // Need to show an error
-                console.log("Warning! note with id", parsed.identifier, " in file ", this.data.path, " does not exist in Anki!")
+                console.log("Warning! note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -329,9 +311,9 @@ export class RegexFile extends AbstractFile {
     ignore_spans: [number, number][]
     custom_regexps: Record<string, string>
 
-    constructor(data: ExternalAppData, custom_regexps: Record<string, string>) {
-        super(data)
-        this.custom_regexps = custom_regexps
+    constructor(file_contents: string, path: string, data: ExternalAppData, custom_regexps: Record<string, string>) {
+        super(file_contents, path, data)
+        this.custom_regexps = data.custom_regexps
     }
 
     add_spans_to_ignore() {
@@ -386,7 +368,7 @@ export class RegexFile extends AbstractFile {
                 true, true, this.data.curly_cloze
             ).parse(this.target_deck,this.url,this.frozen_fields_dict)
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
-                console.log("Warning! Note with id", parsed.identifier, " in file ", this.data.path, " does not exist in Anki!")
+                console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -402,7 +384,7 @@ export class RegexFile extends AbstractFile {
                 false, true, this.data.curly_cloze
             ).parse(this.target_deck, this.url, this.frozen_fields_dict)
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
-                console.log("Warning! Note with id", parsed.identifier, " in file ", this.data.path, " does not exist in Anki!")
+                console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
             }
