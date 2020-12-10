@@ -1,4 +1,4 @@
-import { FIELDS_DICT, FROZEN_FIELDS_DICT } from './field-interface'
+import { FIELDS_DICT } from './field-interface'
 import { AnkiConnectNote } from './note-interface'
 
 export interface PluginSettings {
@@ -23,22 +23,26 @@ export interface PluginSettings {
 	}
 }
 
-export interface ExternalAppData {
-    vault_name: string
-    fields_dict: FIELDS_DICT
+export interface FileData {
+	//All the data that a file would need.
+	fields_dict: FIELDS_DICT
 	custom_regexps: Record<string, string>
 	template: AnkiConnectNote
 	EXISTING_IDS: number[]
 
-    FROZEN_REGEXP: RegExp
-    DECK_REGEXP: RegExp
-    TAG_REGEXP: RegExp
-    NOTE_REGEXP: RegExp
-    INLINE_REGEXP: RegExp
-    EMPTY_REGEXP: RegExp
+	FROZEN_REGEXP: RegExp
+	DECK_REGEXP: RegExp
+	TAG_REGEXP: RegExp
+	NOTE_REGEXP: RegExp
+	INLINE_REGEXP: RegExp
+	EMPTY_REGEXP: RegExp
 
-    curly_cloze: boolean
+	curly_cloze: boolean
+	comment: boolean
+}
+
+export interface ExternalAppData extends FileData {
+    vault_name: string
     add_file_link: boolean
-    comment: boolean
 	regex: boolean
 }
