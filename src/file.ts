@@ -1,7 +1,7 @@
 /*Performing script operations on markdown file contents*/
 
 import { FIELDS_DICT, FROZEN_FIELDS_DICT } from './interfaces/field-interface'
-import { Note, InlineNote, CLOZE_ERROR, TAG_SEP } from './note'
+import { Note, InlineNote, RegexNote, CLOZE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'
 import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
@@ -42,7 +42,7 @@ function spans(pattern: RegExp, text: string): Array<[number, number]> {
 	let matches = text.matchAll(pattern)
 	for (let match of matches) {
 		output.push(
-			[match.index, match.index + match.length]
+			[match.index, match.index + match[0].length]
 		)
 	}
 	return output
@@ -58,7 +58,7 @@ function contained_in(span: [number, number], spans: Array<[number, number]>): b
 function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number, number]>): IterableIterator<RegExpMatchArray> {
 	let matches = text.matchAll(pattern)
 	for (let match of matches) {
-		if (!(contained_in([match.index, match.index + match.length], ignore_spans))) {
+		if (!(contained_in([match.index, match.index + match[0].length], ignore_spans))) {
 			yield match
 		}
 	}
@@ -359,5 +359,81 @@ export class RegexFile extends AbstractFile {
         }
         this.all_notes_to_add = this.notes_to_add
         this.scanDeletions()
+    }
+
+    search(note_type: string, regexp_str: string) {
+        //Search the file for regex matches of this type,
+        //ignoring matches inside ignore_spans,
+        //and adding any matches to ignore_spans.
+        this.search_tags_id(note_type, regexp_str)
+        this.search_id(note_type, regexp_str)
+        this.search_tags(note_type, regexp_str)
+        this.search_none(note_type, regexp_str)
+    }
+
+    search_tags_id(note_type: string, regexp_str: string) {
+        const regexp: RegExp = new RegExp(regexp_str + TAG_REGEXP_STR + ID_REGEXP_STR, 'gm')
+        for (let match of findignore(regexp, this.file, this.ignore_spans)) {
+            this.ignore_spans.push([match.index, match.index + match[0].length])
+            const parsed: AnkiConnectNoteAndID = new RegexNote(
+                match, note_type, this.data.fields_dict,
+                true, true, this.data.curly_cloze
+            ).parse(this.target_deck,this.url,this.frozen_fields_dict)
+            if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
+                console.log("Warning! Note with id", parsed.identifier, " in file ", this.data.path, " does not exist in Anki!")
+            } else {
+                this.notes_to_edit.push(parsed)
+            }
+        }
+    }
+
+    search_id(note_type: string, regexp_str: string) {
+        const regexp: RegExp = new RegExp(regexp_str + ID_REGEXP_STR, 'gm')
+        for (let match of findignore(regexp, this.file, this.ignore_spans)) {
+            this.ignore_spans.push([match.index, match.index + match[0].length])
+            const parsed: AnkiConnectNoteAndID = new RegexNote(
+                match, note_type, this.data.fields_dict,
+                false, true, this.data.curly_cloze
+            ).parse(this.target_deck, this.url, this.frozen_fields_dict)
+            if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
+                console.log("Warning! Note with id", parsed.identifier, " in file ", this.data.path, " does not exist in Anki!")
+            } else {
+                this.notes_to_edit.push(parsed)
+            }
+        }
+    }
+
+    search_tags(note_type: string, regexp_str: string) {
+        const regexp: RegExp = new RegExp(regexp_str + TAG_REGEXP_STR, 'gm')
+        for (let match of findignore(regexp, this.file, this.ignore_spans)) {
+            this.ignore_spans.push([match.index, match.index + match[0].length])
+            const parsed: AnkiConnectNoteAndID = new RegexNote(
+                match, note_type, this.data.fields_dict,
+                true, false, this.data.curly_cloze
+            ).parse(this.target_deck, this.url, this.frozen_fields_dict)
+            if (parsed.identifier == CLOZE_ERROR) {
+                continue
+            }
+            parsed.note.tags.push(...this.global_tags.split(TAG_SEP))
+            this.notes_to_add.push(parsed.note)
+            this.id_indexes.push(match.index + match[0].length)
+        }
+    }
+
+    search_none(note_type: string, regexp_str: string) {
+        const regexp: RegExp = new RegExp(regexp_str, 'gm')
+        for (let match of findignore(regexp, this.file, this.ignore_spans)) {
+            this.ignore_spans.push([match.index, match.index + match[0].length])
+            const parsed: AnkiConnectNoteAndID = new RegexNote(
+                match, note_type, this.data.fields_dict,
+                false, false, this.data.curly_cloze
+            ).parse(this.target_deck, this.url, this.frozen_fields_dict)
+            if (parsed.identifier == CLOZE_ERROR) {
+                continue
+            }
+            parsed.note.tags.push(...this.global_tags.split(TAG_SEP))
+            this.notes_to_add.push(parsed.note)
+            this.id_indexes.push(match.index + match[0].length)
+        }
     }
 }

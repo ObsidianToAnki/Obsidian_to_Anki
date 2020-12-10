@@ -1,4 +1,4 @@
-import { NOTE } from './interfaces/note-interface'
+import { AnkiConnectNote } from './interfaces/note-interface'
 import { basename } from 'path'
 import { bytesToBase64 } from 'byte-base64'
 import { App } from 'obsidian'
@@ -39,13 +39,13 @@ export class FormatConverter {
     }
 	*/
 
-	format_note_with_url(note: NOTE, url: string): void {
+	format_note_with_url(note: AnkiConnectNote, url: string): void {
 		for (let field in note.fields) {
 			note.fields[field] += '<br><a href="' + url + '" class="obsidian-link">Obsidian</a>'
 		}
 	}
 
-	format_note_with_frozen_fields(note: NOTE, frozen_fields_dict: Record<string, Record<string, string>>): void {
+	format_note_with_frozen_fields(note: AnkiConnectNote, frozen_fields_dict: Record<string, Record<string, string>>): void {
 		for (let field in note.fields) {
 			note.fields[field] += frozen_fields_dict[note.modelName][field]
 		}

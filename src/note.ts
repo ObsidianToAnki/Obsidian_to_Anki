@@ -9,6 +9,8 @@ import { FIELDS_DICT, FROZEN_FIELDS_DICT } from './interfaces/field-interface'
 
 const TAG_PREFIX:string = "Tags: "
 export const TAG_SEP:string = " "
+export const ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
+export const TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
 
 const NOTE_DICT_TEMPLATE: AnkiConnectNote = {
 	deckName: "",
@@ -211,8 +213,6 @@ export class InlineNote extends AbstractNote {
 }
 
 export class RegexNote {
-	ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
-	TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
 
 	match: RegExpMatchArray
 	note_type: string
