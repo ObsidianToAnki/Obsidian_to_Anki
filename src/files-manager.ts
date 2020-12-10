@@ -57,6 +57,10 @@ export class FileManager {
         this.file_hashes = file_hashes
     }
 
+    getUrl(file: TFile): string {
+        return "obsidian://open?vault=" + encodeURIComponent(this.data.vault_name) + "&file=" + encodeURIComponent(file.path)
+    }
+
     async initialiseFiles() {
         if (this.data.regex) {
             await this.genRegexFiles()
@@ -83,8 +87,8 @@ export class FileManager {
                 new RegexFile(
                     content,
                     file.path,
+                    this.data.add_file_link ? this.getUrl(file) : "",
                     this.data,
-                    this.data.custom_regexps
                 )
             )
         }
@@ -95,8 +99,9 @@ export class FileManager {
             const content: string = await this.app.vault.read(file)
             this.ownFiles.push(
                 new File(
-                    await this.app.vault.read(file),
+                    content,
                     file.path,
+                    this.data.add_file_link ? this.getUrl(file) : "",
                     this.data
                 )
             )
@@ -144,6 +149,7 @@ export class FileManager {
             let i: number = parseInt(index)
             let file = this.ownFiles[i]
             const file_response = note_ids_array_by_file[i]
+            file.note_ids = []
             for (let response of AnkiConnect.parse(file_response)) {
                 file.note_ids.push(AnkiConnect.parse(response))
             }
