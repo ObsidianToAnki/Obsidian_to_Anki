@@ -38,7 +38,7 @@ export function invoke(action: string, params={}) {
     });
 }
 
-export function parse(response) {
+export function parse<T>(response: {error: string, result: T}): T {
 	//Helper function for parsing the result of a multi
 	if (Object.getOwnPropertyNames(response).length != 2) {
 		throw 'response has an unexpected number of fields'
@@ -117,4 +117,8 @@ export function addTags(note_ids: number[], tags: string): AnkiConnectRequest {
 			tags: tags
 		}
 	)
+}
+
+export function getTags(): AnkiConnectRequest {
+	return request('getTags')
 }

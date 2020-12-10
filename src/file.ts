@@ -137,10 +137,6 @@ abstract class AbstractFile {
         }
     }
 
-    setNoteIDs(note_ids: number[]) {
-        this.note_ids = note_ids
-    }
-
     abstract writeIDs(): void
 
     removeEmpties() {
@@ -179,16 +175,8 @@ abstract class AbstractFile {
         return AnkiConnect.notesInfo(IDs)
     }
 
-    setCardIDs(card_ids: number[]) {
-        this.card_ids = card_ids
-    }
-
     getChangeDecks(): AnkiConnect.AnkiConnectRequest {
         return AnkiConnect.changeDeck(this.card_ids, this.target_deck)
-    }
-
-    setTags(tags: string[]) {
-        this.tags = tags
     }
 
     getClearTags(): AnkiConnect.AnkiConnectRequest {
