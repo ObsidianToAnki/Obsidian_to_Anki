@@ -1,27 +1,23 @@
 import { AnkiConnectNote } from './interfaces/note-interface'
 import { basename } from 'path'
 import { bytesToBase64 } from 'byte-base64'
-import { App } from 'obsidian'
 import { Converter } from 'showdown'
+import { CachedMetadata } from 'obsidian'
+import * as c from './constants'
 
-export const OBS_INLINE_MATH_REGEXP: RegExp = /(?<!\$)\$((?=[\S])(?=[^$])[\s\S]*?\S)\$/g
-export const OBS_DISPLAY_MATH_REGEXP: RegExp = /\$\$([\s\S]*?)\$\$/g
-export const OBS_CODE_REGEXP:RegExp = /(?<!`)`(?=[^`])[\s\S]*?`/g
-export const OBS_DISPLAY_CODE_REGEXP:RegExp = /```[\s\S]*?```/g
+const ANKI_MATH_REGEXP:RegExp = /(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))/g
 
-export const ANKI_MATH_REGEXP:RegExp = /(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))/g
+const MATH_REPLACE:string = "OBSTOANKIMATH"
+const INLINE_CODE_REPLACE:string = "OBSTOANKICODEINLINE"
+const DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
 
-export const MATH_REPLACE:string = "OBSTOANKIMATH"
-export const INLINE_CODE_REPLACE:string = "OBSTOANKICODEINLINE"
-export const DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
+const IMAGE_REGEXP:RegExp = /<img alt=".*?" src="(.*?)"/g
+const SOUND_REGEXP:RegExp = /\[sound:(.+)\]/g
+const CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
+const URL_REGEXP:RegExp = /https?:\/\//g
 
-export const IMAGE_REGEXP:RegExp = /<img alt=".*?" src="(.*?)"/g
-export const SOUND_REGEXP:RegExp = /\[sound:(.+)\]/g
-export const CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
-export const URL_REGEXP:RegExp = /https?:\/\//g
-
-export const PARA_OPEN:string = "<p>"
-export const PARA_CLOSE:string = "</p>"
+const PARA_OPEN:string = "<p>"
+const PARA_CLOSE:string = "</p>"
 
 let cloze_unset_num: number = 1
 
@@ -29,16 +25,11 @@ let converter: Converter = new Converter()
 
 export class FormatConverter {
 
-	/*
-    media_to_add = {}
-    ADDED_MEDIA: string[] = []
-    app: App
+	file_cache: CachedMetadata
 
-    constructor(app: App, ADDED_MEDIA: string[] = []) {
-        this.ADDED_MEDIA = ADDED_MEDIA
-        this.app = app
-    }
-	*/
+	constructor(file_cache: CachedMetadata) {
+		this.file_cache = file_cache
+	}
 
 	format_note_with_url(note: AnkiConnectNote, url: string): void {
 		for (let field in note.fields) {
@@ -54,9 +45,9 @@ export class FormatConverter {
 
 	obsidian_to_anki_math(note_text: string): string {
 		return note_text.replace(
-				OBS_DISPLAY_MATH_REGEXP, "\\[$1\\]"
+				c.OBS_DISPLAY_MATH_REGEXP, "\\[$1\\]"
 		).replace(
-			OBS_INLINE_MATH_REGEXP,
+			c.OBS_INLINE_MATH_REGEXP,
 			"\\($1\\)"
 		)
 	}
@@ -163,8 +154,8 @@ export class FormatConverter {
 		let inline_code_matches: string[]
 		let display_code_matches: string[]
 		[note_text, math_matches] = this.censor(note_text, ANKI_MATH_REGEXP, MATH_REPLACE);
-		[note_text, inline_code_matches] = this.censor(note_text, OBS_CODE_REGEXP, INLINE_CODE_REPLACE);
-		[note_text, display_code_matches] = this.censor(note_text, OBS_DISPLAY_CODE_REGEXP, DISPLAY_CODE_REPLACE)
+		[note_text, inline_code_matches] = this.censor(note_text, c.OBS_CODE_REGEXP, INLINE_CODE_REPLACE);
+		[note_text, display_code_matches] = this.censor(note_text, c.OBS_DISPLAY_CODE_REGEXP, DISPLAY_CODE_REPLACE)
 		if (cloze) {
 			note_text = this.curly_to_cloze(note_text)
 		}
