@@ -222,10 +222,11 @@ export class File extends AbstractFile {
 
     scanNotes() {
         for (let note_match of this.file.matchAll(this.data.NOTE_REGEXP)) {
-            const [note, position]: [string, number] = [note_match[1], note_match[0].indexOf(note_match[1]) + note_match[1].length]
+            console.log(note_match)
+            let [note, position]: [string, number] = [note_match[1], note_match.index + note_match[0].indexOf(note_match[1]) + note_match[1].length]
             // That second thing essentially gets the index of the end of the first capture group.
-            const parsed = new Note(
-                note, this.data.fields_dict, this.data.curly_cloze
+            let parsed = new Note(
+                note, this.data.fields_dict, this.data.curly_cloze, this.formatter
             ).parse(
                 this.target_deck, this.url, this.frozen_fields_dict
             )
@@ -245,10 +246,10 @@ export class File extends AbstractFile {
 
     scanInlineNotes() {
         for (let note_match of this.file.matchAll(this.data.INLINE_REGEXP)) {
-            const [note, position]: [string, number] = [note_match[1], note_match[0].indexOf(note_match[1]) + note_match[1].length]
+            let [note, position]: [string, number] = [note_match[1], note_match.index + note_match[0].indexOf(note_match[1]) + note_match[1].length]
             // That second thing essentially gets the index of the end of the first capture group.
-            const parsed = new InlineNote(
-                note, this.data.fields_dict, this.data.curly_cloze
+            let parsed = new InlineNote(
+                note, this.data.fields_dict, this.data.curly_cloze, this.formatter
             ).parse(
                 this.target_deck, this.url, this.frozen_fields_dict
             )
