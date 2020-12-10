@@ -150,6 +150,7 @@ export class File {
     notes_to_delete: number[]
     inline_notes_to_add: AnkiConnectNote[]
     inline_id_indexes: number[]
+    all_notes_to_add: AnkiConnectNote[]
 
     note_ids: number[]
     card_ids: number[]
@@ -263,6 +264,7 @@ export class File {
         this.setupScan()
         this.scanNotes()
         this.scanInlineNotes()
+        this.all_notes_to_add = this.notes_to_add.concat(this.inline_notes_to_add)
         this.scanDeletions()
     }
 
@@ -295,36 +297,27 @@ export class File {
     }
 
     getAddNotes(): AnkiConnect.AnkiConnectRequest {
-        return AnkiConnect.request('addNotes', {
-            notes: this.notes_to_add.concat(this.inline_notes_to_add)
-        })
+        let actions: AnkiConnect.AnkiConnectRequest[] = []
+        for (let note of this.notes_to_add) {
+            actions.push(AnkiConnect.addNote(note))
+        }
+        return AnkiConnect.multi(actions)
     }
 
     getDeleteNotes(): AnkiConnect.AnkiConnectRequest {
-        return AnkiConnect.request('deleteNotes', {
-            notes: this.notes_to_delete
-        })
+        return AnkiConnect.deleteNotes(this.notes_to_delete)
     }
 
     getUpdateFields(): AnkiConnect.AnkiConnectRequest {
         let actions: AnkiConnect.AnkiConnectRequest[] = []
         for (let parsed of this.notes_to_edit) {
             actions.push(
-                AnkiConnect.request(
-                    'updateNoteFields',
-                    {
-                        note: {
-                            id: parsed.identifier,
-                            fields: parsed.note.fields,
-                        }
-                    }
+                AnkiConnect.updateNoteFields(
+                    parsed.identifier, parsed.note.fields
                 )
             )
         }
-        return AnkiConnect.request(
-            'multi',
-            {actions: actions}
-        )
+        return AnkiConnect.multi(actions)
     }
 
     getNoteInfo(): AnkiConnect.AnkiConnectRequest {
@@ -332,10 +325,7 @@ export class File {
         for (let parsed of this.notes_to_edit) {
             IDs.push(parsed.identifier)
         }
-        return AnkiConnect.request(
-            'notesInfo',
-            {notes: IDs}
-        )
+        return AnkiConnect.notesInfo(IDs)
     }
 
     setCardIDs(card_ids: number[]) {
@@ -343,10 +333,7 @@ export class File {
     }
 
     getChangeDecks(): AnkiConnect.AnkiConnectRequest {
-        return AnkiConnect.request(
-            'changeDeck',
-            {cards: this.card_ids, deck: this.target_deck}
-        )
+        return AnkiConnect.changeDeck(this.card_ids, this.target_deck)
     }
 
     setTags(tags: string[]) {
@@ -358,26 +345,17 @@ export class File {
         for (let parsed of this.notes_to_edit) {
             IDs.push(parsed.identifier)
         }
-        return AnkiConnect.request(
-            'removeTags',
-            {notes: IDs, tags: this.tags.join(" ")}
-        )
+        return AnkiConnect.removeTags(IDs, this.tags.join(" "))
     }
 
     getAddTags(): AnkiConnect.AnkiConnectRequest {
         let actions: AnkiConnect.AnkiConnectRequest[] = []
         for (let parsed of this.notes_to_edit) {
             actions.push(
-                AnkiConnect.request(
-                    'addTags',
-                    {notes: [parsed.identifier], tags: parsed.note.tags.join(" ") + " " + this.global_tags}
-                )
+                AnkiConnect.addTags([parsed.identifier], parsed.note.tags.join(" ") + " " + this.global_tags)
             )
         }
-        return AnkiConnect.request(
-            'multi',
-            {actions: actions}
-        )
+        return AnkiConnect.multi(actions)
     }
 
 }
