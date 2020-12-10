@@ -1,5 +1,5 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, addIcon } from 'obsidian'
-import { NOTE } from './src/interfaces/note-interface'
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, addIcon, getLinkpath } from 'obsidian'
+import { AnkiConnectNote } from './src/interfaces/note-interface'
 import { basename } from 'path'
 import * as AnkiConnect from './src/anki'
 import { PluginSettings } from './src/interfaces/settings-interface'
@@ -13,22 +13,6 @@ let ID_PREFIX: string = "ID: ";
 
 let TAG_PREFIX: string = "Tags: ";
 let TAG_SEP: string = " ";
-
-function string_insert(text: string, position_inserts: Array<[number, string]>): string {
-	/*Insert strings in position_inserts into text, at indices.
-
-    position_inserts will look like:
-    [(0, "hi"), (3, "hello"), (5, "beep")]*/
-	let offset = 0
-	let sorted_inserts: Array<[number, string]> = position_inserts.sort((a, b):number => a[0] - b[0])
-	for (let insertion of sorted_inserts) {
-		let position = insertion[0]
-		let insert_str = insertion[1]
-		text = text.slice(0, position + offset) + insert_str + text.slice(position + offset)
-		offset += insert_str.length
-	}
-	return text
-}
 
 function spans(pattern: RegExp, text: string): Array<[number, number]> {
 	/*Return a list of span-tuples for matches of pattern in text.*/
@@ -146,18 +130,20 @@ export default class MyPlugin extends Plugin {
 		this.settings = await this.loadSettings()
 		this.note_types = Object.keys(this.settings["CUSTOM_REGEXPS"])
 
-		this.addRibbonIcon('anki', 'Sample Plugin', () => {
-			new Notice('This is a notice!');
-		});
+		this.addRibbonIcon('anki', 'Obsidian_to_Anki', () => {
+			new Notice('Cool icon!');
+		})
 
+		/*
 		this.addStatusBarItem().setText('Status Bar Text');
+		*/
 
 		this.addCommand({
 			id: 'open-sample-modal',
 			name: 'Open Sample Modal',
-			// callback: () => {
-			// 	console.log('Simple Callback');
-			// },
+			callback: () => {
+			 	console.log('Simple Callback');
+			 },
 			checkCallback: (checking: boolean) => {
 				let leaf = this.app.workspace.activeLeaf;
 				if (leaf) {
@@ -168,10 +154,12 @@ export default class MyPlugin extends Plugin {
 				}
 				return false;
 			}
+
 		});
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
+		/*
 		this.registerEvent(this.app.on('codemirror', (cm: CodeMirror.Editor) => {
 			console.log('codemirror', cm);
 		}));
@@ -181,6 +169,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		*/
 	}
 
 	async onunload() {

@@ -1,18 +1,16 @@
-interface NOTE_OPTIONS {
-	allowDuplicate: boolean,
-	duplicateScope: string,
-}
-
-export interface NOTE {
+export interface AnkiConnectNote {
 	deckName: string,
 	modelName: string,
 	fields: Record<string, string>,
-	options: NOTE_OPTIONS,
+	options: {
+		allowDuplicate: boolean,
+		duplicateScope: string
+	}
 	tags: Array<string>,
 	audio: Array<any>
 }
 
-export interface NOTE_AND_ID {
-	note: NOTE,
+export interface AnkiConnectNoteAndID {
+	note: AnkiConnectNote,
 	identifier: number | null
 }
