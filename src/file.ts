@@ -5,6 +5,7 @@ import { Note, InlineNote, CLOZE_ERROR, TAG_SEP } from './note'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'
 import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
+import * as format from './format'
 
 function id_to_str(identifier:number, inline:boolean = false, comment:boolean = false): string {
     let result = "ID: " + identifier.toString()
@@ -33,6 +34,34 @@ function string_insert(text: string, position_inserts: Array<[number, string]>):
 		offset += insert_str.length
 	}
 	return text
+}
+
+function spans(pattern: RegExp, text: string): Array<[number, number]> {
+	/*Return a list of span-tuples for matches of pattern in text.*/
+	let output: Array<[number, number]> = []
+	let matches = text.matchAll(pattern)
+	for (let match of matches) {
+		output.push(
+			[match.index, match.index + match.length]
+		)
+	}
+	return output
+}
+
+function contained_in(span: [number, number], spans: Array<[number, number]>): boolean {
+	/*Return whether span is contained in spans (+- 1 leeway)*/
+	return spans.some(
+		(element) => span[0] >= element[0] - 1 && span[1] <= element[1] + 1
+	)
+}
+
+function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number, number]>): IterableIterator<RegExpMatchArray> {
+	let matches = text.matchAll(pattern)
+	for (let match of matches) {
+		if (!(contained_in([match.index, match.index + match.length], ignore_spans))) {
+			yield match
+		}
+	}
 }
 
 interface ExternalAppData {
@@ -287,4 +316,48 @@ export class File extends AbstractFile {
         this.file = string_insert(this.file, normal_inserts.concat(inline_inserts))
     }
 
+}
+
+export class RegexFile extends AbstractFile {
+
+    ignore_spans: [number, number][]
+    custom_regexps: Record<string, string>
+
+    constructor(data: ExternalAppData, custom_regexps: Record<string, string>) {
+        super(data)
+        this.custom_regexps = custom_regexps
+    }
+
+    add_spans_to_ignore() {
+        this.ignore_spans = []
+        this.ignore_spans.push(...spans(this.data.NOTE_REGEXP, this.file))
+        this.ignore_spans.push(...spans(this.data.INLINE_REGEXP, this.file))
+        this.ignore_spans.push(...spans(format.OBS_INLINE_MATH_REGEXP, this.file))
+        this.ignore_spans.push(...spans(format.OBS_DISPLAY_MATH_REGEXP, this.file))
+        this.ignore_spans.push(...spans(format.OBS_CODE_REGEXP, this.file))
+        this.ignore_spans.push(...spans(format.OBS_DISPLAY_CODE_REGEXP, this.file))
+    }
+
+    setupScan() {
+        this.setup_frozen_fields_dict()
+        this.setup_target_deck()
+        this.setup_global_tags()
+        this.add_spans_to_ignore()
+        this.notes_to_add = []
+        this.id_indexes = []
+        this.notes_to_edit = []
+        this.notes_to_delete = []
+    }
+
+    scanFile() {
+        this.setupScan()
+        for (let note_type in this.custom_regexps) {
+            const regexp_str: string = this.custom_regexps[note_type]
+            if (regexp_str) {
+                this.search(note_type, regexp_str)
+            }
+        }
+        this.all_notes_to_add = this.notes_to_add
+        this.scanDeletions()
+    }
 }

@@ -4,26 +4,26 @@ import { bytesToBase64 } from 'byte-base64'
 import { App } from 'obsidian'
 import { Converter } from 'showdown'
 
+export const OBS_INLINE_MATH_REGEXP: RegExp = /(?<!\$)\$((?=[\S])(?=[^$])[\s\S]*?\S)\$/g
+export const OBS_DISPLAY_MATH_REGEXP: RegExp = /\$\$([\s\S]*?)\$\$/g
+export const OBS_CODE_REGEXP:RegExp = /(?<!`)`(?=[^`])[\s\S]*?`/g
+export const OBS_DISPLAY_CODE_REGEXP:RegExp = /```[\s\S]*?```/g
+
+export const ANKI_MATH_REGEXP:RegExp = /(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))/g
+
+export const MATH_REPLACE:string = "OBSTOANKIMATH"
+export const INLINE_CODE_REPLACE:string = "OBSTOANKICODEINLINE"
+export const DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
+
+export const IMAGE_REGEXP:RegExp = /<img alt=".*?" src="(.*?)"/g
+export const SOUND_REGEXP:RegExp = /\[sound:(.+)\]/g
+export const CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
+export const URL_REGEXP:RegExp = /https?:\/\//g
+
+export const PARA_OPEN:string = "<p>"
+export const PARA_CLOSE:string = "</p>"
+
 let converter: Converter = new Converter()
-
-let OBS_INLINE_MATH_REGEXP: RegExp = /(?<!\$)\$((?=[\S])(?=[^$])[\s\S]*?\S)\$/g
-let OBS_DISPLAY_MATH_REGEXP: RegExp = /\$\$([\s\S]*?)\$\$/g
-let OBS_CODE_REGEXP:RegExp = /(?<!`)`(?=[^`])[\s\S]*?`/g
-let OBS_DISPLAY_CODE_REGEXP:RegExp = /```[\s\S]*?```/g
-
-let ANKI_MATH_REGEXP:RegExp = /(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))/g
-
-let MATH_REPLACE:string = "OBSTOANKIMATH"
-let INLINE_CODE_REPLACE:string = "OBSTOANKICODEINLINE"
-let DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
-
-let IMAGE_REGEXP:RegExp = /<img alt=".*?" src="(.*?)"/g
-let SOUND_REGEXP:RegExp = /\[sound:(.+)\]/g
-let CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
-let URL_REGEXP:RegExp = /https?:\/\//g
-
-let PARA_OPEN:string = "<p>"
-let PARA_CLOSE:string = "</p>"
 
 export class FormatConverter {
 

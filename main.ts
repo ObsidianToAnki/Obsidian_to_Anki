@@ -14,34 +14,6 @@ let ID_PREFIX: string = "ID: ";
 let TAG_PREFIX: string = "Tags: ";
 let TAG_SEP: string = " ";
 
-function spans(pattern: RegExp, text: string): Array<[number, number]> {
-	/*Return a list of span-tuples for matches of pattern in text.*/
-	let output: Array<[number, number]> = []
-	let matches = text.matchAll(pattern)
-	for (let match of matches) {
-		output.push(
-			[match.index, match.index + match.length]
-		)
-	}
-	return output
-}
-
-function contained_in(span: [number, number], spans: Array<[number, number]>): boolean {
-	/*Return whether span is contained in spans (+- 1 leeway)*/
-	return spans.some(
-		(element) => span[0] >= element[0] - 1 && span[1] <= element[1] + 1
-	)
-}
-
-function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number, number]>): IterableIterator<RegExpMatchArray> {
-	let matches = text.matchAll(pattern)
-	for (let match of matches) {
-		if (!(contained_in([match.index, match.index + match.length], ignore_spans))) {
-			yield match
-		}
-	}
-}
-
 export default class MyPlugin extends Plugin {
 
 	settings: PluginSettings
