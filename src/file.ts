@@ -1,12 +1,13 @@
 /*Performing script operations on markdown file contents*/
 
-import { FIELDS_DICT, FROZEN_FIELDS_DICT } from './interfaces/field-interface'
+import { FROZEN_FIELDS_DICT } from './interfaces/field-interface'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'
-import { ExternalAppData } from './interfaces/settings-interface'
+import { FileData } from './interfaces/settings-interface'
 import { Note, InlineNote, RegexNote, CLOZE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
 import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
-import * as format from './format'
+import * as c from './constants'
+import { FormatConverter } from './format'
 
 const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?ID: \d+)/
 
@@ -72,7 +73,7 @@ abstract class AbstractFile {
     path: string
     url: string
     original_file: string
-    data: ExternalAppData
+    data: FileData
 
     frozen_fields_dict: FROZEN_FIELDS_DICT
     target_deck: string
@@ -88,12 +89,15 @@ abstract class AbstractFile {
     card_ids: number[]
     tags: string[]
 
-    constructor(file_contents: string, path:string, data: ExternalAppData) {
+    formatter: FormatConverter
+
+    constructor(file_contents: string, path:string, url: string, data: FileData) {
         this.data = data
         this.file = file_contents
         this.path = path
-        this.url = data.add_file_link ? "obsidian://open?vault=" + encodeURIComponent(data.vault_name) + "&file=" + encodeURIComponent(this.path) : ""
+        this.url = url
         this.original_file = this.file
+        this.formatter = new FormatConverter()
     }
 
     setup_frozen_fields_dict() {
@@ -109,7 +113,7 @@ abstract class AbstractFile {
         for (let match of this.file.matchAll(this.data.FROZEN_REGEXP)) {
             const [note_type, fields]: [string, string] = [match[1], match[2]]
             const virtual_note = note_type + "\n" + fields
-            const parsed_fields: Record<string, string> = new Note(virtual_note, this.data.fields_dict, this.data.curly_cloze).getFields()
+            const parsed_fields: Record<string, string> = new Note(virtual_note, this.data.fields_dict, this.data.curly_cloze, this.formatter).getFields()
             frozen_fields_dict[note_type] = parsed_fields
         }
         this.frozen_fields_dict = frozen_fields_dict
@@ -272,6 +276,8 @@ export class File extends AbstractFile {
 
     writeIDs() {
         let normal_inserts: [number, string][] = []
+        console.log("WRITING IDS")
+        console.log(this.id_indexes)
         this.id_indexes.forEach(
             (id_position: number, index: number) => {
                 const identifier: number | null = this.note_ids[index]
@@ -299,8 +305,8 @@ export class RegexFile extends AbstractFile {
     ignore_spans: [number, number][]
     custom_regexps: Record<string, string>
 
-    constructor(file_contents: string, path: string, data: ExternalAppData, custom_regexps: Record<string, string>) {
-        super(file_contents, path, data)
+    constructor(file_contents: string, path:string, url: string, data: FileData) {
+        super(file_contents, path, url, data)
         this.custom_regexps = data.custom_regexps
     }
 
@@ -308,10 +314,10 @@ export class RegexFile extends AbstractFile {
         this.ignore_spans = []
         this.ignore_spans.push(...spans(this.data.NOTE_REGEXP, this.file))
         this.ignore_spans.push(...spans(this.data.INLINE_REGEXP, this.file))
-        this.ignore_spans.push(...spans(format.OBS_INLINE_MATH_REGEXP, this.file))
-        this.ignore_spans.push(...spans(format.OBS_DISPLAY_MATH_REGEXP, this.file))
-        this.ignore_spans.push(...spans(format.OBS_CODE_REGEXP, this.file))
-        this.ignore_spans.push(...spans(format.OBS_DISPLAY_CODE_REGEXP, this.file))
+        this.ignore_spans.push(...spans(c.OBS_INLINE_MATH_REGEXP, this.file))
+        this.ignore_spans.push(...spans(c.OBS_DISPLAY_MATH_REGEXP, this.file))
+        this.ignore_spans.push(...spans(c.OBS_CODE_REGEXP, this.file))
+        this.ignore_spans.push(...spans(c.OBS_DISPLAY_CODE_REGEXP, this.file))
     }
 
     setupScan() {
