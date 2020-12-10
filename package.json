@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "byte-base64": "^1.1.0",
-    "showdown": "^1.9.1"
+    "showdown": "^1.9.1",
+    "ts-md5": "^1.2.7"
   }
 }
