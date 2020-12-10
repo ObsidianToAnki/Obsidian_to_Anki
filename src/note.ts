@@ -55,7 +55,7 @@ abstract class AbstractNote {
     formatter: FormatConverter
     curly_cloze: boolean
 
-    constructor(note_text: string, fields_dict: FIELDS_DICT, curly_cloze: boolean = false) {
+    constructor(note_text: string, fields_dict: FIELDS_DICT, curly_cloze: boolean, formatter: FormatConverter) {
         this.text = note_text.trim()
         this.current_field_num = 0
         this.delete = false
@@ -65,7 +65,7 @@ abstract class AbstractNote {
         this.note_type = this.getNoteType()
         this.field_names = fields_dict[this.note_type]
         this.current_field = this.field_names[0]
-        this.formatter = new FormatConverter()
+        this.formatter = formatter
         this.curly_cloze = curly_cloze
     }
 
