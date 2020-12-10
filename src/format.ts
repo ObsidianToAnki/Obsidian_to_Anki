@@ -1,6 +1,5 @@
 import { AnkiConnectNote } from './interfaces/note-interface'
 import { basename, extname } from 'path'
-import { bytesToBase64 } from 'byte-base64'
 import { Converter } from 'showdown'
 import { CachedMetadata } from 'obsidian'
 import * as c from './constants'
@@ -13,8 +12,8 @@ const DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
 
 const CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
 
-const IMAGE_EXTS: string[] = ["png", "jpg", "jpeg", "gif", "bmp", "svg", "tiff"]
-const AUDIO_EXTS: string[] = ["wav", "m4a", "flac", "mp3", "wma", "aac", "webm"]
+const IMAGE_EXTS: string[] = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".tiff"]
+const AUDIO_EXTS: string[] = [".wav", ".m4a", ".flac", ".mp3", ".wma", ".aac", ".webm"]
 
 const PARA_OPEN:string = "<p>"
 const PARA_CLOSE:string = "</p>"

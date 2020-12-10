@@ -223,7 +223,6 @@ export class File extends AbstractFile {
 
     scanNotes() {
         for (let note_match of this.file.matchAll(this.data.NOTE_REGEXP)) {
-            console.log(note_match)
             let [note, position]: [string, number] = [note_match[1], note_match.index + note_match[0].indexOf(note_match[1]) + note_match[1].length]
             // That second thing essentially gets the index of the end of the first capture group.
             let parsed = new Note(
@@ -278,8 +277,6 @@ export class File extends AbstractFile {
 
     writeIDs() {
         let normal_inserts: [number, string][] = []
-        console.log("WRITING IDS")
-        console.log(this.id_indexes)
         this.id_indexes.forEach(
             (id_position: number, index: number) => {
                 const identifier: number | null = this.note_ids[index]
@@ -352,7 +349,6 @@ export class RegexFile extends AbstractFile {
         this.search_tags_id(note_type, regexp_str)
         this.search_id(note_type, regexp_str)
         this.search_tags(note_type, regexp_str)
-        console.log(this.ignore_spans)
         this.search_none(note_type, regexp_str)
     }
 

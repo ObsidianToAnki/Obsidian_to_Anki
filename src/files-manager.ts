@@ -1,8 +1,10 @@
 /*Class for managing a list of files, and their Anki requests.*/
-import { ExternalAppData } from './interfaces/settings-interface'
+import { ParsedSettings } from './interfaces/settings-interface'
 import { App, TFile, CachedMetadata } from 'obsidian'
 import { RegexFile, File} from './file'
 import * as AnkiConnect from './anki'
+import { bytesToBase64 } from 'byte-base64'
+import { basename } from 'path'
 
 interface addNoteResponse {
     result: number,
@@ -36,25 +38,36 @@ interface Requests1Result {
         result: notesInfoResponse[]
     },
     2: any,
-    3: any
+    3: any,
+    4: any
 
+}
+
+function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
+    let _difference = new Set(setA)
+    for (let elem of setB) {
+        _difference.delete(elem)
+    }
+    return _difference
 }
 
 
 export class FileManager {
     app: App
-    data: ExternalAppData
+    data: ParsedSettings
     files: TFile[]
     ownFiles: Array<File | RegexFile>
     file_hashes: Record<string, string>
     requests_1_result: any
+    added_media_set: Set<string>
 
-    constructor(app: App, data:ExternalAppData, files: TFile[], file_hashes: Record<string, string>) {
+    constructor(app: App, data:ParsedSettings, files: TFile[], file_hashes: Record<string, string>, added_media: string[]) {
         this.app = app
         this.data = data
         this.files = files
         this.ownFiles = []
         this.file_hashes = file_hashes
+        this.added_media_set = new Set(added_media)
     }
 
     getUrl(file: TFile): string {
@@ -140,12 +153,29 @@ export class FileManager {
             temp.push(file.getDeleteNotes())
         }
         requests.push(AnkiConnect.multi(temp))
-        console.log("MEDIA CHECK")
+        temp = []
+        console.log("Requesting addition of media...")
         for (let file of this.ownFiles) {
-            console.log(file.formatter.detectedMedia)
+            const mediaLinks = difference(file.formatter.detectedMedia, this.added_media_set)
+            for (let mediaLink of mediaLinks) {
+                console.log("Adding media file: ", mediaLink)
+                this.added_media_set.add(mediaLink)
+                const dataFile = this.app.metadataCache.getFirstLinkpathDest(mediaLink, file.path)
+                const data = await this.app.vault.readBinary(dataFile)
+                temp.push(
+                    AnkiConnect.storeMediaFile(
+                        basename(mediaLink),
+                        bytesToBase64(
+                            new Uint8Array(data)
+                        )
+                    )
+                )
+            }
         }
+        requests.push(AnkiConnect.multi(temp))
+        temp = []
         this.requests_1_result = await AnkiConnect.invoke('multi', {actions: requests})
-        this.parse_requests_1()
+        await this.parse_requests_1()
     }
 
     async parse_requests_1() {
@@ -183,6 +213,38 @@ export class FileManager {
                 await this.app.vault.modify(obFile, ownFile.file)
             }
         }
+        await this.requests_2()
+    }
+
+    getHashes(): Record<string, string> {
+        let result: Record<string, string> = {}
+        for (let file of this.ownFiles) {
+            result[file.path] = file.getHash()
+        }
+        return result
+    }
+
+    async requests_2(): Promise<void> {
+        let requests: AnkiConnect.AnkiConnectRequest[] = []
+        let temp: AnkiConnect.AnkiConnectRequest[] = []
+        console.log("Requesting cards to be moved to target deck...")
+        for (let file of this.ownFiles) {
+            temp.push(file.getChangeDecks())
+        }
+        requests.push(AnkiConnect.multi(temp))
+        temp = []
+        console.log("Requesting tags to be replaced...")
+        for (let file of this.ownFiles) {
+            temp.push(file.getClearTags())
+        }
+        requests.push(AnkiConnect.multi(temp))
+        temp = []
+        for (let file of this.ownFiles) {
+            temp.push(file.getAddTags())
+        }
+        requests.push(AnkiConnect.multi(temp))
+        temp = []
+        await AnkiConnect.invoke('multi', {actions: requests})
     }
 
 

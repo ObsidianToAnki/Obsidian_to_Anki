@@ -122,3 +122,12 @@ export function addTags(note_ids: number[], tags: string): AnkiConnectRequest {
 export function getTags(): AnkiConnectRequest {
 	return request('getTags')
 }
+
+export function storeMediaFile(filename: string, data: string): AnkiConnectRequest {
+	return request(
+		'storeMediaFile', {
+			filename: filename,
+			data: data
+		}
+	)
+}

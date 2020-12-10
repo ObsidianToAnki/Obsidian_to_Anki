@@ -30,7 +30,7 @@ export class SettingsTab extends PluginSettingTab {
 						)
 						.onChange((value) => {
 							plugin.settings["CUSTOM_REGEXPS"][note_type] = value
-							plugin.saveSettings()
+							plugin.saveAllData()
 						})
 				)
 			custom_regexp.settingEl = row_cells[1] as HTMLElement
@@ -50,7 +50,7 @@ export class SettingsTab extends PluginSettingTab {
 						text => text.setValue(plugin.settings["Syntax"][key])
 						.onChange((value) => {
 							plugin.settings["Syntax"][key] = value
-							plugin.saveSettings()
+							plugin.saveAllData()
 						})
 				)
 		}
@@ -68,7 +68,7 @@ export class SettingsTab extends PluginSettingTab {
 						text => text.setValue(plugin.settings["Defaults"][key])
 						.onChange((value) => {
 							plugin.settings["Defaults"][key] = value
-							plugin.saveSettings()
+							plugin.saveAllData()
 						})
 				)
 			} else {
@@ -78,7 +78,7 @@ export class SettingsTab extends PluginSettingTab {
 						toggle => toggle.setValue(plugin.settings["Defaults"][key])
 						.onChange((value) => {
 							plugin.settings["Defaults"][key] = value
-							plugin.saveSettings()
+							plugin.saveAllData()
 						})
 					)
 			}
@@ -98,8 +98,36 @@ export class SettingsTab extends PluginSettingTab {
 					.onClick(async () => {
 						plugin.note_types = await AnkiConnect.invoke('modelNames')
 						plugin.regenerateSettingsRegexps()
-						plugin.saveSettings()
+						await plugin.saveAllData()
 						this.setup_display()
+					})
+				}
+			)
+		new Setting(action_buttons)
+			.setName("Clear Media Cache")
+			.setDesc(`Clear the cached list of media filenames that have been added to Anki.
+
+			The script will skip over adding a media file if it's added a file with the same name before, so clear this if e.g. you've updated the media file with the same name.`)
+			.addButton(
+				button => {
+					button.setButtonText("Clear")
+					.onClick(async () => {
+						plugin.added_media = []
+						await plugin.saveAllData()
+					})
+				}
+			)
+		new Setting(action_buttons)
+			.setName("Clear File Hash Cache")
+			.setDesc(`Clear the cached dictionary of file hashes that the script has scanned before.
+
+			The script will skip over a file if the file path and the hash is unaltered.`)
+			.addButton(
+				button => {
+					button.setButtonText("Clear")
+					.onClick(async () => {
+						plugin.file_hashes = {}
+						await plugin.saveAllData()
 					})
 				}
 			)

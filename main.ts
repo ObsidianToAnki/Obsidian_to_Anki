@@ -1,30 +1,25 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, addIcon, getLinkpath, TFile } from 'obsidian'
+import { Notice, Plugin, addIcon, TFile } from 'obsidian'
 import * as AnkiConnect from './src/anki'
-import { PluginSettings, ExternalAppData } from './src/interfaces/settings-interface'
+import { PluginSettings, ParsedSettings } from './src/interfaces/settings-interface'
 import { SettingsTab } from './src/settings'
 import { ANKI_ICON } from './src/constants'
 import { settingToData } from './src/setting-to-data'
 import { FileManager } from './src/files-manager'
 
-/* Declaring initial variables*/
-
-let ID_PREFIX: string = "ID: ";
-
-let TAG_PREFIX: string = "Tags: ";
-let TAG_SEP: string = " ";
-
 export default class MyPlugin extends Plugin {
 
 	settings: PluginSettings
 	note_types: Array<string>
+	added_media: string[]
+	file_hashes: Record<string, string>
 
-	async own_saveData(data_key: string, data: any) {
+	async own_saveData(data_key: string, data: any): Promise<void> {
 		let current_data = await this.loadData()
 		current_data[data_key] = data
 		this.saveData(current_data)
 	}
 
-	async getDefaultSettings() {
+	async getDefaultSettings(): Promise<PluginSettings> {
 		let settings: PluginSettings = {
 			CUSTOM_REGEXPS: {},
 			Syntax: {
@@ -53,7 +48,18 @@ export default class MyPlugin extends Plugin {
 		return settings
 	}
 
-	async loadSettings() {
+	async saveDefault(): Promise<void> {
+		const default_sets = await this.getDefaultSettings()
+		this.saveData(
+			{
+				settings: default_sets,
+				"Added Media": [],
+				"File Hashes": {}
+			}
+		)
+	}
+
+	async loadSettings(): Promise<PluginSettings> {
 		let current_data = await this.loadData()
 		if (current_data == null) {
 			const default_sets = await this.getDefaultSettings()
@@ -70,12 +76,32 @@ export default class MyPlugin extends Plugin {
 		}
 	}
 
-	async saveSettings() {
+	async loadAddedMedia(): Promise<string[]> {
+		let current_data = await this.loadData()
+		if (current_data == null) {
+			await this.saveDefault()
+			return []
+		} else {
+			return current_data["Added Media"]
+		}
+	}
+
+	async loadFileHashes(): Promise<Record<string, string>> {
+		let current_data = await this.loadData()
+		if (current_data == null) {
+			await this.saveDefault()
+			return {}
+		} else {
+			return current_data["File Hashes"]
+		}
+	}
+
+	async saveAllData(): Promise<void> {
 		this.saveData(
 				{
 					settings: this.settings,
-					"Added Media": [],
-					"File Hashes": {}
+					"Added Media": this.added_media,
+					"File Hashes": this.file_hashes
 				}
 		)
 	}
@@ -100,23 +126,22 @@ export default class MyPlugin extends Plugin {
 
 		this.settings = await this.loadSettings()
 		this.note_types = Object.keys(this.settings["CUSTOM_REGEXPS"])
-
-		this.addRibbonIcon('anki', 'Obsidian_to_Anki', () => {
-			new Notice('Cool icon!');
-		})
+		this.added_media = await this.loadAddedMedia()
+		this.file_hashes = await this.loadFileHashes()
 
 		/*
 		this.addStatusBarItem().setText('Status Bar Text');
 		*/
 
+		/*
 		this.addCommand({
 			id: 'open-sample-modal',
 			name: 'Open Sample Modal',
-			/*
-			callback: () => {
-			 	console.log('Simple Callback');
-			 },
-			*/
+			//
+			//callback: () => {
+			// 	console.log('Simple Callback');
+			// },
+			//
 			checkCallback: (checking: boolean) => {
 				let leaf = this.app.workspace.activeLeaf;
 				if (leaf) {
@@ -129,16 +154,23 @@ export default class MyPlugin extends Plugin {
 			}
 
 		});
+		*/
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		const data: ExternalAppData = await settingToData(this.settings, this.app)
-
-		const testFile = this.app.vault.getAbstractFileByPath("hap.md") as TFile
-		const manager = new FileManager(this.app, data, [testFile], {})
-
-		await manager.initialiseFiles()
-		await manager.requests_1()
+		this.addRibbonIcon('anki', 'Obsidian_to_Anki - Scan Vault', async () => {
+			new Notice('Scanning vault, check console for details...');
+			const data: ParsedSettings = await settingToData(this.settings, this.app)
+			const manager = new FileManager(this.app, data, this.app.vault.getMarkdownFiles(), this.file_hashes, this.added_media)
+			await manager.initialiseFiles()
+			await manager.requests_1()
+			this.added_media = Array.from(manager.added_media_set)
+			const hashes = manager.getHashes()
+			for (let key in hashes) {
+				this.file_hashes[key] = hashes[key]
+			}
+			this.saveAllData()
+		})
 
 		/*
 		this.registerEvent(this.app.on('codemirror', (cm: CodeMirror.Editor) => {
@@ -155,11 +187,12 @@ export default class MyPlugin extends Plugin {
 
 	async onunload() {
 		console.log("Saving settings for Obsidian_to_Anki...")
-		this.saveSettings()
+		this.saveAllData()
 		console.log('unloading Obsidian_to_Anki...');
 	}
 }
 
+/*
 class SampleModal extends Modal {
 	constructor(app: App) {
 		super(app);
@@ -175,3 +208,4 @@ class SampleModal extends Modal {
 		contentEl.empty();
 	}
 }
+*/

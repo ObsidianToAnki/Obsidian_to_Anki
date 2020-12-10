@@ -42,7 +42,7 @@ export interface FileData {
 	comment: boolean
 }
 
-export interface ExternalAppData extends FileData {
+export interface ParsedSettings extends FileData {
     add_file_link: boolean
 	regex: boolean
 }
