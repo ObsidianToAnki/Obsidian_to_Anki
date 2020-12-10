@@ -356,6 +356,7 @@ export class RegexFile extends AbstractFile {
         this.search_tags_id(note_type, regexp_str)
         this.search_id(note_type, regexp_str)
         this.search_tags(note_type, regexp_str)
+        console.log(this.ignore_spans)
         this.search_none(note_type, regexp_str)
     }
 
@@ -417,6 +418,7 @@ export class RegexFile extends AbstractFile {
                 false, false, this.data.curly_cloze
             ).parse(this.target_deck, this.url, this.frozen_fields_dict)
             if (parsed.identifier == CLOZE_ERROR) {
+                console.log("Note has no cloze deletions!")
                 continue
             }
             parsed.note.tags.push(...this.global_tags.split(TAG_SEP))

@@ -1,11 +1,10 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, addIcon, getLinkpath } from 'obsidian'
-import { AnkiConnectNote } from './src/interfaces/note-interface'
-import { basename } from 'path'
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, addIcon, getLinkpath, TFile } from 'obsidian'
 import * as AnkiConnect from './src/anki'
-import { PluginSettings } from './src/interfaces/settings-interface'
+import { PluginSettings, ExternalAppData } from './src/interfaces/settings-interface'
 import { SettingsTab } from './src/settings'
-import { Note, InlineNote } from './src/note'
 import { ANKI_ICON } from './src/constants'
+import { settingToData } from './src/setting-to-data'
+import { FileManager } from './src/files-manager'
 
 /* Declaring initial variables*/
 
@@ -35,7 +34,7 @@ export default class MyPlugin extends Plugin {
 				"End Inline Note": "ENDI",
 				"Target Deck Line": "TARGET DECK",
 				"File Tags Line": "FILE TAGS",
-				"Delete Regex Note Line": "DELETE",
+				"Delete Note Line": "DELETE",
 				"Frozen Fields Line": "FROZEN"
 			},
 			Defaults: {
@@ -113,9 +112,11 @@ export default class MyPlugin extends Plugin {
 		this.addCommand({
 			id: 'open-sample-modal',
 			name: 'Open Sample Modal',
+			/*
 			callback: () => {
 			 	console.log('Simple Callback');
 			 },
+			*/
 			checkCallback: (checking: boolean) => {
 				let leaf = this.app.workspace.activeLeaf;
 				if (leaf) {

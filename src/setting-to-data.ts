@@ -8,12 +8,12 @@ function escapeRegex(str: string): string {
     return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-export async function settingToData(settings: PluginSettings, app: App) {
-    let result: ExternalAppData
+export async function settingToData(settings: PluginSettings, app: App): Promise<ExternalAppData> {
+    let result: ExternalAppData = <ExternalAppData>{}
 
     //Some processing required
     result.vault_name = app.vault.getName()
-    const note_types: string[] = Object.keys(this.settings["CUSTOM_REGEXPS"])
+    const note_types: string[] = Object.keys(settings["CUSTOM_REGEXPS"])
     let fields_dict = {}
     for (let note_type of note_types) {
         const field_names: string[] = await AnkiConnect.invoke(
@@ -39,13 +39,15 @@ export async function settingToData(settings: PluginSettings, app: App) {
     result.FROZEN_REGEXP = new RegExp(escapeRegex(settings.Syntax["Frozen Fields Line"]) + String.raw` - (.*?):\n((?:[^\n][\n]?)+)`, "g")
     result.DECK_REGEXP = new RegExp(String.raw`^` + escapeRegex(settings.Syntax["Target Deck Line"]) + String.raw`(?:\n|: )(.*)`, "gm")
     result.TAG_REGEXP = new RegExp(String.raw`^` + escapeRegex(settings.Syntax["File Tags Line"]) + String.raw`(?:\n|: )(.*)`, "gm")
-    result.NOTE_REGEXP = new RegExp(String.raw`^` + escapeRegex(settings.Syntax["Begin Note"]) + String.raw`\n([\s\S]*?\n)` + escapeRegex(settings.Syntax["End Note"]))
-    result.INLINE_REGEXP = new RegExp(escapeRegex(settings.Syntax["Begin Inline Note"]) + String.raw`(.*?)` + escapeRegex(settings.Syntax["End Inline Note"]))
-    result.EMPTY_REGEXP = new RegExp(escapeRegex(settings.Syntax["Delete Note Line"]) + ID_REGEXP_STR)
+    result.NOTE_REGEXP = new RegExp(String.raw`^` + escapeRegex(settings.Syntax["Begin Note"]) + String.raw`\n([\s\S]*?\n)` + escapeRegex(settings.Syntax["End Note"]), "gm")
+    result.INLINE_REGEXP = new RegExp(escapeRegex(settings.Syntax["Begin Inline Note"]) + String.raw`(.*?)` + escapeRegex(settings.Syntax["End Inline Note"]), "g")
+    result.EMPTY_REGEXP = new RegExp(escapeRegex(settings.Syntax["Delete Note Line"]) + ID_REGEXP_STR, "g")
 
     //Just a simple transfer
     result.curly_cloze = settings.Defaults.CurlyCloze
     result.add_file_link = settings.Defaults["Add File Link"]
     result.comment = settings.Defaults["ID Comments"]
     result.regex = settings.Defaults.Regex
+
+    return result
 }

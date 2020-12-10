@@ -23,11 +23,12 @@ export const URL_REGEXP:RegExp = /https?:\/\//g
 export const PARA_OPEN:string = "<p>"
 export const PARA_CLOSE:string = "</p>"
 
+let cloze_unset_num: number = 1
+
 let converter: Converter = new Converter()
 
 export class FormatConverter {
 
-	cloze_unset_num:number = 1
 	/*
     media_to_add = {}
     ADDED_MEDIA: string[] = []
@@ -62,8 +63,8 @@ export class FormatConverter {
 
 	cloze_repl(_1: string, match_id: string, match_content: string): string {
 		if (match_id == undefined) {
-			let result = "{{c" + this.cloze_unset_num.toString() + "::" + match_content + "}}"
-			this.cloze_unset_num += 1
+			let result = "{{c" + cloze_unset_num.toString() + "::" + match_content + "}}"
+			cloze_unset_num += 1
 			return result
 		}
 		let result = "{{c" + match_id + "::" + match_content + "}}"
@@ -73,7 +74,7 @@ export class FormatConverter {
 	curly_to_cloze(text: string): string {
 		/*Change text in curly brackets to Anki-formatted cloze.*/
 		text = text.replaceAll(CLOZE_REGEXP, this.cloze_repl)
-		this.cloze_unset_num = 1
+		cloze_unset_num = 1
 		return text
 	}
 

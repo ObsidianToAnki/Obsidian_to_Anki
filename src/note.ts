@@ -33,7 +33,12 @@ function has_clozes(text: string): boolean {
 
 function note_has_clozes(note: AnkiConnectNote): boolean {
 	/*Checks whether a note has cloze deletions in any of its fields.*/
-	return Array(note.fields.values).some(has_clozes)
+	for (let i in note.fields) {
+		if (has_clozes(note.fields[i])) {
+			return true
+		}
+	}
+	return false
 }
 
 abstract class AbstractNote {
@@ -245,7 +250,7 @@ export class RegexNote {
         for (let field of this.field_names) {
             fields[field] = ""
         }
-		for (let index in this.match) {
+		for (let index in this.match.slice(1)) {
 			fields[this.field_names[index]] = this.match[index]
 		}
 		for (let key in fields) {
@@ -267,9 +272,11 @@ export class RegexNote {
         if (Object.keys(frozen_fields_dict).length) {
             this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)
         }
-		if (this.note_type.includes("Cloze") && !note_has_clozes(template)) {
+		if (this.note_type.includes("Cloze") && !(note_has_clozes(template))) {
 			this.identifier = CLOZE_ERROR //An error code that says "don't add this note!"
 		}
+		template["tags"].push(...this.tags)
+        template["deckName"] = deck
 		return {note: template, identifier: this.identifier}
 	}
 }

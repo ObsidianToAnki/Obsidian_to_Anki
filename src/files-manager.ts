@@ -22,9 +22,9 @@ export class FileManager {
 
     async initialiseFiles() {
         if (this.data.regex) {
-            this.genRegexFiles()
+            await this.genRegexFiles()
         } else {
-            this.genFiles()
+            await this.genFiles()
         }
         let files_changed: Array<File | RegexFile> = []
         for (let file of this.ownFiles) {
@@ -41,9 +41,10 @@ export class FileManager {
 
     async genRegexFiles() {
         for (let file of this.files) {
+            const content: string = await this.app.vault.read(file)
             this.ownFiles.push(
                 new RegexFile(
-                    await this.app.vault.read(file),
+                    content,
                     file.path,
                     this.data,
                     this.data.custom_regexps
@@ -54,6 +55,7 @@ export class FileManager {
 
     async genFiles() {
         for (let file of this.files) {
+            const content: string = await this.app.vault.read(file)
             this.ownFiles.push(
                 new File(
                     await this.app.vault.read(file),
