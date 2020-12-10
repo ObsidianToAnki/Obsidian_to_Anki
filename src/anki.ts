@@ -38,6 +38,23 @@ export function invoke(action: string, params={}) {
     });
 }
 
+export function parse(response) {
+	//Helper function for parsing the result of a multi
+	if (Object.getOwnPropertyNames(response).length != 2) {
+		throw 'response has an unexpected number of fields'
+	}
+	if (!(response.hasOwnProperty('error'))) {
+		throw 'response is missing required error field'
+	}
+	if (!(response.hasOwnProperty('result'))) {
+		throw 'response is missing required result field';
+	}
+	if (response.error) {
+		throw response.error
+	}
+	return response.result
+}
+
 // All the rest of these functions only return request objects as opposed to actually carrying out the action. For efficiency!
 
 function request(action: string, params={}): AnkiConnectRequest {
