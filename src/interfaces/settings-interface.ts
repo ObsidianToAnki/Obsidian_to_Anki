@@ -10,7 +10,7 @@ export interface PluginSettings {
 		"End Inline Note": string,
 		"Target Deck Line": string,
 		"File Tags Line": string,
-		"Delete Regex Note Line": string,
+		"Delete Note Line": string,
 		"Frozen Fields Line": string
 	},
 	Defaults: {
@@ -26,6 +26,9 @@ export interface PluginSettings {
 export interface ExternalAppData {
     vault_name: string
     fields_dict: FIELDS_DICT
+	custom_regexps: Record<string, string>
+	template: AnkiConnectNote
+	EXISTING_IDS: number[]
 
     FROZEN_REGEXP: RegExp
     DECK_REGEXP: RegExp
@@ -35,10 +38,7 @@ export interface ExternalAppData {
     EMPTY_REGEXP: RegExp
 
     curly_cloze: boolean
-    template: AnkiConnectNote
-    EXISTING_IDS: number[]
     add_file_link: boolean
     comment: boolean
 	regex: boolean
-	custom_regexps: Record<string, string>
 }
