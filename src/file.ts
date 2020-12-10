@@ -458,6 +458,7 @@ export class RegexFile extends AbstractFile {
             }
         )
         this.file = string_insert(this.file, inserts)
+        this.fix_newline_ids()
     }
 
 
