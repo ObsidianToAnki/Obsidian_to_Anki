@@ -1,5 +1,5 @@
 import { AnkiConnectNote } from './interfaces/note-interface'
-import { basename } from 'path'
+import { basename, extname } from 'path'
 import { bytesToBase64 } from 'byte-base64'
 import { Converter } from 'showdown'
 import { CachedMetadata } from 'obsidian'
@@ -11,10 +11,20 @@ const MATH_REPLACE:string = "OBSTOANKIMATH"
 const INLINE_CODE_REPLACE:string = "OBSTOANKICODEINLINE"
 const DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
 
-const IMAGE_REGEXP:RegExp = /<img alt=".*?" src="(.*?)"/g
+/*
+const HTML_IMAGE_REGEXP:RegExp = /<img alt=".*?" src="(.*?)"/g
+const OB_IMAGE_REGEXP:RegExp = /!\[\[[^[]*?\]\]/g
 const SOUND_REGEXP:RegExp = /\[sound:(.+)\]/g
+*/
+
+const MD_WEB_IMAGE_REGEXP:RegExp = /!\[(.*?)\]\((https?:\/\/.*?)\)/g
+const MD_WEB_LINK_REGEXP:RegExp = /(?<!!)\[(.*?)\]\((https?:\/\/.*?)\)/g
+
 const CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
 const URL_REGEXP:RegExp = /https?:\/\//g
+
+const IMAGE_EXTS: string[] = ["png", "jpg", "jpeg", "gif", "bmp", "svg", "tiff"]
+const AUDIO_EXTS: string[] = ["wav", "m4a", "flac", "mp3", "wma", "aac"]
 
 const PARA_OPEN:string = "<p>"
 const PARA_CLOSE:string = "</p>"
@@ -26,10 +36,18 @@ let converter: Converter = new Converter()
 export class FormatConverter {
 
 	file_cache: CachedMetadata
+	vault_name: string
+	detectedMedia: Set<string>
 
-	constructor(file_cache: CachedMetadata) {
+	constructor(file_cache: CachedMetadata, vault_name: string) {
+		this.vault_name = vault_name
 		this.file_cache = file_cache
+		this.detectedMedia = new Set()
 	}
+
+	getUrlFromLink(link: string): string {
+        return "obsidian://open?vault=" + encodeURIComponent(this.vault_name) + "&file=" + encodeURIComponent(link)
+    }
 
 	format_note_with_url(note: AnkiConnectNote, url: string): void {
 		for (let field in note.fields) {
@@ -69,64 +87,30 @@ export class FormatConverter {
 		return text
 	}
 
-	is_url(text: string): boolean {
-		/*Check whether text looks like a url.*/
-		return URL_REGEXP.test(text)
-	}
-
-	/*
-	async get_images(html_text: string) {
-        //Get all the images that need to be added.
-		for (let match of html_text.matchAll(IMAGE_REGEXP)) {
-			let path = match[1]
-			if (this.is_url(path)) {
-				continue
-				//Skips over web-based images
+	getAndFormatMedias(note_text: string): string {
+		for (let embed of this.file_cache.embeds) {
+			if (note_text.includes(embed.original)) {
+				this.detectedMedia.add(embed.link)
+				if (AUDIO_EXTS.includes(extname(embed.link))) {
+					note_text = note_text.replaceAll(embed.original, "[sound:" + basename(embed.link) + "]")
+				} else if (IMAGE_EXTS.includes(extname(embed.link))) {
+					note_text = note_text.replaceAll(
+						embed.original,
+						'<img src="' + basename(embed.link) + '" alt="' + embed.displayText + '">'
+					)
+				} else {
+					console.log("Unsupported extension: ", extname(embed.link))
+				}
 			}
-			path = decodeURI(path)
-			let filename = basename(path)
-            if (!this.ADDED_MEDIA.includes(filename) && !Object.keys(this.media_to_add).includes(filename)) {
-                this.media_to_add[filename] = bytesToBase64(
-                    new Uint8Array(
-                        await this.app.vault.adapter.readBinary(path)
-                    )
-                )
-            }
 		}
+		return note_text
 	}
 
-    async get_audio(html_text: string) {
-        //Get all the audio that needs to be added.
-        for (let match of html_text.matchAll(SOUND_REGEXP)) {
-            let path = match[1]
-            let filename = basename(path)
-            if (!this.ADDED_MEDIA.includes(filename) && !Object.keys(this.media_to_add).includes(filename)) {
-                this.media_to_add[filename] = bytesToBase64(
-                    new Uint8Array(
-                        await this.app.vault.adapter.readBinary(path)
-                    )
-                )
-            }
-        }
-    }
-	*/
-
-    path_to_filename(match: string, path: string): string {
-		/*Replace the src in match appropriately.*/
-		if (this.is_url(path)) {
-			return match //Don't alter urls!
+	formatLinks(note_text: string): string {
+		for (let link of this.file_cache.links) {
+			note_text = note_text.replaceAll(link.original, '<a href="' + this.getUrlFromLink(link.link) + '">' + link.displayText + "</a>")
 		}
-		path = decodeURI(path)
-		match.replace(path, basename(path))
-		return match
-    }
-
-	fix_image_src(html_text: string): string {
-		return html_text.replace(IMAGE_REGEXP, this.path_to_filename)
-	}
-
-	fix_audio_src(html_text: string): string {
-		return html_text.replace(SOUND_REGEXP, this.path_to_filename)
+		return note_text
 	}
 
 	censor(note_text: string, regexp: RegExp, mask: string): [string, string[]] {
@@ -159,14 +143,12 @@ export class FormatConverter {
 		if (cloze) {
 			note_text = this.curly_to_cloze(note_text)
 		}
+		note_text = this.getAndFormatMedias(note_text)
+		note_text = this.formatLinks(note_text)
 		note_text = this.decensor(note_text, INLINE_CODE_REPLACE, inline_code_matches)
 		note_text = this.decensor(note_text, DISPLAY_CODE_REPLACE, display_code_matches)
 		note_text = converter.makeHtml(note_text)
 		note_text = this.decensor(note_text, MATH_REPLACE, math_matches).trim()
-		/* Need to figure out another way to do this
-		this.get_images(note_text)
-		this.get_audio(note_text)
-		*/
 		// Remove unnecessary paragraph tag
 		if (note_text.startsWith(PARA_OPEN) && note_text.endsWith(PARA_CLOSE)) {
 			note_text = note_text.slice(PARA_OPEN.length, -1 * PARA_CLOSE.length)
