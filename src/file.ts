@@ -132,69 +132,74 @@ abstract class AbstractFile {
         this.file = this.file.replaceAll(this.data.EMPTY_REGEXP, "")
     }
 
+    getAddNotes(): AnkiConnect.AnkiConnectRequest {
+        let actions: AnkiConnect.AnkiConnectRequest[] = []
+        for (let note of this.all_notes_to_add) {
+            actions.push(AnkiConnect.addNote(note))
+        }
+        return AnkiConnect.multi(actions)
+    }
+
+    getDeleteNotes(): AnkiConnect.AnkiConnectRequest {
+        return AnkiConnect.deleteNotes(this.notes_to_delete)
+    }
+
+    getUpdateFields(): AnkiConnect.AnkiConnectRequest {
+        let actions: AnkiConnect.AnkiConnectRequest[] = []
+        for (let parsed of this.notes_to_edit) {
+            actions.push(
+                AnkiConnect.updateNoteFields(
+                    parsed.identifier, parsed.note.fields
+                )
+            )
+        }
+        return AnkiConnect.multi(actions)
+    }
+
+    getNoteInfo(): AnkiConnect.AnkiConnectRequest {
+        let IDs: number[] = []
+        for (let parsed of this.notes_to_edit) {
+            IDs.push(parsed.identifier)
+        }
+        return AnkiConnect.notesInfo(IDs)
+    }
+
+    setCardIDs(card_ids: number[]) {
+        this.card_ids = card_ids
+    }
+
+    getChangeDecks(): AnkiConnect.AnkiConnectRequest {
+        return AnkiConnect.changeDeck(this.card_ids, this.target_deck)
+    }
+
+    setTags(tags: string[]) {
+        this.tags = tags
+    }
+
+    getClearTags(): AnkiConnect.AnkiConnectRequest {
+        let IDs: number[] = []
+        for (let parsed of this.notes_to_edit) {
+            IDs.push(parsed.identifier)
+        }
+        return AnkiConnect.removeTags(IDs, this.tags.join(" "))
+    }
+
+    getAddTags(): AnkiConnect.AnkiConnectRequest {
+        let actions: AnkiConnect.AnkiConnectRequest[] = []
+        for (let parsed of this.notes_to_edit) {
+            actions.push(
+                AnkiConnect.addTags([parsed.identifier], parsed.note.tags.join(" ") + " " + this.global_tags)
+            )
+        }
+        return AnkiConnect.multi(actions)
+    }
+
 }
 
-export class File {
-    file: string
-    url: string
-    original_file: string
-    data: ExternalAppData
+export class File extends AbstractFile {
 
-    frozen_fields_dict: FROZEN_FIELDS_DICT
-    target_deck: string
-    global_tags: string
-
-    notes_to_add: AnkiConnectNote[]
-    id_indexes: number[]
-    notes_to_edit: AnkiConnectNoteAndID[]
-    notes_to_delete: number[]
     inline_notes_to_add: AnkiConnectNote[]
     inline_id_indexes: number[]
-    all_notes_to_add: AnkiConnectNote[]
-
-    note_ids: number[]
-    card_ids: number[]
-    tags: string[]
-
-    constructor(data: ExternalAppData) {
-        this.data = data
-        this.file = data.file_contents
-        this.url = data.add_file_link ? "obsidian://open?vault=" + encodeURIComponent(data.vault_name) + "&file=" + encodeURIComponent(data.path) : ""
-        this.original_file = this.file
-    }
-
-    setup_frozen_fields_dict() {
-        let frozen_fields_dict: FROZEN_FIELDS_DICT = {}
-        for (let note_type in this.data.fields_dict) {
-            let fields: string[] = this.data.fields_dict[note_type]
-            let temp_dict: Record<string, string> = {}
-            for (let field of fields) {
-                temp_dict[field] = ""
-            }
-            frozen_fields_dict[note_type] = temp_dict
-        }
-        for (let match of this.file.matchAll(this.data.FROZEN_REGEXP)) {
-            const [note_type, fields]: [string, string] = [match[1], match[2]]
-            const virtual_note = note_type + "\n" + fields
-            const parsed_fields: Record<string, string> = new Note(virtual_note, this.data.fields_dict, this.data.curly_cloze).getFields()
-            frozen_fields_dict[note_type] = parsed_fields
-        }
-        this.frozen_fields_dict = frozen_fields_dict
-    }
-
-    setup_target_deck() {
-        const result = this.file.match(this.data.DECK_REGEXP)
-        this.target_deck = result ? result[1] : this.data.template["deckName"]
-    }
-
-    setup_global_tags() {
-        const result = this.file.match(this.data.TAG_REGEXP)
-        this.global_tags = result ? result[1] : ""
-    }
-
-    getHash(): string {
-        return Md5.hashStr(this.file) as string
-    }
 
     setupScan() {
         this.setup_frozen_fields_dict()
@@ -254,22 +259,12 @@ export class File {
         }
     }
 
-    scanDeletions() {
-        for (let match of this.file.matchAll(this.data.EMPTY_REGEXP)) {
-            this.notes_to_delete.push(parseInt(match[1]))
-        }
-    }
-
     scanFile() {
         this.setupScan()
         this.scanNotes()
         this.scanInlineNotes()
         this.all_notes_to_add = this.notes_to_add.concat(this.inline_notes_to_add)
         this.scanDeletions()
-    }
-
-    setNoteIDs(note_ids: number[]) {
-        this.note_ids = note_ids
     }
 
     writeIDs() {
@@ -290,72 +285,6 @@ export class File {
             }
         }
         this.file = string_insert(this.file, normal_inserts.concat(inline_inserts))
-    }
-
-    removeEmpties() {
-        this.file = this.file.replaceAll(this.data.EMPTY_REGEXP, "")
-    }
-
-    getAddNotes(): AnkiConnect.AnkiConnectRequest {
-        let actions: AnkiConnect.AnkiConnectRequest[] = []
-        for (let note of this.notes_to_add) {
-            actions.push(AnkiConnect.addNote(note))
-        }
-        return AnkiConnect.multi(actions)
-    }
-
-    getDeleteNotes(): AnkiConnect.AnkiConnectRequest {
-        return AnkiConnect.deleteNotes(this.notes_to_delete)
-    }
-
-    getUpdateFields(): AnkiConnect.AnkiConnectRequest {
-        let actions: AnkiConnect.AnkiConnectRequest[] = []
-        for (let parsed of this.notes_to_edit) {
-            actions.push(
-                AnkiConnect.updateNoteFields(
-                    parsed.identifier, parsed.note.fields
-                )
-            )
-        }
-        return AnkiConnect.multi(actions)
-    }
-
-    getNoteInfo(): AnkiConnect.AnkiConnectRequest {
-        let IDs: number[] = []
-        for (let parsed of this.notes_to_edit) {
-            IDs.push(parsed.identifier)
-        }
-        return AnkiConnect.notesInfo(IDs)
-    }
-
-    setCardIDs(card_ids: number[]) {
-        this.card_ids = card_ids
-    }
-
-    getChangeDecks(): AnkiConnect.AnkiConnectRequest {
-        return AnkiConnect.changeDeck(this.card_ids, this.target_deck)
-    }
-
-    setTags(tags: string[]) {
-        this.tags = tags
-    }
-
-    getClearTags(): AnkiConnect.AnkiConnectRequest {
-        let IDs: number[] = []
-        for (let parsed of this.notes_to_edit) {
-            IDs.push(parsed.identifier)
-        }
-        return AnkiConnect.removeTags(IDs, this.tags.join(" "))
-    }
-
-    getAddTags(): AnkiConnect.AnkiConnectRequest {
-        let actions: AnkiConnect.AnkiConnectRequest[] = []
-        for (let parsed of this.notes_to_edit) {
-            actions.push(
-                AnkiConnect.addTags([parsed.identifier], parsed.note.tags.join(" ") + " " + this.global_tags)
-            )
-        }
-        return AnkiConnect.multi(actions)
     }
 
 }
