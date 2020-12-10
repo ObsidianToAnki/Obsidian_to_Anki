@@ -7,6 +7,8 @@ import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
 import * as format from './format'
 
+const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?ID: \d+)/
+
 function id_to_str(identifier:number, inline:boolean = false, comment:boolean = false): string {
     let result = "ID: " + identifier.toString()
     if (comment) {
@@ -101,7 +103,7 @@ abstract class AbstractFile {
     notes_to_delete: number[]
     all_notes_to_add: AnkiConnectNote[]
 
-    note_ids: number[]
+    note_ids: Array<number | null>
     card_ids: number[]
     tags: string[]
 
@@ -156,6 +158,8 @@ abstract class AbstractFile {
     setNoteIDs(note_ids: number[]) {
         this.note_ids = note_ids
     }
+
+    abstract writeIDs(): void
 
     removeEmpties() {
         this.file = this.file.replaceAll(this.data.EMPTY_REGEXP, "")
@@ -298,21 +302,23 @@ export class File extends AbstractFile {
 
     writeIDs() {
         let normal_inserts: [number, string][] = []
-        for (let i in this.id_indexes) {
-            const id_position = this.id_indexes[i]
-            const identifier = this.note_ids[i]
-            if (identifier) {
-                normal_inserts.push([id_position, id_to_str(identifier, false, this.data.comment)])
+        this.id_indexes.forEach(
+            (id_position: number, index: number) => {
+                const identifier: number | null = this.note_ids[index]
+                if (identifier) {
+                    normal_inserts.push([id_position, id_to_str(identifier, false, this.data.comment)])
+                }
             }
-        }
+        )
         let inline_inserts: [number, string][] = []
-        for (let i in this.inline_id_indexes) {
-            const id_position = this.inline_id_indexes[i]
-            const identifier = this.note_ids[i + this.notes_to_add.length] //Since the initial part is all regular notes, then final part is inline notes
-            if (identifier) {
-                inline_inserts.push([id_position, id_to_str(identifier, true, this.data.comment)])
+        this.inline_id_indexes.forEach(
+            (id_position: number, index: number) => {
+                const identifier: number | null = this.note_ids[index + this.notes_to_add.length] //Since the initial part is all regular notes, then final part is inline notes
+                if (identifier) {
+                    inline_inserts.push([id_position, id_to_str(identifier, true, this.data.comment)])
+                }
             }
-        }
+        )
         this.file = string_insert(this.file, normal_inserts.concat(inline_inserts))
     }
 
@@ -436,4 +442,23 @@ export class RegexFile extends AbstractFile {
             this.id_indexes.push(match.index + match[0].length)
         }
     }
+
+    fix_newline_ids() {
+        this.file = this.file.replaceAll(double_regexp, "$1")
+    }
+
+    writeIDs() {
+        let inserts: [number, string][] = []
+        this.id_indexes.forEach(
+            (id_position: number, index: number) => {
+                const identifier: number | null = this.note_ids[index]
+                if (identifier) {
+                    inserts.push([id_position, id_to_str(identifier, false, this.data.comment)])
+                }
+            }
+        )
+        this.file = string_insert(this.file, inserts)
+    }
+
+
 }
