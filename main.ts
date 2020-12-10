@@ -1,4 +1,4 @@
-import { Notice, Plugin, addIcon, TFile } from 'obsidian'
+import { Notice, Plugin, addIcon } from 'obsidian'
 import * as AnkiConnect from './src/anki'
 import { PluginSettings, ParsedSettings } from './src/interfaces/settings-interface'
 import { SettingsTab } from './src/settings'
@@ -129,33 +129,6 @@ export default class MyPlugin extends Plugin {
 		this.added_media = await this.loadAddedMedia()
 		this.file_hashes = await this.loadFileHashes()
 
-		/*
-		this.addStatusBarItem().setText('Status Bar Text');
-		*/
-
-		/*
-		this.addCommand({
-			id: 'open-sample-modal',
-			name: 'Open Sample Modal',
-			//
-			//callback: () => {
-			// 	console.log('Simple Callback');
-			// },
-			//
-			checkCallback: (checking: boolean) => {
-				let leaf = this.app.workspace.activeLeaf;
-				if (leaf) {
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-					return true;
-				}
-				return false;
-			}
-
-		});
-		*/
-
 		this.addSettingTab(new SettingsTab(this.app, this));
 
 		this.addRibbonIcon('anki', 'Obsidian_to_Anki - Scan Vault', async () => {
@@ -171,18 +144,6 @@ export default class MyPlugin extends Plugin {
 			}
 			this.saveAllData()
 		})
-
-		/*
-		this.registerEvent(this.app.on('codemirror', (cm: CodeMirror.Editor) => {
-			console.log('codemirror', cm);
-		}));
-
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-		*/
 	}
 
 	async onunload() {
@@ -191,21 +152,3 @@ export default class MyPlugin extends Plugin {
 		console.log('unloading Obsidian_to_Anki...');
 	}
 }
-
-/*
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		let {contentEl} = this;
-		contentEl.empty();
-	}
-}
-*/
