@@ -1354,9 +1354,21 @@ class File:
     def get_add_notes(self):
         """Get the AnkiConnect-formatted request to add notes."""
         return AnkiConnect.request(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "addNote",
+                    note=note
+                )
+                for note in self.notes_to_add + self.inline_notes_to_add
+            ]
+        )
+        """
+        return AnkiConnect.request(
             "addNotes",
             notes=self.notes_to_add + self.inline_notes_to_add
         )
+        """
 
     def get_delete_notes(self):
         """Get the AnkiConnect-formatted request to delete a note."""
@@ -1692,7 +1704,10 @@ class Directory:
         notes_ids = AnkiConnect.parse(response[0])
         cards_ids = AnkiConnect.parse(response[2])
         for note_ids, file in zip(notes_ids, self.files):
-            file.note_ids = AnkiConnect.parse(note_ids)
+            file.note_ids = [
+                AnkiConnect.parse(response)
+                for response in AnkiConnect.parse(note_ids)
+            ]
         for card_ids, file in zip(cards_ids, self.files):
             file.card_ids = AnkiConnect.parse(card_ids)
         for file in self.files:

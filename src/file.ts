@@ -56,6 +56,84 @@ interface ExternalAppData {
     comment: boolean
 }
 
+abstract class AbstractFile {
+    file: string
+    url: string
+    original_file: string
+    data: ExternalAppData
+
+    frozen_fields_dict: FROZEN_FIELDS_DICT
+    target_deck: string
+    global_tags: string
+
+    notes_to_add: AnkiConnectNote[]
+    id_indexes: number[]
+    notes_to_edit: AnkiConnectNoteAndID[]
+    notes_to_delete: number[]
+    all_notes_to_add: AnkiConnectNote[]
+
+    note_ids: number[]
+    card_ids: number[]
+    tags: string[]
+
+    constructor(data: ExternalAppData) {
+        this.data = data
+        this.file = data.file_contents
+        this.url = data.add_file_link ? "obsidian://open?vault=" + encodeURIComponent(data.vault_name) + "&file=" + encodeURIComponent(data.path) : ""
+        this.original_file = this.file
+    }
+
+    setup_frozen_fields_dict() {
+        let frozen_fields_dict: FROZEN_FIELDS_DICT = {}
+        for (let note_type in this.data.fields_dict) {
+            let fields: string[] = this.data.fields_dict[note_type]
+            let temp_dict: Record<string, string> = {}
+            for (let field of fields) {
+                temp_dict[field] = ""
+            }
+            frozen_fields_dict[note_type] = temp_dict
+        }
+        for (let match of this.file.matchAll(this.data.FROZEN_REGEXP)) {
+            const [note_type, fields]: [string, string] = [match[1], match[2]]
+            const virtual_note = note_type + "\n" + fields
+            const parsed_fields: Record<string, string> = new Note(virtual_note, this.data.fields_dict, this.data.curly_cloze).getFields()
+            frozen_fields_dict[note_type] = parsed_fields
+        }
+        this.frozen_fields_dict = frozen_fields_dict
+    }
+
+    setup_target_deck() {
+        const result = this.file.match(this.data.DECK_REGEXP)
+        this.target_deck = result ? result[1] : this.data.template["deckName"]
+    }
+
+    setup_global_tags() {
+        const result = this.file.match(this.data.TAG_REGEXP)
+        this.global_tags = result ? result[1] : ""
+    }
+
+    getHash(): string {
+        return Md5.hashStr(this.file) as string
+    }
+
+    abstract scanFile(): void
+
+    scanDeletions() {
+        for (let match of this.file.matchAll(this.data.EMPTY_REGEXP)) {
+            this.notes_to_delete.push(parseInt(match[1]))
+        }
+    }
+
+    setNoteIDs(note_ids: number[]) {
+        this.note_ids = note_ids
+    }
+
+    removeEmpties() {
+        this.file = this.file.replaceAll(this.data.EMPTY_REGEXP, "")
+    }
+
+}
+
 export class File {
     file: string
     url: string
@@ -301,9 +379,5 @@ export class File {
             {actions: actions}
         )
     }
-
-
-
-
 
 }
