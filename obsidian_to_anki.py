@@ -1342,10 +1342,7 @@ class File:
 
     def remove_empties(self):
         """Remove empty notes from self.file."""
-        self.file = App.EMPTY_REGEXP.sub(
-            "", self.file
-        )
-        self.file = App.INLINE_EMPTY_REGEXP.sub(
+        self.file = RegexFile.EMPTY_REGEXP.sub(
             "", self.file
         )
 
