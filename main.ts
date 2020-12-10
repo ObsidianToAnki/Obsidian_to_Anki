@@ -1,10 +1,11 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian'
-import { NOTE } from './src/interfaces/note-interface'
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, addIcon, getLinkpath } from 'obsidian'
+import { AnkiConnectNote } from './src/interfaces/note-interface'
 import { basename } from 'path'
 import * as AnkiConnect from './src/anki'
 import { PluginSettings } from './src/interfaces/settings-interface'
 import { SettingsTab } from './src/settings'
 import { Note, InlineNote } from './src/note'
+import { ANKI_ICON } from './src/constants'
 
 /* Declaring initial variables*/
 
@@ -12,34 +13,6 @@ let ID_PREFIX: string = "ID: ";
 
 let TAG_PREFIX: string = "Tags: ";
 let TAG_SEP: string = " ";
-
-const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
-
-function has_clozes(text: string): boolean {
-	/*Checks whether text actually has cloze deletions.*/
-	return ANKI_CLOZE_REGEXP.test(text)
-}
-
-function note_has_clozes(note: NOTE): boolean {
-	/*Checks whether a note has cloze deletions in any of its fields.*/
-	return Array(note.fields.values).some(has_clozes)
-}
-
-function string_insert(text: string, position_inserts: Array<[number, string]>): string {
-	/*Insert strings in position_inserts into text, at indices.
-
-    position_inserts will look like:
-    [(0, "hi"), (3, "hello"), (5, "beep")]*/
-	let offset = 0
-	let sorted_inserts: Array<[number, string]> = position_inserts.sort((a, b):number => a[0] - b[0])
-	for (let insertion of sorted_inserts) {
-		let position = insertion[0]
-		let insert_str = insertion[1]
-		text = text.slice(0, position + offset) + insert_str + text.slice(position + offset)
-		offset += insert_str.length
-	}
-	return text
-}
 
 function spans(pattern: RegExp, text: string): Array<[number, number]> {
 	/*Return a list of span-tuples for matches of pattern in text.*/
@@ -67,23 +40,6 @@ function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number,
 			yield match
 		}
 	}
-}
-
-const test = `Basic
-This is a test.
-Back: Test successful!
-Front: More content
-and even more!!!
-$x = 5$ stuff too.
-# and a markdown heading...
-
-Tags: Help halp holp
-<!--ID: 124090124940-->`
-
-const test2 = "[Basic] This is a test. Back: Test successful! Front: More content Tags: Help halp <!--ID: 124901421-->"
-
-const fields_dict = {
-	Basic: ['Front', 'Back']
 }
 
 export default class MyPlugin extends Plugin {
@@ -169,22 +125,25 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		console.log('loading Obsidian_to_Anki...');
+		addIcon('anki', ANKI_ICON)
 
 		this.settings = await this.loadSettings()
 		this.note_types = Object.keys(this.settings["CUSTOM_REGEXPS"])
 
-		this.addRibbonIcon('dice', 'Sample Plugin', () => {
-			new Notice('This is a notice!');
-		});
+		this.addRibbonIcon('anki', 'Obsidian_to_Anki', () => {
+			new Notice('Cool icon!');
+		})
 
+		/*
 		this.addStatusBarItem().setText('Status Bar Text');
+		*/
 
 		this.addCommand({
 			id: 'open-sample-modal',
 			name: 'Open Sample Modal',
-			// callback: () => {
-			// 	console.log('Simple Callback');
-			// },
+			callback: () => {
+			 	console.log('Simple Callback');
+			 },
 			checkCallback: (checking: boolean) => {
 				let leaf = this.app.workspace.activeLeaf;
 				if (leaf) {
@@ -195,10 +154,12 @@ export default class MyPlugin extends Plugin {
 				}
 				return false;
 			}
+
 		});
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
+		/*
 		this.registerEvent(this.app.on('codemirror', (cm: CodeMirror.Editor) => {
 			console.log('codemirror', cm);
 		}));
@@ -208,6 +169,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		*/
 	}
 
 	async onunload() {
