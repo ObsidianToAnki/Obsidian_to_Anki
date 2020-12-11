@@ -5,6 +5,7 @@ const defaultDescs = {
 	"Tag": "The tag that the plugin automatically adds to any generated cards.",
 	"Deck": "The deck the plugin adds cards to if TARGET DECK is not specified in the file.",
 	"Add File Link": "Append a link to the file that generated the flashcard on the field specified in the table.",
+	"Add Context": "Append 'context' for the card, in the form of path > heading > heading etc, to the field specified in the table.",
 	"CurlyCloze": "Convert {cloze deletions} -> {{c1::cloze deletions}} on note types that have a 'Cloze' in their name.",
 	"Regex": "Scan using the provided custom regexps rather than the START END syntax.",
 	"ID Comments": "Wrap note IDs in a HTML comment."
@@ -131,6 +132,11 @@ export class SettingsTab extends PluginSettingTab {
 		let {containerEl} = this;
 		const plugin = (this as any).plugin
 		let defaults_settings = containerEl.createEl('h3', {text: 'Defaults'})
+
+		// To account for new add context
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Add Context"))) {
+			plugin.settings["Defaults"]["Add Context"] = false
+		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
 			if (typeof plugin.settings["Defaults"][key] === "string") {
 				new Setting(defaults_settings)

@@ -145,25 +145,19 @@ abstract class AbstractFile {
     }
 
     getContextAtIndex(position: number): string {
-        let result: string = this.path
+        let result: string[] = [this.path]
         if (!(this.file_cache.hasOwnProperty('headings'))) {
-            return result
+            return result.join(" > ")
         }
-        let heading_array: string[] = []
         for (let heading of this.file_cache.headings) {
-            console.log("HI")
             if (position < heading.position.start.offset) {
                 //We've gone past position now with headings, so let's return!
-                if (heading_array) {
-                    return result + " > " + heading_array.join(" > ")
-                } else {
-                    return result
-                }
+                return result.join(" > ")
             }
-            heading_array = heading_array.slice(0, heading.level)
-            heading_array.push(heading.heading)
+            result = result.slice(0, heading.level)
+            result.push(heading.heading)
         }
-        return result + " > " + heading_array.join(" > ")
+        return result.join(" > ")
     }
 
     abstract writeIDs(): void
