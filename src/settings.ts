@@ -16,8 +16,7 @@ export class SettingsTab extends PluginSettingTab {
 	setup_table() {
 		let {containerEl} = this;
 		const plugin = (this as any).plugin
-		containerEl.createEl('h3', {text: 'Note type setting'})
-		containerEl.createEl('a', {text: 'For more information check the wiki', href: "https://github.com/Pseudonium/Obsidian_to_Anki/wiki"})
+		containerEl.createEl('h3', {text: 'Note type settings'})
 		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"})
 		let head = note_type_table.createTHead()
 		let header_row = head.insertRow()
@@ -238,6 +237,7 @@ export class SettingsTab extends PluginSettingTab {
 
 		containerEl.empty()
 		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings'})
+		containerEl.createEl('a', {text: 'For more information check the wiki', href: "https://github.com/Pseudonium/Obsidian_to_Anki/wiki"})
 		this.setup_table()
 		this.setup_syntax()
 		this.setup_defaults()
