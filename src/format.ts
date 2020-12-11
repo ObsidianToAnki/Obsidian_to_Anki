@@ -75,6 +75,9 @@ export class FormatConverter {
 	}
 
 	getAndFormatMedias(note_text: string): string {
+		if (!(this.file_cache.hasOwnProperty("embeds"))) {
+			return note_text
+		}
 		for (let embed of this.file_cache.embeds) {
 			if (note_text.includes(embed.original)) {
 				this.detectedMedia.add(embed.link)
@@ -94,6 +97,9 @@ export class FormatConverter {
 	}
 
 	formatLinks(note_text: string): string {
+		if (!(this.file_cache.hasOwnProperty("links"))) {
+			return note_text
+		}
 		for (let link of this.file_cache.links) {
 			note_text = note_text.replaceAll(link.original, '<a href="' + this.getUrlFromLink(link.link) + '">' + link.displayText + "</a>")
 		}
