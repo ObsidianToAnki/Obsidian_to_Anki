@@ -10,7 +10,7 @@ import * as c from './constants'
 import { FormatConverter } from './format'
 import { CachedMetadata } from 'obsidian'
 
-const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?ID: \d+)/
+const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?ID: \d+)/g
 
 function id_to_str(identifier:number, inline:boolean = false, comment:boolean = false): string {
     let result = "ID: " + identifier.toString()
