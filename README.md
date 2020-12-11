@@ -19,7 +19,7 @@ Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It ha
 4. Have [Obsidian](https://obsidian.md/) downloaded
 5. Search the 'Community plugins' list for this plugin
 6. Install the plugin.
-7. In Anki, navigate to Tools->Addons->AnkiConnect->Config, and change it to look like this:
+7. In Anki, navigate to Tools->Addons->AnkiConnect->Config, and change it to look like this: ![AnkiConnect_Config](Images/AnkiConnect_Config.png)
 8. With Anki running in the background, load the plugin. This will generate the plugin settings.
 
 You shouldn't need Anki running to load Obsidian in the future, though of course you will need it for using the plugin!
