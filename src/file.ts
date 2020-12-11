@@ -75,6 +75,7 @@ abstract class AbstractFile {
     url: string
     original_file: string
     data: FileData
+    file_cache: CachedMetadata
 
     frozen_fields_dict: FROZEN_FIELDS_DICT
     target_deck: string
@@ -98,6 +99,7 @@ abstract class AbstractFile {
         this.path = path
         this.url = url
         this.original_file = this.file
+        this.file_cache = file_cache
         this.formatter = new FormatConverter(file_cache, this.data.vault_name)
     }
 
@@ -140,6 +142,22 @@ abstract class AbstractFile {
         for (let match of this.file.matchAll(this.data.EMPTY_REGEXP)) {
             this.notes_to_delete.push(parseInt(match[1]))
         }
+    }
+
+    getContextAtIndex(position: number): string {
+        let result: string[] = [this.path]
+        if (!(this.file_cache.hasOwnProperty('headings'))) {
+            return result.join(" > ")
+        }
+        for (let heading of this.file_cache.headings) {
+            if (position < heading.position.start.offset) {
+                //We've gone past position now with headings, so let's return!
+                return result.join(" > ")
+            }
+            result = result.slice(0, heading.level)
+            result.push(heading.heading)
+        }
+        return result.join(" > ")
     }
 
     abstract writeIDs(): void
@@ -228,7 +246,11 @@ export class File extends AbstractFile {
             let parsed = new Note(
                 note, this.data.fields_dict, this.data.curly_cloze, this.formatter
             ).parse(
-                this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields
+                this.target_deck,
+                this.url,
+                this.frozen_fields_dict,
+                this.data,
+                this.data.add_context ? this.getContextAtIndex(note_match.index) : ""
             )
             if (parsed.identifier == null) {
                 // Need to make sure global_tags get added
@@ -254,7 +276,11 @@ export class File extends AbstractFile {
             let parsed = new InlineNote(
                 note, this.data.fields_dict, this.data.curly_cloze, this.formatter
             ).parse(
-                this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields
+                this.target_deck,
+                this.url,
+                this.frozen_fields_dict,
+                this.data,
+                this.data.add_context ? this.getContextAtIndex(note_match.index) : ""
             )
             if (parsed.identifier == null) {
                 // Need to make sure global_tags get added
@@ -365,7 +391,13 @@ export class RegexFile extends AbstractFile {
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
                 true, true, this.data.curly_cloze, this.formatter
-            ).parse(this.target_deck,this.url,this.frozen_fields_dict, this.data.file_link_fields)
+            ).parse(
+                this.target_deck,
+                this.url,
+                this.frozen_fields_dict,
+                this.data,
+                this.data.add_context ? this.getContextAtIndex(match.index) : ""
+            )
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 if (parsed.identifier == CLOZE_ERROR) {
                     continue
@@ -384,7 +416,13 @@ export class RegexFile extends AbstractFile {
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
                 false, true, this.data.curly_cloze, this.formatter
-            ).parse(this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields)
+            ).parse(
+                this.target_deck,
+                this.url,
+                this.frozen_fields_dict,
+                this.data,
+                this.data.add_context ? this.getContextAtIndex(match.index) : ""
+            )
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 if (parsed.identifier == CLOZE_ERROR) {
                     continue
@@ -403,7 +441,13 @@ export class RegexFile extends AbstractFile {
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
                 true, false, this.data.curly_cloze, this.formatter
-            ).parse(this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields)
+            ).parse(
+                this.target_deck,
+                this.url,
+                this.frozen_fields_dict,
+                this.data,
+                this.data.add_context ? this.getContextAtIndex(match.index) : ""
+            )
             if (parsed.identifier == CLOZE_ERROR) {
                 continue
             }
@@ -420,7 +464,13 @@ export class RegexFile extends AbstractFile {
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
                 false, false, this.data.curly_cloze, this.formatter
-            ).parse(this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields)
+            ).parse(
+                this.target_deck,
+                this.url,
+                this.frozen_fields_dict,
+                this.data,
+                this.data.add_context ? this.getContextAtIndex(match.index) : ""
+            )
             if (parsed.identifier == CLOZE_ERROR) {
                 //console.log("Note has no cloze deletions!")
                 continue

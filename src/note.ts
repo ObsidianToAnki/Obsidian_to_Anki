@@ -6,6 +6,7 @@ Does NOT deal with finding the note in the file.*/
 import { FormatConverter } from './format'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'
 import { FIELDS_DICT, FROZEN_FIELDS_DICT } from './interfaces/field-interface'
+import { FileData } from './interfaces/settings-interface'
 
 const TAG_PREFIX:string = "Tags: "
 export const TAG_SEP:string = " "
@@ -79,17 +80,21 @@ abstract class AbstractNote {
 
     abstract getFields(): Record<string, string>
 
-    parse(deck:string, url:string, frozen_fields_dict: FROZEN_FIELDS_DICT, file_link_fields: Record<string, string>): AnkiConnectNoteAndID {
+    parse(deck:string, url:string, frozen_fields_dict: FROZEN_FIELDS_DICT, data: FileData, context:string): AnkiConnectNoteAndID {
         let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
         template["modelName"] = this.note_type
         template["fields"] = this.getFields()
+		const file_link_fields = data.file_link_fields
         if (url) {
             this.formatter.format_note_with_url(template, url, file_link_fields[this.note_type])
         }
         if (Object.keys(frozen_fields_dict).length) {
             this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)
         }
-
+		if (context) {
+			const context_field = data.context_fields[this.note_type]
+			template["fields"][context_field] += context
+		}
         template["tags"].push(...this.tags)
         template["deckName"] = deck
         return {note: template, identifier: this.identifier}
@@ -263,16 +268,21 @@ export class RegexNote {
         return fields
 	}
 
-	parse(deck: string, url: string = "", frozen_fields_dict: FROZEN_FIELDS_DICT, file_link_fields: Record<string, string>): AnkiConnectNoteAndID {
+	parse(deck: string, url: string = "", frozen_fields_dict: FROZEN_FIELDS_DICT, data: FileData, context: string): AnkiConnectNoteAndID {
 		let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
 		template["modelName"] = this.note_type
 		template["fields"] = this.getFields()
+		const file_link_fields = data.file_link_fields
 		if (url) {
             this.formatter.format_note_with_url(template, url, file_link_fields[this.note_type])
         }
         if (Object.keys(frozen_fields_dict).length) {
             this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)
         }
+		if (context) {
+			const context_field = data.context_fields[this.note_type]
+			template["fields"][context_field] += context
+		}
 		if (this.note_type.includes("Cloze") && !(note_has_clozes(template))) {
 			this.identifier = CLOZE_ERROR //An error code that says "don't add this note!"
 		}

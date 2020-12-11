@@ -12,6 +12,7 @@ export async function settingToData(app: App, settings: PluginSettings, fields_d
     result.fields_dict = fields_dict
     result.custom_regexps = settings.CUSTOM_REGEXPS
     result.file_link_fields = settings.FILE_LINK_FIELDS
+    result.context_fields = settings.CONTEXT_FIELDS
     result.template = {
         deckName: settings.Defaults.Deck,
         modelName: "",
@@ -37,6 +38,7 @@ export async function settingToData(app: App, settings: PluginSettings, fields_d
     result.add_file_link = settings.Defaults["Add File Link"]
     result.comment = settings.Defaults["ID Comments"]
     result.regex = settings.Defaults.Regex
+    result.add_context = settings.Defaults["Add Context"]
 
     return result
 }

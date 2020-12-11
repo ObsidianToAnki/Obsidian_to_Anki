@@ -4,6 +4,7 @@ import { AnkiConnectNote } from './note-interface'
 export interface PluginSettings {
 	CUSTOM_REGEXPS: Record<string, string>,
 	FILE_LINK_FIELDS: Record<string, string>,
+	CONTEXT_FIELDS: Record<string, string>
 	Syntax: {
 		"Begin Note": string,
 		"End Note": string,
@@ -18,6 +19,7 @@ export interface PluginSettings {
 		"Tag": string,
 		"Deck": string,
 		"Add File Link": boolean,
+		"Add Context": boolean,
 		"CurlyCloze": boolean,
 		"Regex": boolean,
 		"ID Comments": boolean,
@@ -29,6 +31,7 @@ export interface FileData {
 	fields_dict: FIELDS_DICT
 	custom_regexps: Record<string, string>
 	file_link_fields: Record<string, string>
+	context_fields: Record<string, string>
 	template: AnkiConnectNote
 	EXISTING_IDS: number[]
 	vault_name: string
@@ -42,6 +45,7 @@ export interface FileData {
 
 	curly_cloze: boolean
 	comment: boolean
+	add_context: boolean
 }
 
 export interface ParsedSettings extends FileData {
