@@ -18,6 +18,7 @@ export default class MyPlugin extends Plugin {
 		let settings: PluginSettings = {
 			CUSTOM_REGEXPS: {},
 			FILE_LINK_FIELDS: {},
+			CONTEXT_FIELDS: {},
 			Syntax: {
 				"Begin Note": "START",
 				"End Note": "END",
@@ -32,6 +33,7 @@ export default class MyPlugin extends Plugin {
 				"Tag": "Obsidian_to_Anki",
 				"Deck": "Default",
 				"Add File Link": false,
+				"Add Context": false,
 				"CurlyCloze": false,
 				"Regex": false,
 				"ID Comments": true,

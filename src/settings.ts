@@ -19,14 +19,18 @@ export class SettingsTab extends PluginSettingTab {
 		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"})
 		let head = note_type_table.createTHead()
 		let header_row = head.insertRow()
-		for (let header of ["Note Type", "Custom Regexp", "File Link Field"]) {
+		for (let header of ["Note Type", "Custom Regexp", "File Link Field", "Context Field"]) {
 			let th = document.createElement("th")
 			th.appendChild(document.createTextNode(header))
 			header_row.appendChild(th)
 		}
 		let main_body = note_type_table.createTBody()
+		if (!(plugin.settings.hasOwnProperty("CONTEXT_FIELDS"))) {
+			plugin.settings.CONTEXT_FIELDS = {}
+		}
 		for (let note_type of plugin.note_types) {
 			let row = main_body.insertRow()
+			row.insertCell()
 			row.insertCell()
 			row.insertCell()
 			row.insertCell()
@@ -48,7 +52,7 @@ export class SettingsTab extends PluginSettingTab {
 			custom_regexp.infoEl.remove()
 			custom_regexp.controlEl.className += " anki-center"
 
-			let fields_section = plugin.settings.FILE_LINK_FIELDS
+			let link_fields_section = plugin.settings.FILE_LINK_FIELDS
 			let link_field = new Setting(row_cells[2] as HTMLElement)
 				.addDropdown(
 					async dropdown => {
@@ -71,7 +75,7 @@ export class SettingsTab extends PluginSettingTab {
 							dropdown.addOption(field, field)
 						}
 						dropdown.setValue(
-							fields_section.hasOwnProperty(note_type) ? fields_section[note_type] : field_names[0]
+							link_fields_section.hasOwnProperty(note_type) ? link_fields_section[note_type] : field_names[0]
 						)
 						dropdown.onChange((value) => {
 							plugin.settings.FILE_LINK_FIELDS[note_type] = value
@@ -82,6 +86,27 @@ export class SettingsTab extends PluginSettingTab {
 			link_field.settingEl = row_cells[2] as HTMLElement
 			link_field.infoEl.remove()
 			link_field.controlEl.className += " anki-center"
+
+			let context_fields_section: Record<string, string> = plugin.settings.CONTEXT_FIELDS
+			let context_field = new Setting(row_cells[3] as HTMLElement)
+				.addDropdown(
+					async dropdown => {
+						const field_names = plugin.fields_dict[note_type]
+						for (let field of field_names) {
+							dropdown.addOption(field, field)
+						}
+						dropdown.setValue(
+							context_fields_section.hasOwnProperty(note_type) ? context_fields_section[note_type] : field_names[0]
+						)
+						dropdown.onChange((value) => {
+							plugin.settings.CONTEXT_FIELDS[note_type] = value
+							plugin.saveAllData()
+						})
+					}
+				)
+			context_field.settingEl = row_cells[3] as HTMLElement
+			context_field.infoEl.remove()
+			context_field.controlEl.className += " anki-center"
 		}
 	}
 

@@ -75,6 +75,7 @@ abstract class AbstractFile {
     url: string
     original_file: string
     data: FileData
+    file_cache: CachedMetadata
 
     frozen_fields_dict: FROZEN_FIELDS_DICT
     target_deck: string
@@ -98,6 +99,7 @@ abstract class AbstractFile {
         this.path = path
         this.url = url
         this.original_file = this.file
+        this.file_cache = file_cache
         this.formatter = new FormatConverter(file_cache, this.data.vault_name)
     }
 
