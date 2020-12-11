@@ -75,7 +75,7 @@ export class FormatConverter {
 
 	curly_to_cloze(text: string): string {
 		/*Change text in curly brackets to Anki-formatted cloze.*/
-		text = text.replaceAll(CLOZE_REGEXP, this.cloze_repl)
+		text = text.replace(CLOZE_REGEXP, this.cloze_repl)
 		cloze_unset_num = 1
 		return text
 	}
@@ -88,10 +88,10 @@ export class FormatConverter {
 			if (note_text.includes(embed.original)) {
 				this.detectedMedia.add(embed.link)
 				if (AUDIO_EXTS.includes(extname(embed.link))) {
-					note_text = note_text.replaceAll(embed.original, "[sound:" + basename(embed.link) + "]")
+					note_text = note_text.replace(new RegExp(c.escapeRegex(embed.original), "g"), "[sound:" + basename(embed.link) + "]")
 				} else if (IMAGE_EXTS.includes(extname(embed.link))) {
-					note_text = note_text.replaceAll(
-						embed.original,
+					note_text = note_text.replace(
+						new RegExp(c.escapeRegex(embed.original), "g"),
 						'<img src="' + basename(embed.link) + '" alt="' + embed.displayText + '">'
 					)
 				} else {
@@ -107,7 +107,7 @@ export class FormatConverter {
 			return note_text
 		}
 		for (let link of this.file_cache.links) {
-			note_text = note_text.replaceAll(link.original, '<a href="' + this.getUrlFromLink(link.link) + '">' + link.displayText + "</a>")
+			note_text = note_text.replace(new RegExp(c.escapeRegex(link.original), "g"), '<a href="' + this.getUrlFromLink(link.link) + '">' + link.displayText + "</a>")
 		}
 		return note_text
 	}
@@ -118,7 +118,7 @@ export class FormatConverter {
 		for (let match of note_text.matchAll(regexp)) {
 			matches.push(match[0])
 		}
-		return [note_text.replaceAll(regexp, mask), matches]
+		return [note_text.replace(regexp, mask), matches]
 	}
 
 	decensor(note_text: string, mask:string, replacements: string[]): string {
