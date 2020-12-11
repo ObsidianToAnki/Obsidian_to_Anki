@@ -1,4 +1,4 @@
-/*Performing script operations on markdown file contents*/
+/*Performing plugin operations on markdown file contents*/
 
 import { FROZEN_FIELDS_DICT } from './interfaces/field-interface'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'

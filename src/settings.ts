@@ -173,7 +173,7 @@ export class SettingsTab extends PluginSettingTab {
 			.setName("Clear Media Cache")
 			.setDesc(`Clear the cached list of media filenames that have been added to Anki.
 
-			The script will skip over adding a media file if it's added a file with the same name before, so clear this if e.g. you've updated the media file with the same name.`)
+			The plugin will skip over adding a media file if it's added a file with the same name before, so clear this if e.g. you've updated the media file with the same name.`)
 			.addButton(
 				button => {
 					button.setButtonText("Clear").setClass("mod-cta")
@@ -186,9 +186,9 @@ export class SettingsTab extends PluginSettingTab {
 			)
 		new Setting(action_buttons)
 			.setName("Clear File Hash Cache")
-			.setDesc(`Clear the cached dictionary of file hashes that the script has scanned before.
+			.setDesc(`Clear the cached dictionary of file hashes that the plugin has scanned before.
 
-			The script will skip over a file if the file path and the hash is unaltered.`)
+			The plugin will skip over a file if the file path and the hash is unaltered.`)
 			.addButton(
 				button => {
 					button.setButtonText("Clear").setClass("mod-cta")
