@@ -8,7 +8,7 @@ Now an Obsidian plugin!
 
 Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It has a ton of information, including setup instructions for new users. I will include a copy of the instructions here:
 
-### Setup
+## Setup
 
 ### All users
 1. Install the latest version of [Python](https://www.python.org/downloads/).
@@ -55,7 +55,7 @@ Current features (check out the wiki for more details):
 * **Inline Notes** - Shorter syntax for typing out notes on a single line.
 * **Easy cloze formatting** - A more compact syntax to do Cloze text
 * **Frozen Fields**
-* **Obsidian integration** - Currently, this only includes a link to the file that made the flashcard, appended to the first field of your card.
+* **Obsidian integration** - A link to the file that made the flashcard, full link and image embed support.
 * **Custom syntax** - Using **regular expressions**, add custom syntax to generate **notes that make sense for you.** Some examples:
   * RemNote single-line style. `This is how to use::Remnote single-line style`  
   ![Remnote 1](Images/Remnote_1.png)
