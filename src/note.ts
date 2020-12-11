@@ -9,6 +9,8 @@ import { FIELDS_DICT, FROZEN_FIELDS_DICT } from './interfaces/field-interface'
 
 const TAG_PREFIX:string = "Tags: "
 export const TAG_SEP:string = " "
+export const ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
+export const TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
 
 const NOTE_DICT_TEMPLATE: AnkiConnectNote = {
 	deckName: "",
@@ -31,7 +33,12 @@ function has_clozes(text: string): boolean {
 
 function note_has_clozes(note: AnkiConnectNote): boolean {
 	/*Checks whether a note has cloze deletions in any of its fields.*/
-	return Array(note.fields.values).some(has_clozes)
+	for (let i in note.fields) {
+		if (has_clozes(note.fields[i])) {
+			return true
+		}
+	}
+	return false
 }
 
 abstract class AbstractNote {
@@ -48,7 +55,7 @@ abstract class AbstractNote {
     formatter: FormatConverter
     curly_cloze: boolean
 
-    constructor(note_text: string, fields_dict: FIELDS_DICT, curly_cloze: boolean = false) {
+    constructor(note_text: string, fields_dict: FIELDS_DICT, curly_cloze: boolean, formatter: FormatConverter) {
         this.text = note_text.trim()
         this.current_field_num = 0
         this.delete = false
@@ -58,7 +65,7 @@ abstract class AbstractNote {
         this.note_type = this.getNoteType()
         this.field_names = fields_dict[this.note_type]
         this.current_field = this.field_names[0]
-        this.formatter = new FormatConverter()
+        this.formatter = formatter
         this.curly_cloze = curly_cloze
     }
 
@@ -72,12 +79,12 @@ abstract class AbstractNote {
 
     abstract getFields(): Record<string, string>
 
-    parse(deck:string, url:string = "", frozen_fields_dict: FROZEN_FIELDS_DICT = {}): AnkiConnectNoteAndID {
+    parse(deck:string, url:string, frozen_fields_dict: FROZEN_FIELDS_DICT, file_link_fields: Record<string, string>): AnkiConnectNoteAndID {
         let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
         template["modelName"] = this.note_type
         template["fields"] = this.getFields()
         if (url) {
-            this.formatter.format_note_with_url(template, url)
+            this.formatter.format_note_with_url(template, url, file_link_fields[this.note_type])
         }
         if (Object.keys(frozen_fields_dict).length) {
             this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)
@@ -211,8 +218,6 @@ export class InlineNote extends AbstractNote {
 }
 
 export class RegexNote {
-	ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
-	TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
 
 	match: RegExpMatchArray
 	note_type: string
@@ -227,9 +232,10 @@ export class RegexNote {
 			match: RegExpMatchArray,
 			note_type: string,
 			fields_dict: FIELDS_DICT,
-			tags: boolean = false,
-			id: boolean = false,
-			curly_cloze:boolean = false
+			tags: boolean,
+			id: boolean,
+			curly_cloze: boolean,
+			formatter: FormatConverter
 	) {
 		this.match = match
 		this.note_type = note_type
@@ -237,7 +243,7 @@ export class RegexNote {
 		this.tags = tags ? this.match.pop().slice(TAG_PREFIX.length).split(TAG_SEP) : []
 		this.field_names = fields_dict[note_type]
 		this.curly_cloze = curly_cloze
-		this.formatter = new FormatConverter()
+		this.formatter = formatter
 	}
 
 	getFields(): Record<string, string> {
@@ -245,7 +251,7 @@ export class RegexNote {
         for (let field of this.field_names) {
             fields[field] = ""
         }
-		for (let index in this.match) {
+		for (let index in this.match.slice(1)) {
 			fields[this.field_names[index]] = this.match[index]
 		}
 		for (let key in fields) {
@@ -257,19 +263,21 @@ export class RegexNote {
         return fields
 	}
 
-	parse(deck: string, url: string = "", frozen_fields_dict: FROZEN_FIELDS_DICT): AnkiConnectNoteAndID {
+	parse(deck: string, url: string = "", frozen_fields_dict: FROZEN_FIELDS_DICT, file_link_fields: Record<string, string>): AnkiConnectNoteAndID {
 		let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
 		template["modelName"] = this.note_type
 		template["fields"] = this.getFields()
 		if (url) {
-            this.formatter.format_note_with_url(template, url)
+            this.formatter.format_note_with_url(template, url, file_link_fields[this.note_type])
         }
         if (Object.keys(frozen_fields_dict).length) {
             this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)
         }
-		if (this.note_type.includes("Cloze") && !note_has_clozes(template)) {
+		if (this.note_type.includes("Cloze") && !(note_has_clozes(template))) {
 			this.identifier = CLOZE_ERROR //An error code that says "don't add this note!"
 		}
+		template["tags"].push(...this.tags)
+        template["deckName"] = deck
 		return {note: template, identifier: this.identifier}
 	}
 }

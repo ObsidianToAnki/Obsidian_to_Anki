@@ -1,61 +1,23 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, addIcon, getLinkpath } from 'obsidian'
-import { AnkiConnectNote } from './src/interfaces/note-interface'
-import { basename } from 'path'
+import { Notice, Plugin, addIcon } from 'obsidian'
 import * as AnkiConnect from './src/anki'
-import { PluginSettings } from './src/interfaces/settings-interface'
+import { PluginSettings, ParsedSettings } from './src/interfaces/settings-interface'
 import { SettingsTab } from './src/settings'
-import { Note, InlineNote } from './src/note'
 import { ANKI_ICON } from './src/constants'
-
-/* Declaring initial variables*/
-
-let ID_PREFIX: string = "ID: ";
-
-let TAG_PREFIX: string = "Tags: ";
-let TAG_SEP: string = " ";
-
-function spans(pattern: RegExp, text: string): Array<[number, number]> {
-	/*Return a list of span-tuples for matches of pattern in text.*/
-	let output: Array<[number, number]> = []
-	let matches = text.matchAll(pattern)
-	for (let match of matches) {
-		output.push(
-			[match.index, match.index + match.length]
-		)
-	}
-	return output
-}
-
-function contained_in(span: [number, number], spans: Array<[number, number]>): boolean {
-	/*Return whether span is contained in spans (+- 1 leeway)*/
-	return spans.some(
-		(element) => span[0] >= element[0] - 1 && span[1] <= element[1] + 1
-	)
-}
-
-function* findignore(pattern: RegExp, text: string, ignore_spans: Array<[number, number]>): IterableIterator<RegExpMatchArray> {
-	let matches = text.matchAll(pattern)
-	for (let match of matches) {
-		if (!(contained_in([match.index, match.index + match.length], ignore_spans))) {
-			yield match
-		}
-	}
-}
+import { settingToData } from './src/setting-to-data'
+import { FileManager } from './src/files-manager'
 
 export default class MyPlugin extends Plugin {
 
 	settings: PluginSettings
 	note_types: Array<string>
+	fields_dict: Record<string, string[]>
+	added_media: string[]
+	file_hashes: Record<string, string>
 
-	async own_saveData(data_key: string, data: any) {
-		let current_data = await this.loadData()
-		current_data[data_key] = data
-		this.saveData(current_data)
-	}
-
-	async getDefaultSettings() {
+	async getDefaultSettings(): Promise<PluginSettings> {
 		let settings: PluginSettings = {
 			CUSTOM_REGEXPS: {},
+			FILE_LINK_FIELDS: {},
 			Syntax: {
 				"Begin Note": "START",
 				"End Note": "END",
@@ -63,48 +25,112 @@ export default class MyPlugin extends Plugin {
 				"End Inline Note": "ENDI",
 				"Target Deck Line": "TARGET DECK",
 				"File Tags Line": "FILE TAGS",
-				"Delete Regex Note Line": "DELETE",
+				"Delete Note Line": "DELETE",
 				"Frozen Fields Line": "FROZEN"
 			},
 			Defaults: {
-				"Add File Link": false,
 				"Tag": "Obsidian_to_Anki",
 				"Deck": "Default",
+				"Add File Link": false,
 				"CurlyCloze": false,
 				"Regex": false,
 				"ID Comments": true,
 			}
 		}
 		/*Making settings from scratch, so need note types*/
-		for (let note_type of await AnkiConnect.invoke('modelNames') as Array<string>) {
+		this.note_types = await AnkiConnect.invoke('modelNames') as Array<string>
+		this.fields_dict = await this.generateFieldsDict()
+		for (let note_type of this.note_types) {
 			settings["CUSTOM_REGEXPS"][note_type] = ""
+			const field_names: string[] = await AnkiConnect.invoke(
+	            'modelFieldNames', {modelName: note_type}
+	        ) as string[]
+			this.fields_dict[note_type] = field_names
+			settings["FILE_LINK_FIELDS"][note_type] = field_names[0]
 		}
 		return settings
 	}
 
-	async loadSettings() {
+	async generateFieldsDict(): Promise<Record<string, string[]>> {
+		let fields_dict = {}
+		for (let note_type of this.note_types) {
+			const field_names: string[] = await AnkiConnect.invoke(
+				'modelFieldNames', {modelName: note_type}
+			) as string[]
+			fields_dict[note_type] = field_names
+		}
+		return fields_dict
+	}
+
+	async saveDefault(): Promise<void> {
+		const default_sets = await this.getDefaultSettings()
+		this.saveData(
+			{
+				settings: default_sets,
+				"Added Media": [],
+				"File Hashes": {},
+				fields_dict: {}
+			}
+		)
+	}
+
+	async loadSettings(): Promise<PluginSettings> {
 		let current_data = await this.loadData()
-		if (current_data == null) {
+		if (current_data == null || Object.keys(current_data).length != 4) {
+			new Notice("Need to connect to Anki generate default settings...")
 			const default_sets = await this.getDefaultSettings()
 			this.saveData(
 				{
 					settings: default_sets,
 					"Added Media": [],
-					"File Hashes": {}
+					"File Hashes": {},
+					fields_dict: {}
 				}
 			)
+			new Notice("Default settings successfully generated!")
 			return default_sets
 		} else {
 			return current_data.settings
 		}
 	}
 
-	async saveSettings() {
+	async loadAddedMedia(): Promise<string[]> {
+		let current_data = await this.loadData()
+		if (current_data == null) {
+			await this.saveDefault()
+			return []
+		} else {
+			return current_data["Added Media"]
+		}
+	}
+
+	async loadFileHashes(): Promise<Record<string, string>> {
+		let current_data = await this.loadData()
+		if (current_data == null) {
+			await this.saveDefault()
+			return {}
+		} else {
+			return current_data["File Hashes"]
+		}
+	}
+
+	async loadFieldsDict(): Promise<Record<string, string[]>> {
+		let current_data = await this.loadData()
+		if (current_data == null) {
+			await this.saveDefault()
+			const fields_dict = await this.generateFieldsDict()
+			return fields_dict
+		}
+		return current_data.fields_dict
+	}
+
+	async saveAllData(): Promise<void> {
 		this.saveData(
 				{
 					settings: this.settings,
-					"Added Media": [],
-					"File Hashes": {}
+					"Added Media": this.added_media,
+					"File Hashes": this.file_hashes,
+					fields_dict: this.fields_dict
 				}
 		)
 	}
@@ -127,70 +153,59 @@ export default class MyPlugin extends Plugin {
 		console.log('loading Obsidian_to_Anki...');
 		addIcon('anki', ANKI_ICON)
 
-		this.settings = await this.loadSettings()
+		try {
+			this.settings = await this.loadSettings()
+		}
+		catch(e) {
+			new Notice("Couldn't connect to Anki! Check console for error message.")
+			return
+		}
+
 		this.note_types = Object.keys(this.settings["CUSTOM_REGEXPS"])
-
-		this.addRibbonIcon('anki', 'Obsidian_to_Anki', () => {
-			new Notice('Cool icon!');
-		})
-
-		/*
-		this.addStatusBarItem().setText('Status Bar Text');
-		*/
-
-		this.addCommand({
-			id: 'open-sample-modal',
-			name: 'Open Sample Modal',
-			callback: () => {
-			 	console.log('Simple Callback');
-			 },
-			checkCallback: (checking: boolean) => {
-				let leaf = this.app.workspace.activeLeaf;
-				if (leaf) {
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-					return true;
-				}
-				return false;
+		this.fields_dict = await this.loadFieldsDict()
+		if (Object.keys(this.fields_dict).length == 0) {
+			new Notice('Need to connect to Anki to generate fields dictionary...')
+			try {
+				this.fields_dict = await this.generateFieldsDict()
+				new Notice("Fields dictionary successfully generated!")
 			}
-
-		});
+			catch(e) {
+				new Notice("Couldn't connect to Anki! Check console for error message.")
+				return
+			}
+		}
+		this.added_media = await this.loadAddedMedia()
+		this.file_hashes = await this.loadFileHashes()
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		/*
-		this.registerEvent(this.app.on('codemirror', (cm: CodeMirror.Editor) => {
-			console.log('codemirror', cm);
-		}));
-
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-		*/
+		this.addRibbonIcon('anki', 'Obsidian_to_Anki - Scan Vault', async () => {
+			new Notice('Scanning vault, check console for details...');
+			console.log("Checking connection to Anki...")
+			try {
+				const test = await AnkiConnect.invoke('modelNames')
+			}
+			catch(e) {
+				new Notice("Error, couldn't connect to Anki! Check console for error message.")
+				return
+			}
+			const data: ParsedSettings = await settingToData(this.app, this.settings, this.fields_dict)
+			const manager = new FileManager(this.app, data, this.app.vault.getMarkdownFiles(), this.file_hashes, this.added_media)
+			await manager.initialiseFiles()
+			await manager.requests_1()
+			this.added_media = Array.from(manager.added_media_set)
+			const hashes = manager.getHashes()
+			for (let key in hashes) {
+				this.file_hashes[key] = hashes[key]
+			}
+			new Notice("All done! Saving file hashes and added media now...")
+			this.saveAllData()
+		})
 	}
 
 	async onunload() {
 		console.log("Saving settings for Obsidian_to_Anki...")
-		this.saveSettings()
+		this.saveAllData()
 		console.log('unloading Obsidian_to_Anki...');
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		let {contentEl} = this;
-		contentEl.empty();
 	}
 }

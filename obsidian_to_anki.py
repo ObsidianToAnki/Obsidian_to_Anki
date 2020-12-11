@@ -1354,9 +1354,21 @@ class File:
     def get_add_notes(self):
         """Get the AnkiConnect-formatted request to add notes."""
         return AnkiConnect.request(
+            "multi",
+            actions=[
+                AnkiConnect.request(
+                    "addNote",
+                    note=note
+                )
+                for note in self.notes_to_add + self.inline_notes_to_add
+            ]
+        )
+        """
+        return AnkiConnect.request(
             "addNotes",
             notes=self.notes_to_add + self.inline_notes_to_add
         )
+        """
 
     def get_delete_notes(self):
         """Get the AnkiConnect-formatted request to delete a note."""
@@ -1652,22 +1664,22 @@ class Directory:
                 ]
             )
         )
-        logging.info("Updating fields of existing notes...")
-        requests.append(
-            AnkiConnect.request(
-                "multi",
-                actions=[
-                    file.get_update_fields()
-                    for file in self.files
-                ]
-            )
-        )
         logging.info("Getting card IDs of notes to be edited...")
         requests.append(
             AnkiConnect.request(
                 "multi",
                 actions=[
                     file.get_note_info()
+                    for file in self.files
+                ]
+            )
+        )
+        logging.info("Updating fields of existing notes...")
+        requests.append(
+            AnkiConnect.request(
+                "multi",
+                actions=[
+                    file.get_update_fields()
                     for file in self.files
                 ]
             )
@@ -1690,9 +1702,13 @@ class Directory:
     def parse_requests_1(self, requests_1_response, tags):
         response = requests_1_response
         notes_ids = AnkiConnect.parse(response[0])
-        cards_ids = AnkiConnect.parse(response[2])
+        print(notes_ids)
+        cards_ids = AnkiConnect.parse(response[1])
         for note_ids, file in zip(notes_ids, self.files):
-            file.note_ids = AnkiConnect.parse(note_ids)
+            file.note_ids = [
+                AnkiConnect.parse(response)
+                for response in AnkiConnect.parse(note_ids)
+            ]
         for card_ids, file in zip(cards_ids, self.files):
             file.card_ids = AnkiConnect.parse(card_ids)
         for file in self.files:

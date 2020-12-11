@@ -1,51 +1,54 @@
-import { NOTE } from './interfaces/note-interface'
-import { basename } from 'path'
-import { bytesToBase64 } from 'byte-base64'
-import { App } from 'obsidian'
+import { AnkiConnectNote } from './interfaces/note-interface'
+import { basename, extname } from 'path'
 import { Converter } from 'showdown'
+import { CachedMetadata } from 'obsidian'
+import * as c from './constants'
 
-let converter: Converter = new Converter()
+const ANKI_MATH_REGEXP:RegExp = /(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))/g
 
-let OBS_INLINE_MATH_REGEXP: RegExp = /(?<!\$)\$((?=[\S])(?=[^$])[\s\S]*?\S)\$/g
-let OBS_DISPLAY_MATH_REGEXP: RegExp = /\$\$([\s\S]*?)\$\$/g
-let OBS_CODE_REGEXP:RegExp = /(?<!`)`(?=[^`])[\s\S]*?`/g
-let OBS_DISPLAY_CODE_REGEXP:RegExp = /```[\s\S]*?```/g
+const MATH_REPLACE:string = "OBSTOANKIMATH"
+const INLINE_CODE_REPLACE:string = "OBSTOANKICODEINLINE"
+const DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
 
-let ANKI_MATH_REGEXP:RegExp = /(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))/g
+const CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
 
-let MATH_REPLACE:string = "OBSTOANKIMATH"
-let INLINE_CODE_REPLACE:string = "OBSTOANKICODEINLINE"
-let DISPLAY_CODE_REPLACE:string = "OBSTOANKICODEDISPLAY"
+const IMAGE_EXTS: string[] = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".tiff"]
+const AUDIO_EXTS: string[] = [".wav", ".m4a", ".flac", ".mp3", ".wma", ".aac", ".webm"]
 
-let IMAGE_REGEXP:RegExp = /<img alt=".*?" src="(.*?)"/g
-let SOUND_REGEXP:RegExp = /\[sound:(.+)\]/g
-let CLOZE_REGEXP:RegExp = /(?:(?<!{){(?:c?(\d+)[:|])?(?!{))((?:[^\n][\n]?)+?)(?:(?<!})}(?!}))/g
-let URL_REGEXP:RegExp = /https?:\/\//g
+const PARA_OPEN:string = "<p>"
+const PARA_CLOSE:string = "</p>"
 
-let PARA_OPEN:string = "<p>"
-let PARA_CLOSE:string = "</p>"
+let cloze_unset_num: number = 1
+
+let converter: Converter = new Converter({
+	simplifiedAutoLink: true,
+	literalMidWordUnderscores: true,
+	tables: true, tasklists: true,
+	simpleLineBreaks: true,
+	requireSpaceBeforeHeadingText: true
+})
 
 export class FormatConverter {
 
-	cloze_unset_num:number = 1
-	/*
-    media_to_add = {}
-    ADDED_MEDIA: string[] = []
-    app: App
+	file_cache: CachedMetadata
+	vault_name: string
+	detectedMedia: Set<string>
 
-    constructor(app: App, ADDED_MEDIA: string[] = []) {
-        this.ADDED_MEDIA = ADDED_MEDIA
-        this.app = app
-    }
-	*/
-
-	format_note_with_url(note: NOTE, url: string): void {
-		for (let field in note.fields) {
-			note.fields[field] += '<br><a href="' + url + '" class="obsidian-link">Obsidian</a>'
-		}
+	constructor(file_cache: CachedMetadata, vault_name: string) {
+		this.vault_name = vault_name
+		this.file_cache = file_cache
+		this.detectedMedia = new Set()
 	}
 
-	format_note_with_frozen_fields(note: NOTE, frozen_fields_dict: Record<string, Record<string, string>>): void {
+	getUrlFromLink(link: string): string {
+        return "obsidian://open?vault=" + encodeURIComponent(this.vault_name) + "&file=" + encodeURIComponent(link)
+    }
+
+	format_note_with_url(note: AnkiConnectNote, url: string, field: string): void {
+		note.fields[field] += '<br><a href="' + url + '" class="obsidian-link">Obsidian</a>'
+	}
+
+	format_note_with_frozen_fields(note: AnkiConnectNote, frozen_fields_dict: Record<string, Record<string, string>>): void {
 		for (let field in note.fields) {
 			note.fields[field] += frozen_fields_dict[note.modelName][field]
 		}
@@ -53,17 +56,17 @@ export class FormatConverter {
 
 	obsidian_to_anki_math(note_text: string): string {
 		return note_text.replace(
-				OBS_DISPLAY_MATH_REGEXP, "\\[$1\\]"
+				c.OBS_DISPLAY_MATH_REGEXP, "\\[$1\\]"
 		).replace(
-			OBS_INLINE_MATH_REGEXP,
+			c.OBS_INLINE_MATH_REGEXP,
 			"\\($1\\)"
 		)
 	}
 
 	cloze_repl(_1: string, match_id: string, match_content: string): string {
 		if (match_id == undefined) {
-			let result = "{{c" + this.cloze_unset_num.toString() + "::" + match_content + "}}"
-			this.cloze_unset_num += 1
+			let result = "{{c" + cloze_unset_num.toString() + "::" + match_content + "}}"
+			cloze_unset_num += 1
 			return result
 		}
 		let result = "{{c" + match_id + "::" + match_content + "}}"
@@ -73,68 +76,40 @@ export class FormatConverter {
 	curly_to_cloze(text: string): string {
 		/*Change text in curly brackets to Anki-formatted cloze.*/
 		text = text.replaceAll(CLOZE_REGEXP, this.cloze_repl)
-		this.cloze_unset_num = 1
+		cloze_unset_num = 1
 		return text
 	}
 
-	is_url(text: string): boolean {
-		/*Check whether text looks like a url.*/
-		return URL_REGEXP.test(text)
-	}
-
-	/*
-	async get_images(html_text: string) {
-        //Get all the images that need to be added.
-		for (let match of html_text.matchAll(IMAGE_REGEXP)) {
-			let path = match[1]
-			if (this.is_url(path)) {
-				continue
-				//Skips over web-based images
+	getAndFormatMedias(note_text: string): string {
+		if (!(this.file_cache.hasOwnProperty("embeds"))) {
+			return note_text
+		}
+		for (let embed of this.file_cache.embeds) {
+			if (note_text.includes(embed.original)) {
+				this.detectedMedia.add(embed.link)
+				if (AUDIO_EXTS.includes(extname(embed.link))) {
+					note_text = note_text.replaceAll(embed.original, "[sound:" + basename(embed.link) + "]")
+				} else if (IMAGE_EXTS.includes(extname(embed.link))) {
+					note_text = note_text.replaceAll(
+						embed.original,
+						'<img src="' + basename(embed.link) + '" alt="' + embed.displayText + '">'
+					)
+				} else {
+					console.log("Unsupported extension: ", extname(embed.link))
+				}
 			}
-			path = decodeURI(path)
-			let filename = basename(path)
-            if (!this.ADDED_MEDIA.includes(filename) && !Object.keys(this.media_to_add).includes(filename)) {
-                this.media_to_add[filename] = bytesToBase64(
-                    new Uint8Array(
-                        await this.app.vault.adapter.readBinary(path)
-                    )
-                )
-            }
 		}
+		return note_text
 	}
 
-    async get_audio(html_text: string) {
-        //Get all the audio that needs to be added.
-        for (let match of html_text.matchAll(SOUND_REGEXP)) {
-            let path = match[1]
-            let filename = basename(path)
-            if (!this.ADDED_MEDIA.includes(filename) && !Object.keys(this.media_to_add).includes(filename)) {
-                this.media_to_add[filename] = bytesToBase64(
-                    new Uint8Array(
-                        await this.app.vault.adapter.readBinary(path)
-                    )
-                )
-            }
-        }
-    }
-	*/
-
-    path_to_filename(match: string, path: string): string {
-		/*Replace the src in match appropriately.*/
-		if (this.is_url(path)) {
-			return match //Don't alter urls!
+	formatLinks(note_text: string): string {
+		if (!(this.file_cache.hasOwnProperty("links"))) {
+			return note_text
 		}
-		path = decodeURI(path)
-		match.replace(path, basename(path))
-		return match
-    }
-
-	fix_image_src(html_text: string): string {
-		return html_text.replace(IMAGE_REGEXP, this.path_to_filename)
-	}
-
-	fix_audio_src(html_text: string): string {
-		return html_text.replace(SOUND_REGEXP, this.path_to_filename)
+		for (let link of this.file_cache.links) {
+			note_text = note_text.replaceAll(link.original, '<a href="' + this.getUrlFromLink(link.link) + '">' + link.displayText + "</a>")
+		}
+		return note_text
 	}
 
 	censor(note_text: string, regexp: RegExp, mask: string): [string, string[]] {
@@ -162,19 +137,17 @@ export class FormatConverter {
 		let inline_code_matches: string[]
 		let display_code_matches: string[]
 		[note_text, math_matches] = this.censor(note_text, ANKI_MATH_REGEXP, MATH_REPLACE);
-		[note_text, inline_code_matches] = this.censor(note_text, OBS_CODE_REGEXP, INLINE_CODE_REPLACE);
-		[note_text, display_code_matches] = this.censor(note_text, OBS_DISPLAY_CODE_REGEXP, DISPLAY_CODE_REPLACE)
+		[note_text, inline_code_matches] = this.censor(note_text, c.OBS_CODE_REGEXP, INLINE_CODE_REPLACE);
+		[note_text, display_code_matches] = this.censor(note_text, c.OBS_DISPLAY_CODE_REGEXP, DISPLAY_CODE_REPLACE)
 		if (cloze) {
 			note_text = this.curly_to_cloze(note_text)
 		}
+		note_text = this.getAndFormatMedias(note_text)
+		note_text = this.formatLinks(note_text)
 		note_text = this.decensor(note_text, INLINE_CODE_REPLACE, inline_code_matches)
 		note_text = this.decensor(note_text, DISPLAY_CODE_REPLACE, display_code_matches)
 		note_text = converter.makeHtml(note_text)
 		note_text = this.decensor(note_text, MATH_REPLACE, math_matches).trim()
-		/* Need to figure out another way to do this
-		this.get_images(note_text)
-		this.get_audio(note_text)
-		*/
 		// Remove unnecessary paragraph tag
 		if (note_text.startsWith(PARA_OPEN) && note_text.endsWith(PARA_CLOSE)) {
 			note_text = note_text.slice(PARA_OPEN.length, -1 * PARA_CLOSE.length)

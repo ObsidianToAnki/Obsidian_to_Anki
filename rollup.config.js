@@ -6,7 +6,7 @@ import nodePolyfills from 'rollup-plugin-node-polyfills'
 export default {
   input: 'main.ts',
   output: {
-    file: 'C:/Users/rubai/Documents/Obsidian/Obsidianzk/.obsidian/plugins/sample-plugin/main.js',
+    file: 'main.js',
     format: 'cjs',
     exports: "default"
   },
