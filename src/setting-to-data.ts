@@ -8,21 +8,14 @@ function escapeRegex(str: string): string {
     return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-export async function settingToData(settings: PluginSettings, app: App): Promise<ParsedSettings> {
+export async function settingToData(app: App, settings: PluginSettings, fields_dict: Record<string, string[]>): Promise<ParsedSettings> {
     let result: ParsedSettings = <ParsedSettings>{}
 
     //Some processing required
     result.vault_name = app.vault.getName()
-    const note_types: string[] = Object.keys(settings["CUSTOM_REGEXPS"])
-    let fields_dict = {}
-    for (let note_type of note_types) {
-        const field_names: string[] = await AnkiConnect.invoke(
-            'modelFieldNames', {modelName: note_type}
-        ) as string[]
-        fields_dict[note_type] = field_names
-    }
     result.fields_dict = fields_dict
     result.custom_regexps = settings.CUSTOM_REGEXPS
+    result.file_link_fields = settings.FILE_LINK_FIELDS
     result.template = {
         deckName: settings.Defaults.Deck,
         modelName: "",

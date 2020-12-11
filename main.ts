@@ -10,18 +10,14 @@ export default class MyPlugin extends Plugin {
 
 	settings: PluginSettings
 	note_types: Array<string>
+	fields_dict: Record<string, string[]>
 	added_media: string[]
 	file_hashes: Record<string, string>
-
-	async own_saveData(data_key: string, data: any): Promise<void> {
-		let current_data = await this.loadData()
-		current_data[data_key] = data
-		this.saveData(current_data)
-	}
 
 	async getDefaultSettings(): Promise<PluginSettings> {
 		let settings: PluginSettings = {
 			CUSTOM_REGEXPS: {},
+			FILE_LINK_FIELDS: {},
 			Syntax: {
 				"Begin Note": "START",
 				"End Note": "END",
@@ -33,19 +29,37 @@ export default class MyPlugin extends Plugin {
 				"Frozen Fields Line": "FROZEN"
 			},
 			Defaults: {
-				"Add File Link": false,
 				"Tag": "Obsidian_to_Anki",
 				"Deck": "Default",
+				"Add File Link": false,
 				"CurlyCloze": false,
 				"Regex": false,
 				"ID Comments": true,
 			}
 		}
 		/*Making settings from scratch, so need note types*/
-		for (let note_type of await AnkiConnect.invoke('modelNames') as Array<string>) {
+		this.note_types = await AnkiConnect.invoke('modelNames') as Array<string>
+		this.fields_dict = await this.generateFieldsDict()
+		for (let note_type of this.note_types) {
 			settings["CUSTOM_REGEXPS"][note_type] = ""
+			const field_names: string[] = await AnkiConnect.invoke(
+	            'modelFieldNames', {modelName: note_type}
+	        ) as string[]
+			this.fields_dict[note_type] = field_names
+			settings["FILE_LINK_FIELDS"][note_type] = field_names[0]
 		}
 		return settings
+	}
+
+	async generateFieldsDict(): Promise<Record<string, string[]>> {
+		let fields_dict = {}
+		for (let note_type of this.note_types) {
+			const field_names: string[] = await AnkiConnect.invoke(
+				'modelFieldNames', {modelName: note_type}
+			) as string[]
+			fields_dict[note_type] = field_names
+		}
+		return fields_dict
 	}
 
 	async saveDefault(): Promise<void> {
@@ -54,22 +68,26 @@ export default class MyPlugin extends Plugin {
 			{
 				settings: default_sets,
 				"Added Media": [],
-				"File Hashes": {}
+				"File Hashes": {},
+				fields_dict: {}
 			}
 		)
 	}
 
 	async loadSettings(): Promise<PluginSettings> {
 		let current_data = await this.loadData()
-		if (current_data == null) {
+		if (current_data == null || Object.keys(current_data).length != 4) {
+			new Notice("Need to connect to Anki generate default settings...")
 			const default_sets = await this.getDefaultSettings()
 			this.saveData(
 				{
 					settings: default_sets,
 					"Added Media": [],
-					"File Hashes": {}
+					"File Hashes": {},
+					fields_dict: {}
 				}
 			)
+			new Notice("Default settings successfully generated!")
 			return default_sets
 		} else {
 			return current_data.settings
@@ -96,12 +114,23 @@ export default class MyPlugin extends Plugin {
 		}
 	}
 
+	async loadFieldsDict(): Promise<Record<string, string[]>> {
+		let current_data = await this.loadData()
+		if (current_data == null) {
+			await this.saveDefault()
+			const fields_dict = await this.generateFieldsDict()
+			return fields_dict
+		}
+		return current_data.fields_dict
+	}
+
 	async saveAllData(): Promise<void> {
 		this.saveData(
 				{
 					settings: this.settings,
 					"Added Media": this.added_media,
-					"File Hashes": this.file_hashes
+					"File Hashes": this.file_hashes,
+					fields_dict: this.fields_dict
 				}
 		)
 	}
@@ -124,8 +153,27 @@ export default class MyPlugin extends Plugin {
 		console.log('loading Obsidian_to_Anki...');
 		addIcon('anki', ANKI_ICON)
 
-		this.settings = await this.loadSettings()
+		try {
+			this.settings = await this.loadSettings()
+		}
+		catch(e) {
+			new Notice("Couldn't connect to Anki! Check console for error message.")
+			return
+		}
+
 		this.note_types = Object.keys(this.settings["CUSTOM_REGEXPS"])
+		this.fields_dict = await this.loadFieldsDict()
+		if (Object.keys(this.fields_dict).length == 0) {
+			new Notice('Need to connect to Anki to generate fields dictionary...')
+			try {
+				this.fields_dict = await this.generateFieldsDict()
+				new Notice("Fields dictionary successfully generated!")
+			}
+			catch(e) {
+				new Notice("Couldn't connect to Anki! Check console for error message.")
+				return
+			}
+		}
 		this.added_media = await this.loadAddedMedia()
 		this.file_hashes = await this.loadFileHashes()
 
@@ -133,7 +181,15 @@ export default class MyPlugin extends Plugin {
 
 		this.addRibbonIcon('anki', 'Obsidian_to_Anki - Scan Vault', async () => {
 			new Notice('Scanning vault, check console for details...');
-			const data: ParsedSettings = await settingToData(this.settings, this.app)
+			console.log("Checking connection to Anki...")
+			try {
+				const test = await AnkiConnect.invoke('modelNames')
+			}
+			catch(e) {
+				new Notice("Error, couldn't connect to Anki! Check console for error message.")
+				return
+			}
+			const data: ParsedSettings = await settingToData(this.app, this.settings, this.fields_dict)
 			const manager = new FileManager(this.app, data, this.app.vault.getMarkdownFiles(), this.file_hashes, this.added_media)
 			await manager.initialiseFiles()
 			await manager.requests_1()
@@ -142,6 +198,7 @@ export default class MyPlugin extends Plugin {
 			for (let key in hashes) {
 				this.file_hashes[key] = hashes[key]
 			}
+			new Notice("All done! Saving file hashes and added media now...")
 			this.saveAllData()
 		})
 	}

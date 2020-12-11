@@ -228,7 +228,7 @@ export class File extends AbstractFile {
             let parsed = new Note(
                 note, this.data.fields_dict, this.data.curly_cloze, this.formatter
             ).parse(
-                this.target_deck, this.url, this.frozen_fields_dict
+                this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields
             )
             if (parsed.identifier == null) {
                 // Need to make sure global_tags get added
@@ -251,7 +251,7 @@ export class File extends AbstractFile {
             let parsed = new InlineNote(
                 note, this.data.fields_dict, this.data.curly_cloze, this.formatter
             ).parse(
-                this.target_deck, this.url, this.frozen_fields_dict
+                this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields
             )
             if (parsed.identifier == null) {
                 // Need to make sure global_tags get added
@@ -359,7 +359,7 @@ export class RegexFile extends AbstractFile {
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
                 true, true, this.data.curly_cloze, this.formatter
-            ).parse(this.target_deck,this.url,this.frozen_fields_dict)
+            ).parse(this.target_deck,this.url,this.frozen_fields_dict, this.data.file_link_fields)
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
@@ -375,7 +375,7 @@ export class RegexFile extends AbstractFile {
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
                 false, true, this.data.curly_cloze, this.formatter
-            ).parse(this.target_deck, this.url, this.frozen_fields_dict)
+            ).parse(this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields)
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
@@ -391,7 +391,7 @@ export class RegexFile extends AbstractFile {
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
                 true, false, this.data.curly_cloze, this.formatter
-            ).parse(this.target_deck, this.url, this.frozen_fields_dict)
+            ).parse(this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields)
             if (parsed.identifier == CLOZE_ERROR) {
                 continue
             }
@@ -408,7 +408,7 @@ export class RegexFile extends AbstractFile {
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
                 false, false, this.data.curly_cloze, this.formatter
-            ).parse(this.target_deck, this.url, this.frozen_fields_dict)
+            ).parse(this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields)
             if (parsed.identifier == CLOZE_ERROR) {
                 console.log("Note has no cloze deletions!")
                 continue

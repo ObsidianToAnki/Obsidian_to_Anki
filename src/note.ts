@@ -79,12 +79,12 @@ abstract class AbstractNote {
 
     abstract getFields(): Record<string, string>
 
-    parse(deck:string, url:string = "", frozen_fields_dict: FROZEN_FIELDS_DICT = {}): AnkiConnectNoteAndID {
+    parse(deck:string, url:string, frozen_fields_dict: FROZEN_FIELDS_DICT, file_link_fields: Record<string, string>): AnkiConnectNoteAndID {
         let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
         template["modelName"] = this.note_type
         template["fields"] = this.getFields()
         if (url) {
-            this.formatter.format_note_with_url(template, url)
+            this.formatter.format_note_with_url(template, url, file_link_fields[this.note_type])
         }
         if (Object.keys(frozen_fields_dict).length) {
             this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)
@@ -263,12 +263,12 @@ export class RegexNote {
         return fields
 	}
 
-	parse(deck: string, url: string = "", frozen_fields_dict: FROZEN_FIELDS_DICT): AnkiConnectNoteAndID {
+	parse(deck: string, url: string = "", frozen_fields_dict: FROZEN_FIELDS_DICT, file_link_fields: Record<string, string>): AnkiConnectNoteAndID {
 		let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
 		template["modelName"] = this.note_type
 		template["fields"] = this.getFields()
 		if (url) {
-            this.formatter.format_note_with_url(template, url)
+            this.formatter.format_note_with_url(template, url, file_link_fields[this.note_type])
         }
         if (Object.keys(frozen_fields_dict).length) {
             this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)

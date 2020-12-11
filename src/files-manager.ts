@@ -245,6 +245,7 @@ export class FileManager {
         requests.push(AnkiConnect.multi(temp))
         temp = []
         await AnkiConnect.invoke('multi', {actions: requests})
+        console.log("All done!")
     }
 
 

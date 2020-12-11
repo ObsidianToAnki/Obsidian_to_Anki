@@ -38,10 +38,8 @@ export class FormatConverter {
         return "obsidian://open?vault=" + encodeURIComponent(this.vault_name) + "&file=" + encodeURIComponent(link)
     }
 
-	format_note_with_url(note: AnkiConnectNote, url: string): void {
-		for (let field in note.fields) {
-			note.fields[field] += '<br><a href="' + url + '" class="obsidian-link">Obsidian</a>'
-		}
+	format_note_with_url(note: AnkiConnectNote, url: string, field: string): void {
+		note.fields[field] += '<br><a href="' + url + '" class="obsidian-link">Obsidian</a>'
 	}
 
 	format_note_with_frozen_fields(note: AnkiConnectNote, frozen_fields_dict: Record<string, Record<string, string>>): void {
