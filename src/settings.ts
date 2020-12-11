@@ -180,6 +180,7 @@ export class SettingsTab extends PluginSettingTab {
 					.onClick(async () => {
 						plugin.added_media = []
 						await plugin.saveAllData()
+						new Notice("Media Cache cleared successfully!")
 					})
 				}
 			)
@@ -194,6 +195,7 @@ export class SettingsTab extends PluginSettingTab {
 					.onClick(async () => {
 						plugin.file_hashes = {}
 						await plugin.saveAllData()
+						new Notice("File Hash Cache cleared successfully!")
 					})
 				}
 			)
