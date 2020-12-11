@@ -237,6 +237,9 @@ export class File extends AbstractFile {
                 this.id_indexes.push(position)
             } else if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 // Need to show an error
+                if (parsed.identifier == CLOZE_ERROR) {
+                    continue
+                }
                 console.log("Warning! note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
@@ -260,6 +263,9 @@ export class File extends AbstractFile {
                 this.inline_id_indexes.push(position)
             } else if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
                 // Need to show an error
+                if (parsed.identifier == CLOZE_ERROR) {
+                    continue
+                }
                 console.log("Warning! note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
@@ -361,6 +367,9 @@ export class RegexFile extends AbstractFile {
                 true, true, this.data.curly_cloze, this.formatter
             ).parse(this.target_deck,this.url,this.frozen_fields_dict, this.data.file_link_fields)
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
+                if (parsed.identifier == CLOZE_ERROR) {
+                    continue
+                }
                 console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
@@ -377,6 +386,9 @@ export class RegexFile extends AbstractFile {
                 false, true, this.data.curly_cloze, this.formatter
             ).parse(this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields)
             if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
+                if (parsed.identifier == CLOZE_ERROR) {
+                    continue
+                }
                 console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
@@ -410,7 +422,7 @@ export class RegexFile extends AbstractFile {
                 false, false, this.data.curly_cloze, this.formatter
             ).parse(this.target_deck, this.url, this.frozen_fields_dict, this.data.file_link_fields)
             if (parsed.identifier == CLOZE_ERROR) {
-                console.log("Note has no cloze deletions!")
+                //console.log("Note has no cloze deletions!")
                 continue
             }
             parsed.note.tags.push(...this.global_tags.split(TAG_SEP))
@@ -429,7 +441,7 @@ export class RegexFile extends AbstractFile {
             (id_position: number, index: number) => {
                 const identifier: number | null = this.note_ids[index]
                 if (identifier) {
-                    inserts.push([id_position, id_to_str(identifier, false, this.data.comment)])
+                    inserts.push([id_position, "\n" + id_to_str(identifier, false, this.data.comment)])
                 }
             }
         )
