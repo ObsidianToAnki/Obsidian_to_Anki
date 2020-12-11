@@ -71,7 +71,7 @@ export class FileManager {
     }
 
     getUrl(file: TFile): string {
-        return "obsidian://open?vault=" + encodeURIComponent(this.data.vault_name) + "&file=" + encodeURIComponent(file.path)
+        return "obsidian://open?vault=" + encodeURIComponent(this.data.vault_name) + String.raw`&file=` + encodeURIComponent(file.path)
     }
 
     async initialiseFiles() {
@@ -180,15 +180,27 @@ export class FileManager {
 
     async parse_requests_1() {
         const response = this.requests_1_result as Requests1Result
-        const note_ids_array_by_file = AnkiConnect.parse(response[0])
+        let note_ids_array_by_file: Requests1Result[0]["result"]
+        try {
+            note_ids_array_by_file = AnkiConnect.parse(response[0])
+        } catch(error) {
+            console.log("Error: ", error)
+            note_ids_array_by_file = response[0].result
+        }
         const note_info_array_by_file = AnkiConnect.parse(response[1])
         const tag_list: string[] = AnkiConnect.parse(response[2])
         for (let index in note_ids_array_by_file) {
             let i: number = parseInt(index)
             let file = this.ownFiles[i]
-            const file_response = note_ids_array_by_file[i]
+            let file_response: addNoteResponse[]
+            try {
+                file_response = AnkiConnect.parse(note_ids_array_by_file[i])
+            } catch(error) {
+                console.log("Error: ", error)
+                file_response = note_ids_array_by_file[i].result
+            }
             file.note_ids = []
-            for (let response of AnkiConnect.parse(file_response)) {
+            for (let response of file_response) {
                 file.note_ids.push(AnkiConnect.parse(response))
             }
         }
