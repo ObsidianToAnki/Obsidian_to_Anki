@@ -20,7 +20,13 @@ const PARA_CLOSE:string = "</p>"
 
 let cloze_unset_num: number = 1
 
-let converter: Converter = new Converter()
+let converter: Converter = new Converter({
+	simplifiedAutoLink: true,
+	literalMidWordUnderscores: true,
+	tables: true, tasklists: true,
+	simpleLineBreaks: true,
+	requireSpaceBeforeHeadingText: true
+})
 
 export class FormatConverter {
 
