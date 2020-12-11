@@ -37,6 +37,7 @@ export async function settingToData(app: App, settings: PluginSettings, fields_d
     result.add_file_link = settings.Defaults["Add File Link"]
     result.comment = settings.Defaults["ID Comments"]
     result.regex = settings.Defaults.Regex
+    result.add_context = settings.Defaults["Add Context"]
 
     return result
 }

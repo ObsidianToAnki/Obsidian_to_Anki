@@ -45,6 +45,7 @@ export interface FileData {
 
 	curly_cloze: boolean
 	comment: boolean
+	add_context: boolean
 }
 
 export interface ParsedSettings extends FileData {
