@@ -2,11 +2,7 @@ import { PluginSettings, ParsedSettings } from './interfaces/settings-interface'
 import { App } from 'obsidian'
 import * as AnkiConnect from './anki'
 import { ID_REGEXP_STR } from './note'
-
-function escapeRegex(str: string): string {
-    // Got from stackoverflow - https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
-    return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-}
+import { escapeRegex } from './constants'
 
 export async function settingToData(app: App, settings: PluginSettings, fields_dict: Record<string, string[]>): Promise<ParsedSettings> {
     let result: ParsedSettings = <ParsedSettings>{}

@@ -145,7 +145,7 @@ abstract class AbstractFile {
     abstract writeIDs(): void
 
     removeEmpties() {
-        this.file = this.file.replaceAll(this.data.EMPTY_REGEXP, "")
+        this.file = this.file.replace(this.data.EMPTY_REGEXP, "")
     }
 
     getAddNotes(): AnkiConnect.AnkiConnectRequest {
@@ -432,7 +432,7 @@ export class RegexFile extends AbstractFile {
     }
 
     fix_newline_ids() {
-        this.file = this.file.replaceAll(double_regexp, "$1")
+        this.file = this.file.replace(double_regexp, "$1")
     }
 
     writeIDs() {
