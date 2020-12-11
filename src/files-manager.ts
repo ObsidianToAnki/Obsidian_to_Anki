@@ -81,16 +81,21 @@ export class FileManager {
             await this.genFiles()
         }
         let files_changed: Array<File | RegexFile> = []
-        for (let file of this.ownFiles) {
+        let obfiles_changed: TFile[] = []
+        for (let index in this.ownFiles) {
+            const i = parseInt(index)
+            let file = this.ownFiles[i]
             if (this.file_hashes.hasOwnProperty(file.path) && file.getHash() === this.file_hashes[file.path]) {
                 //Indicates we've seen it in a scan before
                 console.log("Skipping ", file.path, "as we've scanned it before.")
             } else {
                 file.scanFile()
                 files_changed.push(file)
+                obfiles_changed.push(this.files[i])
             }
         }
         this.ownFiles = files_changed
+        this.files = obfiles_changed
     }
 
     async genRegexFiles() {
