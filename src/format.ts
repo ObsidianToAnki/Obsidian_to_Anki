@@ -41,7 +41,7 @@ export class FormatConverter {
 	}
 
 	getUrlFromLink(link: string): string {
-        return "obsidian://open?vault=" + encodeURIComponent(this.vault_name) + "&file=" + encodeURIComponent(link)
+        return "obsidian://open?vault=" + encodeURIComponent(this.vault_name) + String.raw`&file=` + encodeURIComponent(link)
     }
 
 	format_note_with_url(note: AnkiConnectNote, url: string, field: string): void {
