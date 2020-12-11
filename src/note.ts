@@ -17,7 +17,7 @@ const NOTE_DICT_TEMPLATE: AnkiConnectNote = {
 	modelName: "",
 	fields: {},
 	options: {
-		allowDuplicate: false,
+		allowDuplicate: true,
 		duplicateScope: "deck",
 	},
 	tags: ["Obsidian_to_Anki"],
@@ -252,7 +252,7 @@ export class RegexNote {
             fields[field] = ""
         }
 		for (let index in this.match.slice(1)) {
-			fields[this.field_names[index]] = this.match[index]
+			fields[this.field_names[index]] = this.match.slice(1)[index] ? this.match.slice(1)[index] : ""
 		}
 		for (let key in fields) {
             fields[key] = this.formatter.format(
