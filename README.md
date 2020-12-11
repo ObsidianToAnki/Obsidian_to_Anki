@@ -8,7 +8,7 @@ Now an Obsidian plugin!
 
 Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It has a ton of information, including setup instructions for new users. I will include a copy of the instructions here:
 
-### Setup
+## Setup
 
 ### All users
 1. Install the latest version of [Python](https://www.python.org/downloads/).
