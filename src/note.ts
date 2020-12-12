@@ -72,7 +72,7 @@ abstract class AbstractNote {
     abstract getFields(): Record<string, string>
 
     parse(deck:string, url:string, frozen_fields_dict: FROZEN_FIELDS_DICT, data: FileData, context:string): AnkiConnectNoteAndID {
-        let template = data.template
+        let template = JSON.parse(JSON.stringify(data.template))
         template["modelName"] = this.note_type
         template["fields"] = this.getFields()
 		const file_link_fields = data.file_link_fields
@@ -266,7 +266,7 @@ export class RegexNote {
 	}
 
 	parse(deck: string, url: string = "", frozen_fields_dict: FROZEN_FIELDS_DICT, data: FileData, context: string): AnkiConnectNoteAndID {
-		let template = data.template
+		let template = JSON.parse(JSON.stringify(data.template))
 		template["modelName"] = this.note_type
 		template["fields"] = this.getFields()
 		const file_link_fields = data.file_link_fields
