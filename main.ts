@@ -32,6 +32,7 @@ export default class MyPlugin extends Plugin {
 			Defaults: {
 				"Tag": "Obsidian_to_Anki",
 				"Deck": "Default",
+				"Scheduling Interval": 0,
 				"Add File Link": false,
 				"Add Context": false,
 				"CurlyCloze": false,

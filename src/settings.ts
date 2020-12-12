@@ -4,6 +4,7 @@ import * as AnkiConnect from './anki'
 const defaultDescs = {
 	"Tag": "The tag that the plugin automatically adds to any generated cards.",
 	"Deck": "The deck the plugin adds cards to if TARGET DECK is not specified in the file.",
+	"Scheduling Interval": "The time, in minutes, between the vault being scanned automatically. Set this to 0 to disable automatic scanning.",
 	"Add File Link": "Append a link to the file that generated the flashcard on the field specified in the table.",
 	"Add Context": "Append 'context' for the card, in the form of path > heading > heading etc, to the field specified in the table.",
 	"CurlyCloze": "Convert {cloze deletions} -> {{c1::cloze deletions}} on note types that have a 'Cloze' in their name.",
@@ -137,6 +138,10 @@ export class SettingsTab extends PluginSettingTab {
 		if (!(plugin.settings["Defaults"].hasOwnProperty("Add Context"))) {
 			plugin.settings["Defaults"]["Add Context"] = false
 		}
+		// To account for new scheduling interval
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Scheduling Interval"))) {
+			plugin.settings["Defaults"]["Scheduling Interval"] = 0
+		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
 			if (typeof plugin.settings["Defaults"][key] === "string") {
 				new Setting(defaults_settings)
@@ -149,7 +154,7 @@ export class SettingsTab extends PluginSettingTab {
 							plugin.saveAllData()
 						})
 				)
-			} else {
+			} else if (typeof plugin.settings["Defaults"][key] === "boolean") {
 				new Setting(defaults_settings)
 					.setName(key)
 					.setDesc(defaultDescs[key])
@@ -159,6 +164,21 @@ export class SettingsTab extends PluginSettingTab {
 							plugin.settings["Defaults"][key] = value
 							plugin.saveAllData()
 						})
+					)
+			} else {
+				new Setting(defaults_settings)
+					.setName(key)
+					.setDesc(defaultDescs[key])
+					.addSlider(
+						slider => {
+							slider.setValue(plugin.settings["Defaults"][key])
+							.setLimits(0, 360, 5)
+							.setDynamicTooltip()
+							.onChange((value) => {
+								plugin.settings["Defaults"][key] = value
+								plugin.saveAllData()
+							})
+					}
 					)
 			}
 		}

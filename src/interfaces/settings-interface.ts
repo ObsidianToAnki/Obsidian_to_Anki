@@ -18,6 +18,7 @@ export interface PluginSettings {
 	Defaults: {
 		"Tag": string,
 		"Deck": string,
+		"Scheduling Interval": number
 		"Add File Link": boolean,
 		"Add Context": boolean,
 		"CurlyCloze": boolean,
