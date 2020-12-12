@@ -160,8 +160,6 @@ abstract class AbstractFile {
                 if (currentHeading.level > contextHeading.level) {
                     insert_index += 1
                     continue
-                } else if (currentHeading.level == contextHeading.level) {
-                    currentContext.pop()
                 }
                 break
             }
