@@ -116,7 +116,13 @@ abstract class AbstractFile {
         for (let match of this.file.matchAll(this.data.FROZEN_REGEXP)) {
             const [note_type, fields]: [string, string] = [match[1], match[2]]
             const virtual_note = note_type + "\n" + fields
-            const parsed_fields: Record<string, string> = new Note(virtual_note, this.data.fields_dict, this.data.curly_cloze, this.formatter).getFields()
+            const parsed_fields: Record<string, string> = new Note(
+                virtual_note,
+                this.data.fields_dict,
+                this.data.curly_cloze,
+                this.data.highlights_to_cloze,
+                this.formatter
+            ).getFields()
             frozen_fields_dict[note_type] = parsed_fields
         }
         this.frozen_fields_dict = frozen_fields_dict
@@ -259,7 +265,11 @@ export class File extends AbstractFile {
             let [note, position]: [string, number] = [note_match[1], note_match.index + note_match[0].indexOf(note_match[1]) + note_match[1].length]
             // That second thing essentially gets the index of the end of the first capture group.
             let parsed = new Note(
-                note, this.data.fields_dict, this.data.curly_cloze, this.formatter
+                note,
+                this.data.fields_dict,
+                this.data.curly_cloze,
+                this.data.highlights_to_cloze,
+                this.formatter
             ).parse(
                 this.target_deck,
                 this.url,
@@ -289,7 +299,11 @@ export class File extends AbstractFile {
             let [note, position]: [string, number] = [note_match[1], note_match.index + note_match[0].indexOf(note_match[1]) + note_match[1].length]
             // That second thing essentially gets the index of the end of the first capture group.
             let parsed = new InlineNote(
-                note, this.data.fields_dict, this.data.curly_cloze, this.formatter
+                note,
+                this.data.fields_dict,
+                this.data.curly_cloze,
+                this.data.highlights_to_cloze,
+                this.formatter
             ).parse(
                 this.target_deck,
                 this.url,
@@ -405,7 +419,7 @@ export class RegexFile extends AbstractFile {
             this.ignore_spans.push([match.index, match.index + match[0].length])
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
-                true, true, this.data.curly_cloze, this.formatter
+                true, true, this.data.curly_cloze, this.data.highlights_to_cloze, this.formatter
             ).parse(
                 this.target_deck,
                 this.url,
@@ -430,7 +444,7 @@ export class RegexFile extends AbstractFile {
             this.ignore_spans.push([match.index, match.index + match[0].length])
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
-                false, true, this.data.curly_cloze, this.formatter
+                false, true, this.data.curly_cloze, this.data.highlights_to_cloze, this.formatter
             ).parse(
                 this.target_deck,
                 this.url,
@@ -455,7 +469,7 @@ export class RegexFile extends AbstractFile {
             this.ignore_spans.push([match.index, match.index + match[0].length])
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
-                true, false, this.data.curly_cloze, this.formatter
+                true, false, this.data.curly_cloze, this.data.highlights_to_cloze, this.formatter
             ).parse(
                 this.target_deck,
                 this.url,
@@ -478,7 +492,7 @@ export class RegexFile extends AbstractFile {
             this.ignore_spans.push([match.index, match.index + match[0].length])
             const parsed: AnkiConnectNoteAndID = new RegexNote(
                 match, note_type, this.data.fields_dict,
-                false, false, this.data.curly_cloze, this.formatter
+                false, false, this.data.curly_cloze, this.data.highlights_to_cloze, this.formatter
             ).parse(
                 this.target_deck,
                 this.url,

@@ -8,6 +8,7 @@ const defaultDescs = {
 	"Add File Link": "Append a link to the file that generated the flashcard on the field specified in the table.",
 	"Add Context": "Append 'context' for the card, in the form of path > heading > heading etc, to the field specified in the table.",
 	"CurlyCloze": "Convert {cloze deletions} -> {{c1::cloze deletions}} on note types that have a 'Cloze' in their name.",
+	"CurlyCloze - Highlights to Clozes": "Convert ==highlights== -> {highlights} to be processed by CurlyCloze.",
 	"Regex": "Scan using the provided custom regexps rather than the START END syntax.",
 	"ID Comments": "Wrap note IDs in a HTML comment."
 }
@@ -141,6 +142,10 @@ export class SettingsTab extends PluginSettingTab {
 		// To account for new scheduling interval
 		if (!(plugin.settings["Defaults"].hasOwnProperty("Scheduling Interval"))) {
 			plugin.settings["Defaults"]["Scheduling Interval"] = 0
+		}
+		// To account for new highlights to clozes
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Scheduling Interval"))) {
+			plugin.settings["Defaults"]["CurlyCloze - Highlights to Clozes"] = false
 		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
 			if (typeof plugin.settings["Defaults"][key] === "string") {
