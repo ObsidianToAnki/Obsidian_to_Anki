@@ -4,6 +4,8 @@ import { Converter } from 'showdown'
 import { CachedMetadata } from 'obsidian'
 import * as c from './constants'
 
+import showdownHighlight from 'showdown-highlight'
+
 const ANKI_MATH_REGEXP:RegExp = /(\\\[[\s\S]*?\\\])|(\\\([\s\S]*?\\\))/g
 const HIGHLIGHT_REGEXP:RegExp = /==(.*)==/g
 
@@ -26,7 +28,8 @@ let converter: Converter = new Converter({
 	literalMidWordUnderscores: true,
 	tables: true, tasklists: true,
 	simpleLineBreaks: true,
-	requireSpaceBeforeHeadingText: true
+	requireSpaceBeforeHeadingText: true,
+	extensions: [showdownHighlight]
 })
 
 export class FormatConverter {
@@ -138,8 +141,8 @@ export class FormatConverter {
 		let inline_code_matches: string[]
 		let display_code_matches: string[]
 		[note_text, math_matches] = this.censor(note_text, ANKI_MATH_REGEXP, MATH_REPLACE);
+		[note_text, display_code_matches] = this.censor(note_text, c.OBS_DISPLAY_CODE_REGEXP, DISPLAY_CODE_REPLACE);
 		[note_text, inline_code_matches] = this.censor(note_text, c.OBS_CODE_REGEXP, INLINE_CODE_REPLACE);
-		[note_text, display_code_matches] = this.censor(note_text, c.OBS_DISPLAY_CODE_REGEXP, DISPLAY_CODE_REPLACE)
 		if (cloze) {
 			if (highlights_to_cloze) {
 				note_text = note_text.replace(HIGHLIGHT_REGEXP, "{$1}")
@@ -150,8 +153,8 @@ export class FormatConverter {
 		note_text = this.formatLinks(note_text)
 		//Special for formatting highlights now, but want to avoid any == in code
 		note_text = note_text.replace(HIGHLIGHT_REGEXP, String.raw`<mark>$1</mark>`)
-		note_text = this.decensor(note_text, INLINE_CODE_REPLACE, inline_code_matches)
 		note_text = this.decensor(note_text, DISPLAY_CODE_REPLACE, display_code_matches)
+		note_text = this.decensor(note_text, INLINE_CODE_REPLACE, inline_code_matches)
 		note_text = converter.makeHtml(note_text)
 		note_text = this.decensor(note_text, MATH_REPLACE, math_matches).trim()
 		// Remove unnecessary paragraph tag
