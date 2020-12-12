@@ -174,9 +174,17 @@ export class SettingsTab extends PluginSettingTab {
 							slider.setValue(plugin.settings["Defaults"][key])
 							.setLimits(0, 360, 5)
 							.setDynamicTooltip()
-							.onChange((value) => {
+							.onChange(async (value) => {
 								plugin.settings["Defaults"][key] = value
-								plugin.saveAllData()
+								await plugin.saveAllData()
+								if (plugin.hasOwnProperty("schedule_id")) {
+									window.clearInterval(plugin.schedule_id)
+								}
+								if (value != 0) {
+									plugin.schedule_id = window.setInterval(async () => await plugin.scanVault(), value * 1000 * 60)
+									plugin.registerInterval(plugin.schedule_id)
+								}
+
 							})
 					}
 					)
