@@ -18,9 +18,11 @@ export interface PluginSettings {
 	Defaults: {
 		"Tag": string,
 		"Deck": string,
+		"Scheduling Interval": number
 		"Add File Link": boolean,
 		"Add Context": boolean,
 		"CurlyCloze": boolean,
+		"CurlyCloze - Highlights to Clozes": boolean,
 		"Regex": boolean,
 		"ID Comments": boolean,
 	}
@@ -44,6 +46,7 @@ export interface FileData {
 	EMPTY_REGEXP: RegExp
 
 	curly_cloze: boolean
+	highlights_to_cloze: boolean
 	comment: boolean
 	add_context: boolean
 }

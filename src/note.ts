@@ -13,17 +13,6 @@ export const TAG_SEP:string = " "
 export const ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
 export const TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
 
-const NOTE_DICT_TEMPLATE: AnkiConnectNote = {
-	deckName: "",
-	modelName: "",
-	fields: {},
-	options: {
-		allowDuplicate: true,
-		duplicateScope: "deck",
-	},
-	tags: ["Obsidian_to_Anki"],
-}
-
 const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
 export const CLOZE_ERROR: number = 42
 
@@ -55,8 +44,9 @@ abstract class AbstractNote {
     ID_REGEXP: RegExp = /(?:<!--)?ID: (\d+)/
     formatter: FormatConverter
     curly_cloze: boolean
+	highlights_to_cloze: boolean
 
-    constructor(note_text: string, fields_dict: FIELDS_DICT, curly_cloze: boolean, formatter: FormatConverter) {
+    constructor(note_text: string, fields_dict: FIELDS_DICT, curly_cloze: boolean, highlights_to_cloze: boolean, formatter: FormatConverter) {
         this.text = note_text.trim()
         this.current_field_num = 0
         this.delete = false
@@ -68,6 +58,7 @@ abstract class AbstractNote {
         this.current_field = this.field_names[0]
         this.formatter = formatter
         this.curly_cloze = curly_cloze
+		this.highlights_to_cloze = highlights_to_cloze
     }
 
     abstract getSplitText(): string[]
@@ -81,7 +72,7 @@ abstract class AbstractNote {
     abstract getFields(): Record<string, string>
 
     parse(deck:string, url:string, frozen_fields_dict: FROZEN_FIELDS_DICT, data: FileData, context:string): AnkiConnectNoteAndID {
-        let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
+        let template = data.template
         template["modelName"] = this.note_type
         template["fields"] = this.getFields()
 		const file_link_fields = data.file_link_fields
@@ -152,7 +143,8 @@ export class Note extends AbstractNote {
         for (let key in fields) {
             fields[key] = this.formatter.format(
                 fields[key].trim(),
-                this.note_type.includes("Cloze") && this.curly_cloze
+                this.note_type.includes("Cloze") && this.curly_cloze,
+				this.highlights_to_cloze
             ).trim()
         }
         return fields
@@ -213,7 +205,8 @@ export class InlineNote extends AbstractNote {
         for (let key in fields) {
             fields[key] = this.formatter.format(
                 fields[key].trim(),
-                this.note_type.includes("Cloze") && this.curly_cloze
+                this.note_type.includes("Cloze") && this.curly_cloze,
+				this.highlights_to_cloze
             ).trim()
         }
         return fields
@@ -231,6 +224,7 @@ export class RegexNote {
 	tags: string[]
     field_names: string[]
 	curly_cloze: boolean
+	highlights_to_cloze: boolean
 	formatter: FormatConverter
 
 	constructor(
@@ -240,6 +234,7 @@ export class RegexNote {
 			tags: boolean,
 			id: boolean,
 			curly_cloze: boolean,
+			highlights_to_cloze: boolean,
 			formatter: FormatConverter
 	) {
 		this.match = match
@@ -249,6 +244,7 @@ export class RegexNote {
 		this.field_names = fields_dict[note_type]
 		this.curly_cloze = curly_cloze
 		this.formatter = formatter
+		this.highlights_to_cloze = highlights_to_cloze
 	}
 
 	getFields(): Record<string, string> {
@@ -262,14 +258,15 @@ export class RegexNote {
 		for (let key in fields) {
             fields[key] = this.formatter.format(
                 fields[key].trim(),
-                this.note_type.includes("Cloze") && this.curly_cloze
+                this.note_type.includes("Cloze") && this.curly_cloze,
+				this.highlights_to_cloze
             ).trim()
         }
         return fields
 	}
 
 	parse(deck: string, url: string = "", frozen_fields_dict: FROZEN_FIELDS_DICT, data: FileData, context: string): AnkiConnectNoteAndID {
-		let template = JSON.parse(JSON.stringify(NOTE_DICT_TEMPLATE))
+		let template = data.template
 		template["modelName"] = this.note_type
 		template["fields"] = this.getFields()
 		const file_link_fields = data.file_link_fields

@@ -32,9 +32,11 @@ export default class MyPlugin extends Plugin {
 			Defaults: {
 				"Tag": "Obsidian_to_Anki",
 				"Deck": "Default",
+				"Scheduling Interval": 0,
 				"Add File Link": false,
 				"Add Context": false,
 				"CurlyCloze": false,
+				"CurlyCloze - Highlights to Clozes": false,
 				"Regex": false,
 				"ID Comments": true,
 			}
@@ -151,6 +153,29 @@ export default class MyPlugin extends Plugin {
 		}
 	}
 
+	async scanVault() {
+		new Notice('Scanning vault, check console for details...');
+		console.log("Checking connection to Anki...")
+		try {
+			const test = await AnkiConnect.invoke('modelNames')
+		}
+		catch(e) {
+			new Notice("Error, couldn't connect to Anki! Check console for error message.")
+			return
+		}
+		const data: ParsedSettings = await settingToData(this.app, this.settings, this.fields_dict)
+		const manager = new FileManager(this.app, data, this.app.vault.getMarkdownFiles(), this.file_hashes, this.added_media)
+		await manager.initialiseFiles()
+		await manager.requests_1()
+		this.added_media = Array.from(manager.added_media_set)
+		const hashes = manager.getHashes()
+		for (let key in hashes) {
+			this.file_hashes[key] = hashes[key]
+		}
+		new Notice("All done! Saving file hashes and added media now...")
+		this.saveAllData()
+	}
+
 	async onload() {
 		console.log('loading Obsidian_to_Anki...');
 		addIcon('anki', ANKI_ICON)
@@ -182,26 +207,7 @@ export default class MyPlugin extends Plugin {
 		this.addSettingTab(new SettingsTab(this.app, this));
 
 		this.addRibbonIcon('anki', 'Obsidian_to_Anki - Scan Vault', async () => {
-			new Notice('Scanning vault, check console for details...');
-			console.log("Checking connection to Anki...")
-			try {
-				const test = await AnkiConnect.invoke('modelNames')
-			}
-			catch(e) {
-				new Notice("Error, couldn't connect to Anki! Check console for error message.")
-				return
-			}
-			const data: ParsedSettings = await settingToData(this.app, this.settings, this.fields_dict)
-			const manager = new FileManager(this.app, data, this.app.vault.getMarkdownFiles(), this.file_hashes, this.added_media)
-			await manager.initialiseFiles()
-			await manager.requests_1()
-			this.added_media = Array.from(manager.added_media_set)
-			const hashes = manager.getHashes()
-			for (let key in hashes) {
-				this.file_hashes[key] = hashes[key]
-			}
-			new Notice("All done! Saving file hashes and added media now...")
-			this.saveAllData()
+			await this.scanVault()
 		})
 	}
 
