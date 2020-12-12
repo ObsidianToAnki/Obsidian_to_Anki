@@ -148,6 +148,8 @@ export class FormatConverter {
 		}
 		note_text = this.getAndFormatMedias(note_text)
 		note_text = this.formatLinks(note_text)
+		//Special for formatting highlights now, but want to avoid any == in code
+		note_text = note_text.replace(HIGHLIGHT_REGEXP, String.raw`<mark>$1</mark>`)
 		note_text = this.decensor(note_text, INLINE_CODE_REPLACE, inline_code_matches)
 		note_text = this.decensor(note_text, DISPLAY_CODE_REPLACE, display_code_matches)
 		note_text = converter.makeHtml(note_text)
