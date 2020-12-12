@@ -144,7 +144,7 @@ export class SettingsTab extends PluginSettingTab {
 			plugin.settings["Defaults"]["Scheduling Interval"] = 0
 		}
 		// To account for new highlights to clozes
-		if (!(plugin.settings["Defaults"].hasOwnProperty("Scheduling Interval"))) {
+		if (!(plugin.settings["Defaults"].hasOwnProperty("CurlyCloze - Highlights to Clozes"))) {
 			plugin.settings["Defaults"]["CurlyCloze - Highlights to Clozes"] = false
 		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {

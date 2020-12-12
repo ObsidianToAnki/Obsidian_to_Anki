@@ -36,6 +36,7 @@ export default class MyPlugin extends Plugin {
 				"Add File Link": false,
 				"Add Context": false,
 				"CurlyCloze": false,
+				"CurlyCloze - Highlights to Clozes": false,
 				"Regex": false,
 				"ID Comments": true,
 			}
