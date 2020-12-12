@@ -237,6 +237,7 @@ export class SettingsTab extends PluginSettingTab {
 
 		containerEl.empty()
 		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings'})
+		containerEl.createEl('a', {text: 'For more information check the wiki', href: "https://github.com/Pseudonium/Obsidian_to_Anki/wiki"})
 		this.setup_table()
 		this.setup_syntax()
 		this.setup_defaults()

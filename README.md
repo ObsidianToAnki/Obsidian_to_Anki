@@ -98,3 +98,5 @@ Current features (check out the wiki for more details):
   ![Cloze 1](Images/Cloze_1.png)
 
 Note that **all custom syntax is off by default**, and must be programmed into the script via the config file - see the Wiki for more details.
+
+If you've found the plugin useful, consider [supporting me at ko-fi](https://ko-fi.com/pseudonium)
