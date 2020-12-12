@@ -35,6 +35,7 @@ export async function settingToData(app: App, settings: PluginSettings, fields_d
 
     //Just a simple transfer
     result.curly_cloze = settings.Defaults.CurlyCloze
+    result.highlights_to_cloze = settings.Defaults["CurlyCloze - Highlights to Clozes"]
     result.add_file_link = settings.Defaults["Add File Link"]
     result.comment = settings.Defaults["ID Comments"]
     result.regex = settings.Defaults.Regex
