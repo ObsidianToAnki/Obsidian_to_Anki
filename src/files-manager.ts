@@ -1,7 +1,7 @@
 /*Class for managing a list of files, and their Anki requests.*/
 import { ParsedSettings } from './interfaces/settings-interface'
 import { App, TFile, CachedMetadata } from 'obsidian'
-import { RegexFile, File, AllFile} from './file'
+import { AllFile } from './file'
 import * as AnkiConnect from './anki'
 import { bytesToBase64 } from 'byte-base64'
 import { basename } from 'path'
@@ -56,7 +56,7 @@ export class FileManager {
     app: App
     data: ParsedSettings
     files: TFile[]
-    ownFiles: Array<File | RegexFile>
+    ownFiles: Array<AllFile>
     file_hashes: Record<string, string>
     requests_1_result: any
     added_media_set: Set<string>
@@ -75,15 +75,8 @@ export class FileManager {
     }
 
     async initialiseFiles() {
-        /*
-        if (this.data.regex) {
-            await this.genRegexFiles()
-        } else {
-            await this.genFiles()
-        }
-        */
         await this.genAllFiles()
-        let files_changed: Array<File | RegexFile | AllFile> = []
+        let files_changed: Array<AllFile> = []
         let obfiles_changed: TFile[] = []
         for (let index in this.ownFiles) {
             const i = parseInt(index)
@@ -99,38 +92,6 @@ export class FileManager {
         }
         this.ownFiles = files_changed
         this.files = obfiles_changed
-    }
-
-    async genRegexFiles() {
-        for (let file of this.files) {
-            const content: string = await this.app.vault.read(file)
-            const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
-            this.ownFiles.push(
-                new RegexFile(
-                    content,
-                    file.path,
-                    this.data.add_file_link ? this.getUrl(file) : "",
-                    this.data,
-                    cache
-                )
-            )
-        }
-    }
-
-    async genFiles() {
-        for (let file of this.files) {
-            const content: string = await this.app.vault.read(file)
-            const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
-            this.ownFiles.push(
-                new File(
-                    content,
-                    file.path,
-                    this.data.add_file_link ? this.getUrl(file) : "",
-                    this.data,
-                    cache
-                )
-            )
-        }
     }
 
     async genAllFiles() {
