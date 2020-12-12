@@ -37,7 +37,6 @@ export default class MyPlugin extends Plugin {
 				"Add Context": false,
 				"CurlyCloze": false,
 				"CurlyCloze - Highlights to Clozes": false,
-				"Regex": false,
 				"ID Comments": true,
 			}
 		}
