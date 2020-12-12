@@ -1,7 +1,7 @@
 /*Class for managing a list of files, and their Anki requests.*/
 import { ParsedSettings } from './interfaces/settings-interface'
 import { App, TFile, CachedMetadata } from 'obsidian'
-import { RegexFile, File} from './file'
+import { RegexFile, File, AllFile} from './file'
 import * as AnkiConnect from './anki'
 import { bytesToBase64 } from 'byte-base64'
 import { basename } from 'path'
@@ -75,12 +75,15 @@ export class FileManager {
     }
 
     async initialiseFiles() {
+        /*
         if (this.data.regex) {
             await this.genRegexFiles()
         } else {
             await this.genFiles()
         }
-        let files_changed: Array<File | RegexFile> = []
+        */
+        await this.genAllFiles()
+        let files_changed: Array<File | RegexFile | AllFile> = []
         let obfiles_changed: TFile[] = []
         for (let index in this.ownFiles) {
             const i = parseInt(index)
@@ -120,6 +123,22 @@ export class FileManager {
             const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
             this.ownFiles.push(
                 new File(
+                    content,
+                    file.path,
+                    this.data.add_file_link ? this.getUrl(file) : "",
+                    this.data,
+                    cache
+                )
+            )
+        }
+    }
+
+    async genAllFiles() {
+        for (let file of this.files) {
+            const content: string = await this.app.vault.read(file)
+            const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
+            this.ownFiles.push(
+                new AllFile(
                     content,
                     file.path,
                     this.data.add_file_link ? this.getUrl(file) : "",
