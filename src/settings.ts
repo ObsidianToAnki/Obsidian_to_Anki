@@ -9,7 +9,6 @@ const defaultDescs = {
 	"Add Context": "Append 'context' for the card, in the form of path > heading > heading etc, to the field specified in the table.",
 	"CurlyCloze": "Convert {cloze deletions} -> {{c1::cloze deletions}} on note types that have a 'Cloze' in their name.",
 	"CurlyCloze - Highlights to Clozes": "Convert ==highlights== -> {highlights} to be processed by CurlyCloze.",
-	"Regex": "Scan using the provided custom regexps rather than the START END syntax.",
 	"ID Comments": "Wrap note IDs in a HTML comment."
 }
 
@@ -148,6 +147,10 @@ export class SettingsTab extends PluginSettingTab {
 			plugin.settings["Defaults"]["CurlyCloze - Highlights to Clozes"] = false
 		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
+			// To account for removal of regex setting
+			if (key === "Regex") {
+				continue
+			}
 			if (typeof plugin.settings["Defaults"][key] === "string") {
 				new Setting(defaults_settings)
 					.setName(key)

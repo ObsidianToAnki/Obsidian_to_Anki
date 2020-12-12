@@ -4,5 +4,6 @@
         "downlevelIteration": true,
         "target": "esnext",
         "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
     }
 }

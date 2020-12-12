@@ -23,7 +23,6 @@ export interface PluginSettings {
 		"Add Context": boolean,
 		"CurlyCloze": boolean,
 		"CurlyCloze - Highlights to Clozes": boolean,
-		"Regex": boolean,
 		"ID Comments": boolean,
 	}
 }
@@ -53,5 +52,4 @@ export interface FileData {
 
 export interface ParsedSettings extends FileData {
     add_file_link: boolean
-	regex: boolean
 }
