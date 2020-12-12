@@ -8,7 +8,7 @@ import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
 import * as c from './constants'
 import { FormatConverter } from './format'
-import { CachedMetadata } from 'obsidian'
+import { CachedMetadata, HeadingCache } from 'obsidian'
 
 const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?ID: \d+)/g
 
@@ -145,19 +145,36 @@ abstract class AbstractFile {
     }
 
     getContextAtIndex(position: number): string {
-        let result: string[] = [this.path]
+        let result: string = this.path
+        let currentContext: HeadingCache[] = []
         if (!(this.file_cache.hasOwnProperty('headings'))) {
-            return result.join(" > ")
+            return result
         }
-        for (let heading of this.file_cache.headings) {
-            if (position < heading.position.start.offset) {
+        for (let currentHeading of this.file_cache.headings) {
+            if (position < currentHeading.position.start.offset) {
                 //We've gone past position now with headings, so let's return!
-                return result.join(" > ")
+                break
             }
-            result = result.slice(0, heading.level)
-            result.push(heading.heading)
+            let insert_index: number = 0
+            for (let contextHeading of currentContext) {
+                if (currentHeading.level > contextHeading.level) {
+                    insert_index += 1
+                    continue
+                } else if (currentHeading.level == contextHeading.level) {
+                    currentContext.pop()
+                }
+                break
+            }
+            currentContext = currentContext.slice(0, insert_index)
+            currentContext.push(currentHeading)
         }
-        return result.join(" > ")
+        let heading_strs: string[] = []
+        for (let contextHeading of currentContext) {
+            heading_strs.push(contextHeading.heading)
+        }
+        let result_arr: string[] = [result]
+        result_arr.push(...heading_strs)
+        return result_arr.join(" > ")
     }
 
     abstract writeIDs(): void
