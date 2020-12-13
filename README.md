@@ -35,7 +35,10 @@ Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It ha
 
 7. With Anki running in the background, load the plugin. This will generate the plugin settings.
 
+
 You shouldn't need Anki running to load Obsidian in the future, though of course you will need it for using the plugin!
+
+To use the plugin, look for an Anki icon on your ribbon (the place where buttons such as 'open Graph view' and 'open Quick Switcher' are).
 
 ### Python script users
 3. Install the latest version of [Python](https://www.python.org/downloads/).
@@ -113,4 +116,4 @@ Current features (check out the wiki for more details):
 
 Note that **all custom syntax is off by default**, and must be programmed into the script via the config file - see the Wiki for more details.
 
-If you've found the plugin useful, consider [supporting me at ko-fi](https://ko-fi.com/pseudonium)
+<a href='https://ko-fi.com/K3K52X4L6' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi1.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
