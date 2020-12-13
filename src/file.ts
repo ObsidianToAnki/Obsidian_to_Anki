@@ -383,6 +383,8 @@ export class AllFile extends AbstractFile {
                         }
                     } else {
                         if (parsed.identifier == CLOZE_ERROR) {
+                            // This means it wasn't actually a note! So we should remove it from ignore_spans
+                            this.ignore_spans.pop()
                             continue
                         }
                         parsed.note.tags.push(...this.global_tags.split(TAG_SEP))
