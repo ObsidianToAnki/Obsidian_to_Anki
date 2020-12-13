@@ -81,10 +81,9 @@ export class FileManager {
         for (let index in this.ownFiles) {
             const i = parseInt(index)
             let file = this.ownFiles[i]
-            if (this.file_hashes.hasOwnProperty(file.path) && file.getHash() === this.file_hashes[file.path]) {
-                //Indicates we've seen it in a scan before
-                console.log("Skipping ", file.path, "as we've scanned it before.")
-            } else {
+            if (!(this.file_hashes.hasOwnProperty(file.path) && file.getHash() === this.file_hashes[file.path])) {
+                //Indicates it's changed or new
+                console.log("Scanning ", file.path, "as it's changed or new.")
                 file.scanFile()
                 files_changed.push(file)
                 obfiles_changed.push(this.files[i])
