@@ -371,8 +371,10 @@ export class AllFile extends AbstractFile {
                         this.data.add_context ? this.getContextAtIndex(match.index) : ""
                     )
                     if (search_id) {
-                        if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
+                        if (!(this.data.EXISTING_IDS.includes(parsed.identifier))) {
                             if (parsed.identifier == CLOZE_ERROR) {
+                                // This means it wasn't actually a note! So we should remove it from ignore_spans
+                                this.ignore_spans.pop()
                                 continue
                             }
                             console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
