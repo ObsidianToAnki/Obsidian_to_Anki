@@ -167,7 +167,6 @@ export class FileManager {
 
     async parse_requests_1() {
         const response = this.requests_1_result as Requests1Result
-        console.log(response[5])
         if (response[5].result.length >= 1 && response[5].result[0].error != null) {
             new Notice("Please update AnkiConnect! The way the script has added media files has changed.")
             console.log("Please update AnkiConnect! The way the script has added media files has changed.")
