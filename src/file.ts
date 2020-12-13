@@ -355,7 +355,6 @@ export class AllFile extends AbstractFile {
         //and adding any matches to ignore_spans.
         for (let search_id of [true, false]) {
             for (let search_tags of [true, false]) {
-                console.log("HI")
                 let id_str = search_id ? ID_REGEXP_STR : ""
                 let tag_str = search_tags ? TAG_REGEXP_STR : ""
                 let regexp: RegExp = new RegExp(regexp_str + tag_str + id_str, 'gm')
