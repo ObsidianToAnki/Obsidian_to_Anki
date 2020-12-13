@@ -1,6 +1,6 @@
 /*Class for managing a list of files, and their Anki requests.*/
 import { ParsedSettings } from './interfaces/settings-interface'
-import { App, TFile, CachedMetadata, FileSystemAdapter } from 'obsidian'
+import { App, TFile, CachedMetadata, FileSystemAdapter, Notice } from 'obsidian'
 import { AllFile } from './file'
 import * as AnkiConnect from './anki'
 import { bytesToBase64 } from 'byte-base64'
@@ -168,6 +168,10 @@ export class FileManager {
     async parse_requests_1() {
         const response = this.requests_1_result as Requests1Result
         console.log(response[5])
+        if (response[5].result.length >= 1 && response[5].result[0].error != null) {
+            new Notice("Please update AnkiConnect! The way the script has added media files has changed.")
+            console.log("Please update AnkiConnect! The way the script has added media files has changed.")
+        }
         let note_ids_array_by_file: Requests1Result[0]["result"]
         try {
             note_ids_array_by_file = AnkiConnect.parse(response[0])
