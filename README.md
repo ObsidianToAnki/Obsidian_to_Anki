@@ -113,4 +113,4 @@ Current features (check out the wiki for more details):
 
 Note that **all custom syntax is off by default**, and must be programmed into the script via the config file - see the Wiki for more details.
 
-If you've found the plugin useful, consider [supporting me at ko-fi](https://ko-fi.com/pseudonium)
+<a href='https://ko-fi.com/K3K52X4L6' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi1.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
