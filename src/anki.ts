@@ -131,3 +131,12 @@ export function storeMediaFile(filename: string, data: string): AnkiConnectReque
 		}
 	)
 }
+
+export function storeMediaFileByPath(filename: string, path: string): AnkiConnectRequest {
+	return request(
+		'storeMediaFile', {
+			filename: filename,
+			path: path
+		}
+	)
+}

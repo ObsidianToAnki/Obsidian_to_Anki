@@ -1,6 +1,6 @@
 /*Class for managing a list of files, and their Anki requests.*/
 import { ParsedSettings } from './interfaces/settings-interface'
-import { App, TFile, CachedMetadata } from 'obsidian'
+import { App, TFile, CachedMetadata, FileSystemAdapter } from 'obsidian'
 import { AllFile } from './file'
 import * as AnkiConnect from './anki'
 import { bytesToBase64 } from 'byte-base64'
@@ -146,13 +146,16 @@ export class FileManager {
                 console.log("Adding media file: ", mediaLink)
                 this.added_media_set.add(mediaLink)
                 const dataFile = this.app.metadataCache.getFirstLinkpathDest(mediaLink, file.path)
-                const data = await this.app.vault.readBinary(dataFile)
+                const realPath = (this.app.vault.adapter as FileSystemAdapter).getFullPath(dataFile.path)
+                //const data = await this.app.vault.readBinary(dataFile)
+                console.log(AnkiConnect.storeMediaFileByPath(
+                    basename(mediaLink),
+                    realPath
+                ))
                 temp.push(
-                    AnkiConnect.storeMediaFile(
+                    AnkiConnect.storeMediaFileByPath(
                         basename(mediaLink),
-                        bytesToBase64(
-                            new Uint8Array(data)
-                        )
+                        realPath
                     )
                 )
             }
@@ -165,6 +168,7 @@ export class FileManager {
 
     async parse_requests_1() {
         const response = this.requests_1_result as Requests1Result
+        console.log(response[5])
         let note_ids_array_by_file: Requests1Result[0]["result"]
         try {
             note_ids_array_by_file = AnkiConnect.parse(response[0])
