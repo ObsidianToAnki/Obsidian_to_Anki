@@ -112,6 +112,13 @@ export class FileManager {
     dataToFileData(file: TFile): FileData {
         const folder_path_list: TFolder[] = this.getFolderPathList(file)
         let result: FileData = JSON.parse(JSON.stringify(this.data))
+        //Lost regexp, so have to get them back
+        result.FROZEN_REGEXP = this.data.FROZEN_REGEXP
+        result.DECK_REGEXP = this.data.DECK_REGEXP
+        result.TAG_REGEXP = this.data.TAG_REGEXP
+        result.NOTE_REGEXP = this.data.NOTE_REGEXP
+        result.INLINE_REGEXP = this.data.INLINE_REGEXP
+        result.EMPTY_REGEXP = this.data.EMPTY_REGEXP
         result.template.deckName = this.getDefaultDeck(file, folder_path_list)
         result.template.tags = this.getDefaultTags(file, folder_path_list)
         return result
