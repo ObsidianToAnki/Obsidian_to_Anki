@@ -308,7 +308,7 @@ export class AllFile extends AbstractFile {
                 if (parsed.identifier == CLOZE_ERROR) {
                     continue
                 }
-                console.log("Warning! note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -342,7 +342,7 @@ export class AllFile extends AbstractFile {
                 if (parsed.identifier == CLOZE_ERROR) {
                     continue
                 }
-                console.log("Warning! note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -377,7 +377,7 @@ export class AllFile extends AbstractFile {
                                 this.ignore_spans.pop()
                                 continue
                             }
-                            console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                            console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
                         } else {
                             this.notes_to_edit.push(parsed)
                         }
