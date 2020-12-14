@@ -6,5 +6,5 @@
   "description": "This is an Anki integration plugin! Designed for efficient bulk exporting.",
   "author": "Pseudonium",
   "authorUrl": "https://github.com/Pseudonium/Obsidian_to_Anki",
-  "isDesktopOnly": false
+  "isDesktopOnly": true
 }
