@@ -259,8 +259,14 @@ export class AllFile extends AbstractFile {
     add_spans_to_ignore() {
         this.ignore_spans = []
         this.ignore_spans.push(...spans(this.data.FROZEN_REGEXP, this.file))
-        this.ignore_spans.push(...spans(this.data.DECK_REGEXP, this.file))
-        this.ignore_spans.push(...spans(this.data.TAG_REGEXP, this.file))
+        const deck_result = this.file.match(this.data.DECK_REGEXP)
+        if (deck_result) {
+            this.ignore_spans.push([deck_result.index, deck_result.index + deck_result[0].length])
+        }
+        const tag_result = this.file.match(this.data.TAG_REGEXP)
+        if (tag_result) {
+            this.ignore_spans.push([tag_result.index, tag_result.index + tag_result[0].length])
+        }
         this.ignore_spans.push(...spans(this.data.NOTE_REGEXP, this.file))
         this.ignore_spans.push(...spans(this.data.INLINE_REGEXP, this.file))
         this.ignore_spans.push(...spans(c.OBS_INLINE_MATH_REGEXP, this.file))
