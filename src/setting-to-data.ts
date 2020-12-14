@@ -39,6 +39,7 @@ export async function settingToData(app: App, settings: PluginSettings, fields_d
     result.add_file_link = settings.Defaults["Add File Link"]
     result.comment = settings.Defaults["ID Comments"]
     result.add_context = settings.Defaults["Add Context"]
+    result.add_obs_tags = settings.Defaults["Add Obsidian Tags"]
 
     return result
 }

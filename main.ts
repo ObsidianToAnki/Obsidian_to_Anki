@@ -38,6 +38,7 @@ export default class MyPlugin extends Plugin {
 				"CurlyCloze": false,
 				"CurlyCloze - Highlights to Clozes": false,
 				"ID Comments": true,
+				"Add Obsidian Tags": false,
 			}
 		}
 		/*Making settings from scratch, so need note types*/

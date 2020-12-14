@@ -9,7 +9,8 @@ const defaultDescs = {
 	"Add Context": "Append 'context' for the card, in the form of path > heading > heading etc, to the field specified in the table.",
 	"CurlyCloze": "Convert {cloze deletions} -> {{c1::cloze deletions}} on note types that have a 'Cloze' in their name.",
 	"CurlyCloze - Highlights to Clozes": "Convert ==highlights== -> {highlights} to be processed by CurlyCloze.",
-	"ID Comments": "Wrap note IDs in a HTML comment."
+	"ID Comments": "Wrap note IDs in a HTML comment.",
+	"Add Obsidian Tags": "Interpret #tags in the fields of a note as Anki tags, removing them from the note text in Anki."
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -175,6 +176,10 @@ export class SettingsTab extends PluginSettingTab {
 		// To account for new highlights to clozes
 		if (!(plugin.settings["Defaults"].hasOwnProperty("CurlyCloze - Highlights to Clozes"))) {
 			plugin.settings["Defaults"]["CurlyCloze - Highlights to Clozes"] = false
+		}
+		// To account for new add obsidian tags
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Add Obsidian Tags"))) {
+			plugin.settings["Defaults"]["Add Obsidian Tags"] = false
 		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
 			// To account for removal of regex setting
