@@ -1702,7 +1702,6 @@ class Directory:
     def parse_requests_1(self, requests_1_response, tags):
         response = requests_1_response
         notes_ids = AnkiConnect.parse(response[0])
-        print(notes_ids)
         cards_ids = AnkiConnect.parse(response[1])
         for note_ids, file in zip(notes_ids, self.files):
             file.note_ids = [
