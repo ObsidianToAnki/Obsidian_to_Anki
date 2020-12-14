@@ -14,10 +14,105 @@ const defaultDescs = {
 
 export class SettingsTab extends PluginSettingTab {
 
+	setup_custom_regexp(note_type: string, row_cells: HTMLCollection) {
+		const plugin = (this as any).plugin
+		let regexp_section = plugin.settings["CUSTOM_REGEXPS"]
+		let custom_regexp = new Setting(row_cells[1] as HTMLElement)
+			.addText(
+					text => text.setValue(
+					regexp_section.hasOwnProperty(note_type) ? regexp_section[note_type] : ""
+					)
+					.onChange((value) => {
+						plugin.settings["CUSTOM_REGEXPS"][note_type] = value
+						plugin.saveAllData()
+					})
+			)
+		custom_regexp.settingEl = row_cells[1] as HTMLElement
+		custom_regexp.infoEl.remove()
+		custom_regexp.controlEl.className += " anki-center"
+	}
+
+	setup_link_field(note_type: string, row_cells: HTMLCollection) {
+		const plugin = (this as any).plugin
+		let link_fields_section = plugin.settings.FILE_LINK_FIELDS
+		let link_field = new Setting(row_cells[2] as HTMLElement)
+			.addDropdown(
+				async dropdown => {
+					if (!(plugin.fields_dict[note_type])) {
+						plugin.fields_dict = await plugin.loadFieldsDict()
+						if (Object.keys(plugin.fields_dict).length != plugin.note_types.length) {
+							new Notice('Need to connect to Anki to generate fields dictionary...')
+							try {
+								plugin.fields_dict = await plugin.generateFieldsDict()
+								new Notice("Fields dictionary successfully generated!")
+							}
+							catch(e) {
+								new Notice("Couldn't connect to Anki! Check console for error message.")
+								return
+							}
+						}
+					}
+					const field_names = plugin.fields_dict[note_type]
+					for (let field of field_names) {
+						dropdown.addOption(field, field)
+					}
+					dropdown.setValue(
+						link_fields_section.hasOwnProperty(note_type) ? link_fields_section[note_type] : field_names[0]
+					)
+					dropdown.onChange((value) => {
+						plugin.settings.FILE_LINK_FIELDS[note_type] = value
+						plugin.saveAllData()
+					})
+				}
+			)
+		link_field.settingEl = row_cells[2] as HTMLElement
+		link_field.infoEl.remove()
+		link_field.controlEl.className += " anki-center"
+	}
+
+	setup_context_field(note_type: string, row_cells: HTMLCollection) {
+		const plugin = (this as any).plugin
+		let context_fields_section: Record<string, string> = plugin.settings.CONTEXT_FIELDS
+		let context_field = new Setting(row_cells[3] as HTMLElement)
+			.addDropdown(
+				async dropdown => {
+					const field_names = plugin.fields_dict[note_type]
+					for (let field of field_names) {
+						dropdown.addOption(field, field)
+					}
+					dropdown.setValue(
+						context_fields_section.hasOwnProperty(note_type) ? context_fields_section[note_type] : field_names[0]
+					)
+					dropdown.onChange((value) => {
+						plugin.settings.CONTEXT_FIELDS[note_type] = value
+						plugin.saveAllData()
+					})
+				}
+			)
+		context_field.settingEl = row_cells[3] as HTMLElement
+		context_field.infoEl.remove()
+		context_field.controlEl.className += " anki-center"
+	}
+
 	setup_table() {
 		let {containerEl} = this;
 		const plugin = (this as any).plugin
 		containerEl.createEl('h3', {text: 'Note type settings'})
+		let div = containerEl.createEl('div', {cls: "collapsible-item"})
+		div.innerHTML = `
+			<div class="collapsible-item-self"><div class="collapsible-item-collapse collapse-icon anki-rotated"><svg viewBox="0 0 100 100" width="8" height="8" class="right-triangle"><path fill="currentColor" stroke="currentColor" d="M94.9,20.8c-1.4-2.5-4.1-4.1-7.1-4.1H12.2c-3,0-5.7,1.6-7.1,4.1c-1.3,2.4-1.2,5.2,0.2,7.6L43.1,88c1.5,2.3,4,3.7,6.9,3.7 s5.4-1.4,6.9-3.7l37.8-59.6C96.1,26,96.2,23.2,94.9,20.8L94.9,20.8z"></path></svg></div><div class="collapsible-item-inner"></div><header >Note Type Table</header></div>
+		`
+		div.addEventListener('click', function () {
+			this.classList.toggle("active")
+			let icon = this.firstElementChild.firstElementChild as HTMLElement
+			icon.classList.toggle("anki-rotated")
+			let content = this.nextElementSibling as HTMLElement
+			if (content.style.display === "block") {
+				content.style.display = "none"
+			} else {
+				content.style.display = "block"
+			}
+		})
 		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"})
 		let head = note_type_table.createTHead()
 		let header_row = head.insertRow()
@@ -32,83 +127,18 @@ export class SettingsTab extends PluginSettingTab {
 		}
 		for (let note_type of plugin.note_types) {
 			let row = main_body.insertRow()
+
 			row.insertCell()
 			row.insertCell()
 			row.insertCell()
 			row.insertCell()
+
 			let row_cells = row.children
+
 			row_cells[0].innerHTML = note_type
-
-			let regexp_section = plugin.settings["CUSTOM_REGEXPS"]
-			let custom_regexp = new Setting(row_cells[1] as HTMLElement)
-				.addText(
-						text => text.setValue(
-						regexp_section.hasOwnProperty(note_type) ? regexp_section[note_type] : ""
-						)
-						.onChange((value) => {
-							plugin.settings["CUSTOM_REGEXPS"][note_type] = value
-							plugin.saveAllData()
-						})
-				)
-			custom_regexp.settingEl = row_cells[1] as HTMLElement
-			custom_regexp.infoEl.remove()
-			custom_regexp.controlEl.className += " anki-center"
-
-			let link_fields_section = plugin.settings.FILE_LINK_FIELDS
-			let link_field = new Setting(row_cells[2] as HTMLElement)
-				.addDropdown(
-					async dropdown => {
-						if (!(plugin.fields_dict[note_type])) {
-							plugin.fields_dict = await plugin.loadFieldsDict()
-							if (Object.keys(plugin.fields_dict).length != plugin.note_types.length) {
-								new Notice('Need to connect to Anki to generate fields dictionary...')
-								try {
-									plugin.fields_dict = await plugin.generateFieldsDict()
-									new Notice("Fields dictionary successfully generated!")
-								}
-								catch(e) {
-									new Notice("Couldn't connect to Anki! Check console for error message.")
-									return
-								}
-							}
-						}
-						const field_names = plugin.fields_dict[note_type]
-						for (let field of field_names) {
-							dropdown.addOption(field, field)
-						}
-						dropdown.setValue(
-							link_fields_section.hasOwnProperty(note_type) ? link_fields_section[note_type] : field_names[0]
-						)
-						dropdown.onChange((value) => {
-							plugin.settings.FILE_LINK_FIELDS[note_type] = value
-							plugin.saveAllData()
-						})
-					}
-				)
-			link_field.settingEl = row_cells[2] as HTMLElement
-			link_field.infoEl.remove()
-			link_field.controlEl.className += " anki-center"
-
-			let context_fields_section: Record<string, string> = plugin.settings.CONTEXT_FIELDS
-			let context_field = new Setting(row_cells[3] as HTMLElement)
-				.addDropdown(
-					async dropdown => {
-						const field_names = plugin.fields_dict[note_type]
-						for (let field of field_names) {
-							dropdown.addOption(field, field)
-						}
-						dropdown.setValue(
-							context_fields_section.hasOwnProperty(note_type) ? context_fields_section[note_type] : field_names[0]
-						)
-						dropdown.onChange((value) => {
-							plugin.settings.CONTEXT_FIELDS[note_type] = value
-							plugin.saveAllData()
-						})
-					}
-				)
-			context_field.settingEl = row_cells[3] as HTMLElement
-			context_field.infoEl.remove()
-			context_field.controlEl.className += " anki-center"
+			this.setup_custom_regexp(note_type, row_cells)
+			this.setup_link_field(note_type, row_cells)
+			this.setup_context_field(note_type, row_cells)
 		}
 	}
 
