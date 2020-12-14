@@ -112,33 +112,33 @@ export class FileManager {
     async requests_1() {
         let requests: AnkiConnect.AnkiConnectRequest[] = []
         let temp: AnkiConnect.AnkiConnectRequest[] = []
-        console.log("Requesting addition of notes into Anki...")
+        console.info("Requesting addition of notes into Anki...")
         for (let file of this.ownFiles) {
             temp.push(file.getAddNotes())
         }
         requests.push(AnkiConnect.multi(temp))
         temp = []
-        console.log("Requesting card IDs of notes to be edited...")
+        console.info("Requesting card IDs of notes to be edited...")
         for (let file of this.ownFiles) {
             temp.push(file.getNoteInfo())
         }
         requests.push(AnkiConnect.multi(temp))
         temp = []
-        console.log("Requesting tag list...")
+        console.info("Requesting tag list...")
         requests.push(AnkiConnect.getTags())
-        console.log("Requesting update of fields of existing notes")
+        console.info("Requesting update of fields of existing notes")
         for (let file of this.ownFiles) {
             temp.push(file.getUpdateFields())
         }
         requests.push(AnkiConnect.multi(temp))
         temp = []
-        console.log("Requesting deletion of notes..")
+        console.info("Requesting deletion of notes..")
         for (let file of this.ownFiles) {
             temp.push(file.getDeleteNotes())
         }
         requests.push(AnkiConnect.multi(temp))
         temp = []
-        console.log("Requesting addition of media...")
+        console.info("Requesting addition of media...")
         for (let file of this.ownFiles) {
             const mediaLinks = difference(file.formatter.detectedMedia, this.added_media_set)
             for (let mediaLink of mediaLinks) {
@@ -232,13 +232,13 @@ export class FileManager {
     async requests_2(): Promise<void> {
         let requests: AnkiConnect.AnkiConnectRequest[] = []
         let temp: AnkiConnect.AnkiConnectRequest[] = []
-        console.log("Requesting cards to be moved to target deck...")
+        console.info("Requesting cards to be moved to target deck...")
         for (let file of this.ownFiles) {
             temp.push(file.getChangeDecks())
         }
         requests.push(AnkiConnect.multi(temp))
         temp = []
-        console.log("Requesting tags to be replaced...")
+        console.info("Requesting tags to be replaced...")
         for (let file of this.ownFiles) {
             temp.push(file.getClearTags())
         }
@@ -250,7 +250,7 @@ export class FileManager {
         requests.push(AnkiConnect.multi(temp))
         temp = []
         await AnkiConnect.invoke('multi', {actions: requests})
-        console.log("All done!")
+        console.info("All done!")
     }
 
 
