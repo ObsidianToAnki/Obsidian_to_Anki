@@ -99,7 +99,7 @@ export class FormatConverter {
 						'<img src="' + basename(embed.link) + '" alt="' + embed.displayText + '">'
 					)
 				} else {
-					console.log("Unsupported extension: ", extname(embed.link))
+					console.warn("Unsupported extension: ", extname(embed.link))
 				}
 			}
 		}
