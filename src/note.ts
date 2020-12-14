@@ -12,6 +12,7 @@ const TAG_PREFIX:string = "Tags: "
 export const TAG_SEP:string = " "
 export const ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
 export const TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
+const OBS_TAG_REGEXP: RegExp = /#(\w+)/g
 
 const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/
 export const CLOZE_ERROR: number = 42
@@ -85,6 +86,14 @@ abstract class AbstractNote {
 		if (context) {
 			const context_field = data.context_fields[this.note_type]
 			template["fields"][context_field] += context
+		}
+		if (data.add_obs_tags) {
+			for (let key in template["fields"]) {
+				for (let match of template["fields"][key].matchAll(OBS_TAG_REGEXP)) {
+					this.tags.push(match[1])
+				}
+				template["fields"][key] = template["fields"][key].replace(OBS_TAG_REGEXP, "")
+	        }
 		}
         template["tags"].push(...this.tags)
         template["deckName"] = deck
