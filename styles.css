@@ -5,10 +5,15 @@
 
 .anki-settings-table {
   border-collapse: collapse;
+  display: none;
 }
 
 .anki-center {
   margin: auto;
   padding: 5px;
   padding-top: 30px;
+}
+
+.anki-rotated {
+    transform: rotate(-90deg);
 }

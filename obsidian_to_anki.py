@@ -459,13 +459,13 @@ class FormatConverter:
         for code_match in inline_code_matches:
             note_text = note_text.replace(
                 FormatConverter.INLINE_CODE_REPLACE,
-                html.escape(code_match),
+                code_match,
                 1
             )
         for code_match in display_code_matches:
             note_text = note_text.replace(
                 FormatConverter.DISPLAY_CODE_REPLACE,
-                html.escape(code_match),
+                code_match,
                 1
             )
         note_text = FormatConverter.markdown_parse(note_text)
@@ -1702,7 +1702,6 @@ class Directory:
     def parse_requests_1(self, requests_1_response, tags):
         response = requests_1_response
         notes_ids = AnkiConnect.parse(response[0])
-        print(notes_ids)
         cards_ids = AnkiConnect.parse(response[1])
         for note_ids, file in zip(notes_ids, self.files):
             file.note_ids = [

@@ -32,6 +32,15 @@ let converter: Converter = new Converter({
 	extensions: [showdownHighlight]
 })
 
+function escapeHtml(unsafe: string): string {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }
+
 export class FormatConverter {
 
 	file_cache: CachedMetadata
@@ -125,10 +134,10 @@ export class FormatConverter {
 		return [note_text.replace(regexp, mask), matches]
 	}
 
-	decensor(note_text: string, mask:string, replacements: string[]): string {
+	decensor(note_text: string, mask:string, replacements: string[], escape: boolean): string {
 		for (let replacement of replacements) {
 			note_text = note_text.replace(
-				mask, replacement
+				mask, escape ? escapeHtml(replacement) : replacement
 			)
 		}
 		return note_text
@@ -154,10 +163,10 @@ export class FormatConverter {
 		note_text = this.formatLinks(note_text)
 		//Special for formatting highlights now, but want to avoid any == in code
 		note_text = note_text.replace(HIGHLIGHT_REGEXP, String.raw`<mark>$1</mark>`)
-		note_text = this.decensor(note_text, DISPLAY_CODE_REPLACE, display_code_matches)
-		note_text = this.decensor(note_text, INLINE_CODE_REPLACE, inline_code_matches)
+		note_text = this.decensor(note_text, DISPLAY_CODE_REPLACE, display_code_matches, false)
+		note_text = this.decensor(note_text, INLINE_CODE_REPLACE, inline_code_matches, false)
 		note_text = converter.makeHtml(note_text)
-		note_text = this.decensor(note_text, MATH_REPLACE, math_matches).trim()
+		note_text = this.decensor(note_text, MATH_REPLACE, math_matches, true).trim()
 		// Remove unnecessary paragraph tag
 		if (note_text.startsWith(PARA_OPEN) && note_text.endsWith(PARA_CLOSE)) {
 			note_text = note_text.slice(PARA_OPEN.length, -1 * PARA_CLOSE.length)

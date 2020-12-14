@@ -3,7 +3,6 @@ import { ParsedSettings } from './interfaces/settings-interface'
 import { App, TFile, CachedMetadata, FileSystemAdapter, Notice } from 'obsidian'
 import { AllFile } from './file'
 import * as AnkiConnect from './anki'
-import { bytesToBase64 } from 'byte-base64'
 import { basename } from 'path'
 
 interface addNoteResponse {
