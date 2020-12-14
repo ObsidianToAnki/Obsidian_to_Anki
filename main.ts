@@ -37,7 +37,6 @@ export default class MyPlugin extends Plugin {
 				"Add Context": false,
 				"CurlyCloze": false,
 				"CurlyCloze - Highlights to Clozes": false,
-				"Regex": false,
 				"ID Comments": true,
 			}
 		}
@@ -155,7 +154,7 @@ export default class MyPlugin extends Plugin {
 
 	async scanVault() {
 		new Notice('Scanning vault, check console for details...');
-		console.log("Checking connection to Anki...")
+		console.info("Checking connection to Anki...")
 		try {
 			const test = await AnkiConnect.invoke('modelNames')
 		}
@@ -163,6 +162,7 @@ export default class MyPlugin extends Plugin {
 			new Notice("Error, couldn't connect to Anki! Check console for error message.")
 			return
 		}
+		new Notice("Successfully connected to Anki! This could take a few minutes - please don't close Anki until the plugin is finished")
 		const data: ParsedSettings = await settingToData(this.app, this.settings, this.fields_dict)
 		const manager = new FileManager(this.app, data, this.app.vault.getMarkdownFiles(), this.file_hashes, this.added_media)
 		await manager.initialiseFiles()

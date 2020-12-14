@@ -11,20 +11,38 @@ Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It ha
 ## Setup
 
 ### All users
-1. Install the latest version of [Python](https://www.python.org/downloads/).
-2. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
-3. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
+1. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
+2. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
 
 ### Obsidian plugin users
-4. Have [Obsidian](https://obsidian.md/) downloaded
-5. Search the 'Community plugins' list for this plugin
-6. Install the plugin.
-7. In Anki, navigate to Tools->Addons->AnkiConnect->Config, and change it to look like this: ![AnkiConnect_Config](Images/AnkiConnect_ConfigREAL.png)
+3. Have [Obsidian](https://obsidian.md/) downloaded
+4. Search the 'Community plugins' list for this plugin
+5. Install the plugin.
+6. In Anki, navigate to Tools->Addons->AnkiConnect->Config, and change it to look like this:
+<pre>
+{
+    "apiKey": null,
+    "apiLogPath": null,
+    "webBindAddress": "127.0.0.1",
+    "webBindPort": 8765,
+    "webCorsOrigin": "http://localhost",
+    "webCorsOriginList": [
+        "http://localhost",
+        "app://obsidian.md"
+    ]
+}
+</pre>
+
+7. Restart Anki to apply the above changes
 8. With Anki running in the background, load the plugin. This will generate the plugin settings.
+
 
 You shouldn't need Anki running to load Obsidian in the future, though of course you will need it for using the plugin!
 
+To use the plugin, look for an Anki icon on your ribbon (the place where buttons such as 'open Graph view' and 'open Quick Switcher' are).
+
 ### Python script users
+3. Install the latest version of [Python](https://www.python.org/downloads/).
 4. If you are a new user, download `obstoanki_setup.py` from the [releases page](https://github.com/Pseudonium/Obsidian_to_Anki/releases), and place it in the folder you want the script installed (for example your notes folder).  
 5. Run `obstoanki_setup.py`, for example by double-clicking it in a file explorer. This will download the latest version of the script and required dependencies automatically. Existing users should be able to run their existing `obstoanki_setup.py` to get the latest version of the script.  
 6. Check the Permissions tab below to ensure the script is able to run.
@@ -99,4 +117,4 @@ Current features (check out the wiki for more details):
 
 Note that **all custom syntax is off by default**, and must be programmed into the script via the config file - see the Wiki for more details.
 
-If you've found the plugin useful, consider [supporting me at ko-fi](https://ko-fi.com/pseudonium)
+<a href='https://ko-fi.com/K3K52X4L6' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi1.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>

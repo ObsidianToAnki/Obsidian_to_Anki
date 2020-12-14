@@ -13,7 +13,7 @@ export const TAG_SEP:string = " "
 export const ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
 export const TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
 
-const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/g
+const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/
 export const CLOZE_ERROR: number = 42
 
 function has_clozes(text: string): boolean {

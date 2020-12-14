@@ -308,7 +308,7 @@ export class AllFile extends AbstractFile {
                 if (parsed.identifier == CLOZE_ERROR) {
                     continue
                 }
-                console.log("Warning! note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -342,7 +342,7 @@ export class AllFile extends AbstractFile {
                 if (parsed.identifier == CLOZE_ERROR) {
                     continue
                 }
-                console.log("Warning! note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -355,7 +355,6 @@ export class AllFile extends AbstractFile {
         //and adding any matches to ignore_spans.
         for (let search_id of [true, false]) {
             for (let search_tags of [true, false]) {
-                console.log("HI")
                 let id_str = search_id ? ID_REGEXP_STR : ""
                 let tag_str = search_tags ? TAG_REGEXP_STR : ""
                 let regexp: RegExp = new RegExp(regexp_str + tag_str + id_str, 'gm')
@@ -372,16 +371,20 @@ export class AllFile extends AbstractFile {
                         this.data.add_context ? this.getContextAtIndex(match.index) : ""
                     )
                     if (search_id) {
-                        if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
+                        if (!(this.data.EXISTING_IDS.includes(parsed.identifier))) {
                             if (parsed.identifier == CLOZE_ERROR) {
+                                // This means it wasn't actually a note! So we should remove it from ignore_spans
+                                this.ignore_spans.pop()
                                 continue
                             }
-                            console.log("Warning! Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                            console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
                         } else {
                             this.notes_to_edit.push(parsed)
                         }
                     } else {
                         if (parsed.identifier == CLOZE_ERROR) {
+                            // This means it wasn't actually a note! So we should remove it from ignore_spans
+                            this.ignore_spans.pop()
                             continue
                         }
                         parsed.note.tags.push(...this.global_tags.split(TAG_SEP))
