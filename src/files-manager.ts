@@ -146,11 +146,6 @@ export class FileManager {
                 this.added_media_set.add(mediaLink)
                 const dataFile = this.app.metadataCache.getFirstLinkpathDest(mediaLink, file.path)
                 const realPath = (this.app.vault.adapter as FileSystemAdapter).getFullPath(dataFile.path)
-                //const data = await this.app.vault.readBinary(dataFile)
-                console.log(AnkiConnect.storeMediaFileByPath(
-                    basename(mediaLink),
-                    realPath
-                ))
                 temp.push(
                     AnkiConnect.storeMediaFileByPath(
                         basename(mediaLink),
@@ -169,13 +164,13 @@ export class FileManager {
         const response = this.requests_1_result as Requests1Result
         if (response[5].result.length >= 1 && response[5].result[0].error != null) {
             new Notice("Please update AnkiConnect! The way the script has added media files has changed.")
-            console.log("Please update AnkiConnect! The way the script has added media files has changed.")
+            console.warn("Please update AnkiConnect! The way the script has added media files has changed.")
         }
         let note_ids_array_by_file: Requests1Result[0]["result"]
         try {
             note_ids_array_by_file = AnkiConnect.parse(response[0])
         } catch(error) {
-            console.log("Error: ", error)
+            console.error("Error: ", error)
             note_ids_array_by_file = response[0].result
         }
         const note_info_array_by_file = AnkiConnect.parse(response[1])
@@ -187,7 +182,7 @@ export class FileManager {
             try {
                 file_response = AnkiConnect.parse(note_ids_array_by_file[i])
             } catch(error) {
-                console.log("Error: ", error)
+                console.error("Error: ", error)
                 file_response = note_ids_array_by_file[i].result
             }
             file.note_ids = []
@@ -197,7 +192,7 @@ export class FileManager {
                 try {
                     file.note_ids.push(AnkiConnect.parse(response))
                 } catch (error) {
-                    console.log("Failed to add note ", file.all_notes_to_add[i], " due to error ", error)
+                    console.warn("Failed to add note ", file.all_notes_to_add[i], " in file", file.path, " due to error ", error)
                     file.note_ids.push(response.result)
                 }
             }
