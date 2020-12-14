@@ -4,7 +4,9 @@ import { AnkiConnectNote } from './note-interface'
 export interface PluginSettings {
 	CUSTOM_REGEXPS: Record<string, string>,
 	FILE_LINK_FIELDS: Record<string, string>,
-	CONTEXT_FIELDS: Record<string, string>
+	CONTEXT_FIELDS: Record<string, string>,
+	FOLDER_DECKS: Record<string, string>,
+	FOLDER_TAGS: Record<string, string>,
 	Syntax: {
 		"Begin Note": string,
 		"End Note": string,
@@ -24,6 +26,7 @@ export interface PluginSettings {
 		"CurlyCloze": boolean,
 		"CurlyCloze - Highlights to Clozes": boolean,
 		"ID Comments": boolean,
+		"Add Obsidian Tags": boolean
 	}
 }
 
@@ -48,8 +51,11 @@ export interface FileData {
 	highlights_to_cloze: boolean
 	comment: boolean
 	add_context: boolean
+	add_obs_tags: boolean
 }
 
 export interface ParsedSettings extends FileData {
     add_file_link: boolean
+	folder_decks: Record<string, string>
+	folder_tags: Record<string, string>
 }

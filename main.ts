@@ -19,6 +19,8 @@ export default class MyPlugin extends Plugin {
 			CUSTOM_REGEXPS: {},
 			FILE_LINK_FIELDS: {},
 			CONTEXT_FIELDS: {},
+			FOLDER_DECKS: {},
+			FOLDER_TAGS: {},
 			Syntax: {
 				"Begin Note": "START",
 				"End Note": "END",
@@ -38,6 +40,7 @@ export default class MyPlugin extends Plugin {
 				"CurlyCloze": false,
 				"CurlyCloze - Highlights to Clozes": false,
 				"ID Comments": true,
+				"Add Obsidian Tags": false,
 			}
 		}
 		/*Making settings from scratch, so need note types*/

@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting, Notice } from 'obsidian'
+import { PluginSettingTab, Setting, Notice, TFolder } from 'obsidian'
 import * as AnkiConnect from './anki'
 
 const defaultDescs = {
@@ -9,7 +9,8 @@ const defaultDescs = {
 	"Add Context": "Append 'context' for the card, in the form of path > heading > heading etc, to the field specified in the table.",
 	"CurlyCloze": "Convert {cloze deletions} -> {{c1::cloze deletions}} on note types that have a 'Cloze' in their name.",
 	"CurlyCloze - Highlights to Clozes": "Convert ==highlights== -> {highlights} to be processed by CurlyCloze.",
-	"ID Comments": "Wrap note IDs in a HTML comment."
+	"ID Comments": "Wrap note IDs in a HTML comment.",
+	"Add Obsidian Tags": "Interpret #tags in the fields of a note as Anki tags, removing them from the note text in Anki."
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -94,13 +95,11 @@ export class SettingsTab extends PluginSettingTab {
 		context_field.controlEl.className += " anki-center"
 	}
 
-	setup_table() {
+	create_collapsible(name: string) {
 		let {containerEl} = this;
-		const plugin = (this as any).plugin
-		containerEl.createEl('h3', {text: 'Note type settings'})
 		let div = containerEl.createEl('div', {cls: "collapsible-item"})
 		div.innerHTML = `
-			<div class="collapsible-item-self"><div class="collapsible-item-collapse collapse-icon anki-rotated"><svg viewBox="0 0 100 100" width="8" height="8" class="right-triangle"><path fill="currentColor" stroke="currentColor" d="M94.9,20.8c-1.4-2.5-4.1-4.1-7.1-4.1H12.2c-3,0-5.7,1.6-7.1,4.1c-1.3,2.4-1.2,5.2,0.2,7.6L43.1,88c1.5,2.3,4,3.7,6.9,3.7 s5.4-1.4,6.9-3.7l37.8-59.6C96.1,26,96.2,23.2,94.9,20.8L94.9,20.8z"></path></svg></div><div class="collapsible-item-inner"></div><header >Note Type Table</header></div>
+			<div class="collapsible-item-self"><div class="collapsible-item-collapse collapse-icon anki-rotated"><svg viewBox="0 0 100 100" width="8" height="8" class="right-triangle"><path fill="currentColor" stroke="currentColor" d="M94.9,20.8c-1.4-2.5-4.1-4.1-7.1-4.1H12.2c-3,0-5.7,1.6-7.1,4.1c-1.3,2.4-1.2,5.2,0.2,7.6L43.1,88c1.5,2.3,4,3.7,6.9,3.7 s5.4-1.4,6.9-3.7l37.8-59.6C96.1,26,96.2,23.2,94.9,20.8L94.9,20.8z"></path></svg></div><div class="collapsible-item-inner"></div><header>${name}</header></div>
 		`
 		div.addEventListener('click', function () {
 			this.classList.toggle("active")
@@ -113,6 +112,13 @@ export class SettingsTab extends PluginSettingTab {
 				content.style.display = "block"
 			}
 		})
+	}
+
+	setup_note_table() {
+		let {containerEl} = this;
+		const plugin = (this as any).plugin
+		containerEl.createEl('h3', {text: 'Note type settings'})
+		this.create_collapsible("Note Type Table")
 		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"})
 		let head = note_type_table.createTHead()
 		let header_row = head.insertRow()
@@ -176,6 +182,10 @@ export class SettingsTab extends PluginSettingTab {
 		if (!(plugin.settings["Defaults"].hasOwnProperty("CurlyCloze - Highlights to Clozes"))) {
 			plugin.settings["Defaults"]["CurlyCloze - Highlights to Clozes"] = false
 		}
+		// To account for new add obsidian tags
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Add Obsidian Tags"))) {
+			plugin.settings["Defaults"]["Add Obsidian Tags"] = false
+		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
 			// To account for removal of regex setting
 			if (key === "Regex") {
@@ -230,12 +240,97 @@ export class SettingsTab extends PluginSettingTab {
 		}
 	}
 
+	get_folders(): TFolder[] {
+		const app = (this as any).plugin.app
+		let folder_list: TFolder[] = [app.vault.getRoot()]
+		for (let folder of folder_list) {
+			let filtered_list: TFolder[] = folder.children.filter((element) => element.hasOwnProperty("children")) as TFolder[]
+			folder_list.push(...filtered_list)
+		}
+		return folder_list.slice(1) //Removes initial vault folder
+	}
+
+	setup_folder_deck(folder: TFolder, row_cells: HTMLCollection) {
+		const plugin = (this as any).plugin
+		let folder_decks = plugin.settings.FOLDER_DECKS
+		if (!(folder_decks.hasOwnProperty(folder.path))) {
+			folder_decks[folder.path] = ""
+		}
+		let folder_deck = new Setting(row_cells[1] as HTMLElement)
+			.addText(
+				text => text.setValue(folder_decks[folder.path])
+				.onChange((value) => {
+					plugin.settings.FOLDER_DECKS[folder.path] = value
+					plugin.saveAllData()
+				})
+			)
+		folder_deck.settingEl = row_cells[1] as HTMLElement
+		folder_deck.infoEl.remove()
+		folder_deck.controlEl.className += " anki-center"
+	}
+
+	setup_folder_tag(folder: TFolder, row_cells: HTMLCollection) {
+		const plugin = (this as any).plugin
+		let folder_tags = plugin.settings.FOLDER_TAGS
+		if (!(folder_tags.hasOwnProperty(folder.path))) {
+			folder_tags[folder.path] = ""
+		}
+		let folder_tag = new Setting(row_cells[2] as HTMLElement)
+			.addText(
+				text => text.setValue(folder_tags[folder.path])
+				.onChange((value) => {
+					plugin.settings.FOLDER_TAGS[folder.path] = value
+					plugin.saveAllData()
+				})
+			)
+		folder_tag.settingEl = row_cells[2] as HTMLElement
+		folder_tag.infoEl.remove()
+		folder_tag.controlEl.className += " anki-center"
+	}
+
+	setup_folder_table() {
+		let {containerEl} = this;
+		const plugin = (this as any).plugin
+		const folder_list = this.get_folders()
+		containerEl.createEl('h3', {text: 'Folder settings'})
+		this.create_collapsible("Folder Table")
+		let folder_table = containerEl.createEl('table', {cls: "anki-settings-table"})
+		let head = folder_table.createTHead()
+		let header_row = head.insertRow()
+		for (let header of ["Folder", "Folder Deck", "Folder Tags"]) {
+			let th = document.createElement("th")
+			th.appendChild(document.createTextNode(header))
+			header_row.appendChild(th)
+		}
+		let main_body = folder_table.createTBody()
+		if (!(plugin.settings.hasOwnProperty("FOLDER_DECKS"))) {
+			plugin.settings.FOLDER_DECKS = {}
+		}
+		if (!(plugin.settings.hasOwnProperty("FOLDER_TAGS"))) {
+			plugin.settings.FOLDER_TAGS = {}
+		}
+		for (let folder of folder_list) {
+			let row = main_body.insertRow()
+
+			row.insertCell()
+			row.insertCell()
+			row.insertCell()
+
+			let row_cells = row.children
+
+			row_cells[0].innerHTML = folder.path
+			this.setup_folder_deck(folder, row_cells)
+			this.setup_folder_tag(folder, row_cells)
+		}
+
+	}
+
 	setup_buttons() {
 		let {containerEl} = this
 		const plugin = (this as any).plugin
 		let action_buttons = containerEl.createEl('h3', {text: 'Actions'})
 		new Setting(action_buttons)
-			.setName("Regenerate Table")
+			.setName("Regenerate Note Type Table")
 			.setDesc("Connect to Anki to regenerate the table with new note types, or get rid of deleted note types.")
 			.addButton(
 				button => {
@@ -304,7 +399,8 @@ export class SettingsTab extends PluginSettingTab {
 		containerEl.empty()
 		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings'})
 		containerEl.createEl('a', {text: 'For more information check the wiki', href: "https://github.com/Pseudonium/Obsidian_to_Anki/wiki"})
-		this.setup_table()
+		this.setup_note_table()
+		this.setup_folder_table()
 		this.setup_syntax()
 		this.setup_defaults()
 		this.setup_buttons()
