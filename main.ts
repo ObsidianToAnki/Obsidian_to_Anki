@@ -209,6 +209,14 @@ export default class MyPlugin extends Plugin {
 		this.addRibbonIcon('anki', 'Obsidian_to_Anki - Scan Vault', async () => {
 			await this.scanVault()
 		})
+
+		this.addCommand({
+			id: 'anki-scan-vault',
+			name: 'Scan Vault',
+			callback: async () => {
+			 	await this.scanVault()
+			 }
+		})
 	}
 
 	async onunload() {
