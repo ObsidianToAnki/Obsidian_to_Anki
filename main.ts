@@ -156,7 +156,7 @@ export default class MyPlugin extends Plugin {
 		new Notice('Scanning vault, check console for details...');
 		console.info("Checking connection to Anki...")
 		try {
-			const test = await AnkiConnect.invoke('modelNames')
+			await AnkiConnect.invoke('modelNames')
 		}
 		catch(e) {
 			new Notice("Error, couldn't connect to Anki! Check console for error message.")
