@@ -33,7 +33,8 @@ Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It ha
 }
 </pre>
 
-7. With Anki running in the background, load the plugin. This will generate the plugin settings.
+7. Restart Anki to apply the above changes
+8. With Anki running in the background, load the plugin. This will generate the plugin settings.
 
 
 You shouldn't need Anki running to load Obsidian in the future, though of course you will need it for using the plugin!
