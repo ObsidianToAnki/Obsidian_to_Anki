@@ -191,8 +191,15 @@ export class FileManager {
                 file_response = note_ids_array_by_file[i].result
             }
             file.note_ids = []
-            for (let response of file_response) {
-                file.note_ids.push(AnkiConnect.parse(response))
+            for (let index in file_response) {
+                let i = parseInt(index)
+                let response = file_response[i]
+                try {
+                    file.note_ids.push(AnkiConnect.parse(response))
+                } catch (error) {
+                    console.log("Failed to add note ", file.all_notes_to_add[i], " due to error ", error)
+                    file.note_ids.push(response.result)
+                }
             }
         }
         for (let index in note_info_array_by_file) {
