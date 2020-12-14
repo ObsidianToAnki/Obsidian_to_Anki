@@ -297,7 +297,7 @@ export class SettingsTab extends PluginSettingTab {
 		let folder_table = containerEl.createEl('table', {cls: "anki-settings-table"})
 		let head = folder_table.createTHead()
 		let header_row = head.insertRow()
-		for (let header of ["Folder", "Folder Deck", "Folder Tag"]) {
+		for (let header of ["Folder", "Folder Deck", "Folder Tags"]) {
 			let th = document.createElement("th")
 			th.appendChild(document.createTextNode(header))
 			header_row.appendChild(th)
