@@ -459,13 +459,13 @@ class FormatConverter:
         for code_match in inline_code_matches:
             note_text = note_text.replace(
                 FormatConverter.INLINE_CODE_REPLACE,
-                html.escape(code_match),
+                code_match,
                 1
             )
         for code_match in display_code_matches:
             note_text = note_text.replace(
                 FormatConverter.DISPLAY_CODE_REPLACE,
-                html.escape(code_match),
+                code_match,
                 1
             )
         note_text = FormatConverter.markdown_parse(note_text)
