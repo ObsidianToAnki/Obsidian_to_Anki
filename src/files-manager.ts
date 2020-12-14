@@ -83,7 +83,7 @@ export class FileManager {
             let file = this.ownFiles[i]
             if (!(this.file_hashes.hasOwnProperty(file.path) && file.getHash() === this.file_hashes[file.path])) {
                 //Indicates it's changed or new
-                console.log("Scanning ", file.path, "as it's changed or new.")
+                console.info("Scanning ", file.path, "as it's changed or new.")
                 file.scanFile()
                 files_changed.push(file)
                 obfiles_changed.push(this.files[i])
