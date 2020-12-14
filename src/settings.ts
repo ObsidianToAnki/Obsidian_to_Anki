@@ -247,7 +247,7 @@ export class SettingsTab extends PluginSettingTab {
 			let filtered_list: TFolder[] = folder.children.filter((element) => element.hasOwnProperty("children")) as TFolder[]
 			folder_list.push(...filtered_list)
 		}
-		return folder_list
+		return folder_list.slice(1) //Removes initial vault folder
 	}
 
 	setup_folder_deck(folder: TFolder, row_cells: HTMLCollection) {
