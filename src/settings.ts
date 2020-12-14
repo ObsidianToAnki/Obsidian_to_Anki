@@ -330,7 +330,7 @@ export class SettingsTab extends PluginSettingTab {
 		const plugin = (this as any).plugin
 		let action_buttons = containerEl.createEl('h3', {text: 'Actions'})
 		new Setting(action_buttons)
-			.setName("Regenerate Table")
+			.setName("Regenerate Note Type Table")
 			.setDesc("Connect to Anki to regenerate the table with new note types, or get rid of deleted note types.")
 			.addButton(
 				button => {
