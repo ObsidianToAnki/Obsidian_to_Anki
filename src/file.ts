@@ -258,6 +258,9 @@ export class AllFile extends AbstractFile {
 
     add_spans_to_ignore() {
         this.ignore_spans = []
+        this.ignore_spans.push(...spans(this.data.FROZEN_REGEXP, this.file))
+        this.ignore_spans.push(...spans(this.data.DECK_REGEXP, this.file))
+        this.ignore_spans.push(...spans(this.data.TAG_REGEXP, this.file))
         this.ignore_spans.push(...spans(this.data.NOTE_REGEXP, this.file))
         this.ignore_spans.push(...spans(this.data.INLINE_REGEXP, this.file))
         this.ignore_spans.push(...spans(c.OBS_INLINE_MATH_REGEXP, this.file))
