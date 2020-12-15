@@ -39,7 +39,8 @@ Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It ha
 
 You shouldn't need Anki running to load Obsidian in the future, though of course you will need it for using the plugin!
 
-To use the plugin, look for an Anki icon on your ribbon (the place where buttons such as 'open Graph view' and 'open Quick Switcher' are).
+To run the plugin, look for an Anki icon on your ribbon (the place where buttons such as 'open Graph view' and 'open Quick Switcher' are).
+For more information on use, please check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)!
 
 ### Python script users
 3. Install the latest version of [Python](https://www.python.org/downloads/).
