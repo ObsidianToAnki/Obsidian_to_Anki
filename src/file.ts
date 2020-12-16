@@ -3,7 +3,7 @@
 import { FROZEN_FIELDS_DICT } from './interfaces/field-interface'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'
 import { FileData } from './interfaces/settings-interface'
-import { Note, InlineNote, RegexNote, CLOZE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
+import { Note, InlineNote, RegexNote, CLOZE_ERROR, NOTE_TYPE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
 import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
 import * as c from './constants'
@@ -313,11 +313,15 @@ export class AllFile extends AbstractFile {
                 this.notes_to_add.push(parsed.note)
                 this.id_indexes.push(position)
             } else if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
-                // Need to show an error
                 if (parsed.identifier == CLOZE_ERROR) {
                     continue
                 }
-                console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                // Need to show an error otherwise
+                else if (parsed.identifier == NOTE_TYPE_ERROR) {
+                    console.warn("Did not recognise note type ", parsed.note.modelName, " in file ", this.path)
+                } else {
+                    console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                }
             } else {
                 this.notes_to_edit.push(parsed)
             }

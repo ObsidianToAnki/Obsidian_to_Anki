@@ -16,6 +16,7 @@ const OBS_TAG_REGEXP: RegExp = /#(\w+)/g
 
 const ANKI_CLOZE_REGEXP: RegExp = /{{c\d+::[\s\S]+?}}/
 export const CLOZE_ERROR: number = 42
+export const NOTE_TYPE_ERROR: number = 69
 
 function has_clozes(text: string): boolean {
 	/*Checks whether text actually has cloze deletions.*/
@@ -46,15 +47,21 @@ abstract class AbstractNote {
     formatter: FormatConverter
     curly_cloze: boolean
 	highlights_to_cloze: boolean
+	no_note_type: boolean
 
     constructor(note_text: string, fields_dict: FIELDS_DICT, curly_cloze: boolean, highlights_to_cloze: boolean, formatter: FormatConverter) {
         this.text = note_text.trim()
         this.current_field_num = 0
         this.delete = false
+		this.no_note_type = false
         this.split_text = this.getSplitText()
         this.identifier = this.getIdentifier()
         this.tags = this.getTags()
         this.note_type = this.getNoteType()
+		if (!(fields_dict.hasOwnProperty(this.note_type))) {
+			this.no_note_type = true
+			return
+		}
         this.field_names = fields_dict[this.note_type]
         this.current_field = this.field_names[0]
         this.formatter = formatter
@@ -74,7 +81,10 @@ abstract class AbstractNote {
 
     parse(deck:string, url:string, frozen_fields_dict: FROZEN_FIELDS_DICT, data: FileData, context:string): AnkiConnectNoteAndID {
         let template = JSON.parse(JSON.stringify(data.template))
-        template["modelName"] = this.note_type
+		template["modelName"] = this.note_type
+		if (this.no_note_type) {
+			return {note: template, identifier: NOTE_TYPE_ERROR}
+		}
         template["fields"] = this.getFields()
 		const file_link_fields = data.file_link_fields
         if (url) {
