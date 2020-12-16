@@ -194,15 +194,21 @@ export class FileManager {
             const mediaLinks = difference(file.formatter.detectedMedia, this.added_media_set)
             for (let mediaLink of mediaLinks) {
                 console.log("Adding media file: ", mediaLink)
-                this.added_media_set.add(mediaLink)
                 const dataFile = this.app.metadataCache.getFirstLinkpathDest(mediaLink, file.path)
-                const realPath = (this.app.vault.adapter as FileSystemAdapter).getFullPath(dataFile.path)
-                temp.push(
-                    AnkiConnect.storeMediaFileByPath(
-                        basename(mediaLink),
-                        realPath
+                if (!(dataFile)) {
+                    console.warn("Couldn't locate media file ", mediaLink)
+                }
+                else {
+                    // Located successfully, so treat as if we've added the media
+                    this.added_media_set.add(mediaLink)
+                    const realPath = (this.app.vault.adapter as FileSystemAdapter).getFullPath(dataFile.path)
+                    temp.push(
+                        AnkiConnect.storeMediaFileByPath(
+                            basename(mediaLink),
+                            realPath
+                        )
                     )
-                )
+                }
             }
         }
         requests.push(AnkiConnect.multi(temp))
