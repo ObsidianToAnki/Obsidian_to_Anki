@@ -88,7 +88,7 @@ export class FileManager {
         let folder_decks = this.data.folder_decks
         for (let folder of folder_path_list) {
             // Loops over them from innermost folder
-            if (folder_decks[folder.path] !== "") {
+            if (folder_decks[folder.path]) {
                 return folder_decks[folder.path]
             }
         }
@@ -101,7 +101,7 @@ export class FileManager {
         let tags_list: string[] = []
         for (let folder of folder_path_list) {
             // Loops over them from innermost folder
-            if (folder_tags[folder.path] !== "") {
+            if (folder_tags[folder.path]) {
                 tags_list.push(...folder_tags[folder.path].split(" "))
             }
         }
