@@ -41,7 +41,8 @@ export default class MyPlugin extends Plugin {
 				"CurlyCloze - Highlights to Clozes": false,
 				"ID Comments": true,
 				"Add Obsidian Tags": false,
-			}
+			},
+			IGNORED_FILE_GLOBS:[]
 		}
 		/*Making settings from scratch, so need note types*/
 		this.note_types = await AnkiConnect.invoke('modelNames') as Array<string>
