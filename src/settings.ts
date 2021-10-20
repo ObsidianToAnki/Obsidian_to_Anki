@@ -396,16 +396,17 @@ export class SettingsTab extends PluginSettingTab {
 		let {containerEl} = this;
 		const plugin = (this as any).plugin
 		let ignored_files_settings = containerEl.createEl('h3', {text: 'Ignored File Settings'})
+		plugin.settings["IGNORED_FILE_GLOBS"] = plugin.settings.hasOwnProperty("IGNORED_FILE_GLOBS")?plugin.settings["IGNORED_FILE_GLOBS"]:[]
 		new Setting(ignored_files_settings)
 			.setName("Ignored File Settings")
 			.addTextArea(
 				text => { 
-					text.setValue(plugin.settings["IGNORED_FILE_GLOBS"].join("\n"))
+					text.setValue(plugin.settings.IGNORED_FILE_GLOBS.join("\n"))
 						.setPlaceholder("This works like a .gitignore file. Files that match any of the lines in this file will not be scanned.")
 						.onChange((value) => {
-							let ignoreLines = !plugin.settings.IGNORED_FILE_GLOBS.hasOwnProperty()? value.split("\n"): []
+							let ignoreLines = value.split("\n")
 							ignoreLines = ignoreLines.filter(e => e.trim() != "") //filter out empty lines and blank lines
-							plugin.settings["IGNORED_FILE_GLOBS"] = ignoreLines
+							plugin.settings.IGNORED_FILE_GLOBS = ignoreLines
 
 							plugin.saveAllData()
 						}
