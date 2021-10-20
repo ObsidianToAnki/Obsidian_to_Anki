@@ -403,7 +403,7 @@ export class SettingsTab extends PluginSettingTab {
 					text.setValue(plugin.settings["IGNORED_FILE_GLOBS"].join("\n"))
 						.setPlaceholder("This works like a .gitignore file. Files that match any of the lines in this file will not be scanned.")
 						.onChange((value) => {
-							let ignoreLines = value.split("\n")
+							let ignoreLines = !plugin.settings.IGNORED_FILE_GLOBS.hasOwnProperty()? value.split("\n"): []
 							ignoreLines = ignoreLines.filter(e => e.trim() != "") //filter out empty lines and blank lines
 							plugin.settings["IGNORED_FILE_GLOBS"] = ignoreLines
 
