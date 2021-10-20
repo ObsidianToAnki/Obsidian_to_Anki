@@ -411,6 +411,7 @@ export class SettingsTab extends PluginSettingTab {
 						}
 					)
 					text.inputEl.rows = 10
+					text.inputEl.cols = 30
 				}
 			)
 	}
