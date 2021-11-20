@@ -9,7 +9,7 @@ export interface AnkiConnectRequest {
 }
 
 export function invoke(action: string, params={}) {
-    return new Promise((resolve, reject) => {
+    return new Promise<any>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.addEventListener('error', () => reject('failed to issue request'));
         xhr.addEventListener('load', () => {
