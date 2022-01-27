@@ -58,7 +58,7 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async generateFieldsDict(): Promise<Record<string, string[]>> {
-		let fields_dict = {}
+		let fields_dict: {[note_type: string]: string[]} = {}
 		for (let note_type of this.note_types) {
 			const field_names: string[] = await AnkiConnect.invoke(
 				'modelFieldNames', {modelName: note_type}

@@ -29,7 +29,8 @@ let converter: Converter = new Converter({
 	tables: true, tasklists: true,
 	simpleLineBreaks: true,
 	requireSpaceBeforeHeadingText: true,
-	extensions: [showdownHighlight]
+	// @ts-ignore
+	extensions: [showdownHighlight] 
 })
 
 function escapeHtml(unsafe: string): string {
