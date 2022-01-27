@@ -338,19 +338,17 @@ export class SettingsTab extends PluginSettingTab {
 					.onClick(async () => {
 						new Notice("Need to connect to Anki to update note types...")
 						try {
+							new Notice('Need to connect to Anki to generate fields dictionary...')
 							plugin.note_types = await AnkiConnect.invoke('modelNames')
 							plugin.regenerateSettingsRegexps()
 							plugin.fields_dict = await plugin.loadFieldsDict()
-							if (Object.keys(plugin.fields_dict).length != plugin.note_types.length) {
-								new Notice('Need to connect to Anki to generate fields dictionary...')
-								try {
-									plugin.fields_dict = await plugin.generateFieldsDict()
-									new Notice("Fields dictionary successfully generated!")
-								}
-								catch(e) {
-									new Notice("Couldn't connect to Anki! Check console for error message.")
-									return
-								}
+							try {
+								plugin.fields_dict = await plugin.generateFieldsDict()
+								new Notice("Fields dictionary successfully generated!")
+							}
+							catch(e) {
+								new Notice("Couldn't connect to Anki! Check console for error message.")
+								return
 							}
 							await plugin.saveAllData()
 							this.setup_display()
