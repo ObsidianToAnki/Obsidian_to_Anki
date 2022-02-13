@@ -19,6 +19,7 @@
     "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
     "rollup": "^2.32.1",
     "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-copy-assets": "^2.0.3",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "showdown-highlight": "^2.1.5",
     "tslib": "^2.0.3",
