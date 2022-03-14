@@ -4,6 +4,7 @@ import { App, TFile, TFolder, TAbstractFile, CachedMetadata, FileSystemAdapter, 
 import { AllFile } from './file'
 import * as AnkiConnect from './anki'
 import { basename } from 'path'
+import MyPlugin from 'main'
 
 interface addNoteResponse {
     result: number,
@@ -53,6 +54,7 @@ function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
 
 export class FileManager {
     app: App
+    plugin: MyPlugin
     data: ParsedSettings
     files: TFile[]
     ownFiles: Array<AllFile>
@@ -60,8 +62,9 @@ export class FileManager {
     requests_1_result: any
     added_media_set: Set<string>
 
-    constructor(app: App, data:ParsedSettings, files: TFile[], file_hashes: Record<string, string>, added_media: string[]) {
+    constructor(app: App, plugin: MyPlugin, data:ParsedSettings, files: TFile[], file_hashes: Record<string, string>, added_media: string[]) {
         this.app = app
+        this.plugin = plugin
         this.data = data
         this.files = files
         this.ownFiles = []
@@ -85,6 +88,9 @@ export class FileManager {
     }
 
     getDefaultDeck(file: TFile, folder_path_list: TFolder[]): string {
+        if (this.plugin.settings.Defaults['Auto Target Deck from Path']) {
+            return file.path.slice(0, -3).replaceAll("/", "::")
+        }
         let folder_decks = this.data.folder_decks
         for (let folder of folder_path_list) {
             // Loops over them from innermost folder
@@ -105,6 +111,7 @@ export class FileManager {
                 tags_list.push(...folder_tags[folder.path].split(" "))
             }
         }
+        
         tags_list.push(...this.data.template.tags)
         return tags_list
     }
