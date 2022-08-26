@@ -149,6 +149,7 @@ export class FileManager {
             const file_data = this.dataToFileData(file)
             this.ownFiles.push(
                 new AllFile(
+                    this,
                     content,
                     file.path,
                     this.data.add_file_link ? this.getUrl(file) : "",
