@@ -41,8 +41,10 @@ export default class MyPlugin extends Plugin {
 				"CurlyCloze - Highlights to Clozes": false,
 				"ID Comments": true,
 				"Add Obsidian Tags": false,
-				"Auto Target Deck from Path": true
-			}
+				"Auto Target Deck from Path": true,
+				"Rescan Error Throwing Files": true
+			},
+			IGNORED_FILE_GLOBS: [],
 		}
 		/*Making settings from scratch, so need note types*/
 		this.note_types = await AnkiConnect.invoke('modelNames') as Array<string>
@@ -175,6 +177,11 @@ export default class MyPlugin extends Plugin {
 		const hashes = manager.getHashes()
 		for (let key in hashes) {
 			this.file_hashes[key] = hashes[key]
+		}
+		if (this.settings.Defaults['Rescan Error Throwing Files']) {
+			for (let errorPath in manager.errorFilePaths) {
+				delete this.file_hashes[errorPath]
+			}
 		}
 		new Notice("All done! Saving file hashes and added media now...")
 		this.saveAllData()

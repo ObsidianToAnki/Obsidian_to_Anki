@@ -22,8 +22,9 @@
         "typescript": "4.4.4"
     },
     "dependencies": {
+        "multimatch": "^6.0.0",
         "showdown": "^1.9.0",
         "showdown-highlight": "^2.1.3",
-        "ts-md5": "^1.2.11"
+        "ts-md5": "^1.3.1"
     }
 }

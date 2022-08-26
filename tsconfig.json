@@ -13,7 +13,6 @@
       "allowSyntheticDefaultImports": true,
       "lib": [
         "DOM",
-        "DOM.Iterable",
         "ES5",
         "ES6",
         "ES7"

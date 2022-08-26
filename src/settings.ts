@@ -11,7 +11,8 @@ const defaultDescs: {[settingName: string]: string} = {
 	"CurlyCloze - Highlights to Clozes": "Convert ==highlights== -> {highlights} to be processed by CurlyCloze.",
 	"ID Comments": "Wrap note IDs in a HTML comment.",
 	"Add Obsidian Tags": "Interpret #tags in the fields of a note as Anki tags, removing them from the note text in Anki.",
-	"Auto Target Deck from Path": "Automatically add decks from path of note if no deck specified"
+	"Auto Target Deck from Path": "Automatically add decks from path of note if no deck specified",
+	"Rescan Error Throwing Files": "Rescan files that throw errors e.g. if their deck was created"
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -187,6 +188,12 @@ export class SettingsTab extends PluginSettingTab {
 		if (!(plugin.settings["Defaults"].hasOwnProperty("Add Obsidian Tags"))) {
 			plugin.settings["Defaults"]["Add Obsidian Tags"] = false
 		}
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Auto Target Deck from Path"))) {
+			plugin.settings["Defaults"]["Auto Target Deck from Path"] = false
+		}
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Auto Rescan Error Throwing Files"))) {
+			plugin.settings["Defaults"]["Rescan Error Throwing Files"] = false
+		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
 			// To account for removal of regex setting
 			if (key === "Regex") {
@@ -204,6 +211,7 @@ export class SettingsTab extends PluginSettingTab {
 						})
 				)
 			} else if (typeof plugin.settings["Defaults"][key] === "boolean") {
+				console.log(defaultDescs[key])
 				new Setting(defaults_settings)
 					.setName(key)
 					.setDesc(defaultDescs[key])
@@ -392,6 +400,31 @@ export class SettingsTab extends PluginSettingTab {
 			)
 	}
 
+	setup_ignore_files(){
+		let {containerEl} = this;
+		const plugin = (this as any).plugin
+		let ignored_files_settings = containerEl.createEl('h3', {text: 'Ignored File Settings'})
+		plugin.settings["IGNORED_FILE_GLOBS"] = plugin.settings.hasOwnProperty("IGNORED_FILE_GLOBS")?plugin.settings["IGNORED_FILE_GLOBS"]:[]
+		new Setting(ignored_files_settings)
+			.setName("Ignored File Settings")
+			.addTextArea(
+				text => { 
+					text.setValue(plugin.settings.IGNORED_FILE_GLOBS.join("\n"))
+						.setPlaceholder("This works like a .gitignore file. Files that match any of the lines in this file will not be scanned.")
+						.onChange((value) => {
+							let ignoreLines = value.split("\n")
+							ignoreLines = ignoreLines.filter(e => e.trim() != "") //filter out empty lines and blank lines
+							plugin.settings.IGNORED_FILE_GLOBS = ignoreLines
+
+							plugin.saveAllData()
+						}
+					)
+					text.inputEl.rows = 10
+					text.inputEl.cols = 30
+				}
+			)
+	}
+
 	setup_display() {
 		let {containerEl} = this
 
@@ -403,6 +436,7 @@ export class SettingsTab extends PluginSettingTab {
 		this.setup_syntax()
 		this.setup_defaults()
 		this.setup_buttons()
+		this.setup_ignore_files()
 	}
 
 	async display() {

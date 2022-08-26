@@ -27,8 +27,10 @@ export interface PluginSettings {
 		"CurlyCloze - Highlights to Clozes": boolean,
 		"ID Comments": boolean,
 		"Add Obsidian Tags": boolean,
-		"Auto Target Deck from Path": boolean
-	}
+		"Auto Target Deck from Path": boolean,
+		"Rescan Error Throwing Files": boolean
+	},
+	IGNORED_FILE_GLOBS:string[]
 }
 
 export interface FileData {
@@ -53,10 +55,13 @@ export interface FileData {
 	comment: boolean
 	add_context: boolean
 	add_obs_tags: boolean
+	auto_target_deck: boolean
+	rescan_error_files: boolean
 }
 
 export interface ParsedSettings extends FileData {
     add_file_link: boolean
 	folder_decks: Record<string, string>
 	folder_tags: Record<string, string>
+	ignored_file_globs: string[]
 }
