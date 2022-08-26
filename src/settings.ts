@@ -191,7 +191,7 @@ export class SettingsTab extends PluginSettingTab {
 		if (!(plugin.settings["Defaults"].hasOwnProperty("Auto Target Deck from Path"))) {
 			plugin.settings["Defaults"]["Auto Target Deck from Path"] = false
 		}
-		if (!(plugin.settings["Defaults"].hasOwnProperty("Auto Rescan Error Throwing Files"))) {
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Rescan Error Throwing Files"))) {
 			plugin.settings["Defaults"]["Rescan Error Throwing Files"] = false
 		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
@@ -211,7 +211,6 @@ export class SettingsTab extends PluginSettingTab {
 						})
 				)
 			} else if (typeof plugin.settings["Defaults"][key] === "boolean") {
-				console.log(defaultDescs[key])
 				new Setting(defaults_settings)
 					.setName(key)
 					.setDesc(defaultDescs[key])

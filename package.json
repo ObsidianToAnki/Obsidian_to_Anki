@@ -1,6 +1,6 @@
 {
     "name": "obsidian-to-anki",
-    "version": "0.9.7",
+    "version": "3.6.0",
     "description": "Plugin to create anki notes in Obsidian",
     "main": "main.js",
     "scripts": {

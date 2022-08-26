@@ -179,7 +179,7 @@ export default class MyPlugin extends Plugin {
 			this.file_hashes[key] = hashes[key]
 		}
 		if (this.settings.Defaults['Rescan Error Throwing Files']) {
-			for (let errorPath in manager.errorFilePaths) {
+			for (let errorPath of manager.errorFilePaths) {
 				delete this.file_hashes[errorPath]
 			}
 		}
