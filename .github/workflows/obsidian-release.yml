@@ -44,7 +44,7 @@ jobs:
          zip -r ${{ github.event.repository.name }}-${{ env.tag }}.zip ${{ github.event.repository.name }}
 
      - name: Release
-       uses: softprops/action-gh-release@v1
+       uses: softprops/action-gh-release@v3
        with:
          files: |
            ${{ github.event.repository.name }}-${{ env.tag }}.zip
