@@ -47,6 +47,7 @@ jobs:
        uses: softprops/action-gh-release@v1
        with:
          # main.css
+         generate_release_notes: true
          files: |
            ${{ github.event.repository.name }}-${{ env.tag }}.zip
            main.js
