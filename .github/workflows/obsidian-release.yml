@@ -44,11 +44,11 @@ jobs:
          zip -r ${{ github.event.repository.name }}-${{ env.tag }}.zip ${{ github.event.repository.name }}
 
      - name: Release
-       uses: softprops/action-gh-release@v3
+       uses: softprops/action-gh-release@v1
        with:
+         # main.css
          files: |
            ${{ github.event.repository.name }}-${{ env.tag }}.zip
            main.js
-           main.css
            manifest.json
            styles.css
