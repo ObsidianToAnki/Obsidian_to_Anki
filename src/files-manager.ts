@@ -76,7 +76,7 @@ export class FileManager {
     getFolderPathList(file: TFile): TFolder[] {
         let result: TFolder[] = []
         let abstractFile: TAbstractFile = file
-        while (abstractFile.hasOwnProperty('parent')) {
+        while (abstractFile && abstractFile.hasOwnProperty('parent')) {
             result.push(abstractFile.parent)
             abstractFile = abstractFile.parent
         }
