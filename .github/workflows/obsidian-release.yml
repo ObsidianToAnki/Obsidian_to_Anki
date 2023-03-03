@@ -39,17 +39,17 @@ jobs:
      # Package the required files into a zip
      - name: Package
        run: |
-         mkdir ${{ github.event.repository.name }}
-         cp main.js manifest.json styles.css README.md ${{ github.event.repository.name }}
-         zip -r ${{ github.event.repository.name }}-${{ env.tag }}.zip ${{ github.event.repository.name }}
+         mkdir ${{ env.PLUGIN_NAME }}
+         cp main.js manifest.json styles.css README.md ${{ env.PLUGIN_NAME }}
+         zip -r ${{ env.PLUGIN_NAME }}-${{ env.tag }}.zip ${{ env.PLUGIN_NAME }}
 
      - name: Release
        uses: softprops/action-gh-release@v1
        with:
          # main.css
+         #  main.js
+         #  manifest.json
+         #  styles.css
          generate_release_notes: true
          files: |
-           ${{ github.event.repository.name }}-${{ env.tag }}.zip
-           main.js
-           manifest.json
-           styles.css
+           ${{ env.PLUGIN_NAME }}-${{ env.tag }}.zip
