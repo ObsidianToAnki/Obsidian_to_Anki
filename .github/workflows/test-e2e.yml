@@ -8,6 +8,8 @@ on:
   #   branches: [ master ]
   pull_request:
     branches: [ master ]
+  repository_dispatch:
+    types: [ok-to-test-command]
 
 permissions:
   checks: write
@@ -15,7 +17,7 @@ permissions:
 
 jobs:
   Test:
-
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
 
     strategy:
@@ -50,9 +52,9 @@ jobs:
           cp main.js manifest.json styles.css README.md ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
 
-      - name: Publish Test Results Comment
+      - name: Publish Test Results in Comment
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
         with:
           report_individual_runs: true
           report_suite_logs: 'any'
@@ -81,7 +83,7 @@ jobs:
           direction: last
           comment-author: 'github-actions[bot]'
       
-      - name: Publish Screenshots - Make comment
+      - name: Publish Screenshots - build comment
         if: always()
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -123,9 +125,8 @@ jobs:
           echo "" >> comment.md
           echo "###### For commit $sha" >> comment.md
       
-      - name: Publish Screehnshots - Update Comment
-        # if: ${{ steps.fc.outputs.comment-id }} == ''
-        if: always()
+      - name: Publish Screehnshots - Update or Create Comment
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
         uses: peter-evans/create-or-update-comment@v2
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
