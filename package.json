@@ -9,8 +9,8 @@
         "copy": "rm -rf tests/defaults/test_vault/.obsidian/plugins/obsidian-to-anki-plugin && mkdir -p tests/defaults/test_vault/.obsidian/plugins/obsidian-to-anki-plugin && cp manifest.json styles.css main.js tests/defaults/test_vault/.obsidian/plugins/obsidian-to-anki-plugin/",
         "prep-wdio": "bash prepare-wdio.sh",
         "test-wdio": "npm run prep-wdio && docker build -t anki-obsidian . && wdio run ./wdio.conf.ts",
-        "test-py": "pytest -v tests/anki/",
-        "test": "npm run test-wdio && pytest -v tests/anki/ --junitxml logs/test-reports/pytest.xml"
+        "test-py": "pip install pytest anki && pytest -v tests/anki/ --junitxml logs/test-reports/pytest.xml",
+        "test": "npm run test-wdio && npm run test-py"
     },
     "keywords": [],
     "author": "",

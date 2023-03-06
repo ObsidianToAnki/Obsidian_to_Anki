@@ -10,7 +10,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  Test:
 
     runs-on: ubuntu-latest
 
@@ -30,43 +30,107 @@ jobs:
       
       - name: Run Tests
         run: | 
-          npm run copy
-          npm run test
+          # npm run test
+          npm run test-wdio
+
+          ls -alh
+          ls -alh tests/test_config/
+          ls -alh "tests/test_config/.local/share/Anki2/User 1/"
+
+          sudo npm run test-py
 
       - name: Package
+        if: always()
         run: |
           mkdir ${{ env.PLUGIN_NAME }}
           cp main.js manifest.json styles.css README.md ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
 
-      - name: Publish Test Results
+      - name: Publish Test Results Comment
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
+          report_individual_runs: true
+          report_suite_logs: 'any'
+          deduplicate_classes_by_file_name: true
           files: |
             logs/test-reports/**/*.xml
+
+      # - name: Publish Test Results
+      #   uses: dorny/test-reporter@v1
+      #   if: success() || failure()
+      #   with:
+      #     name: JUnit Reprot
+      #     path: logs/test-reports/wdio.xml
+      #     reporter: jest-junit
       
       - uses: iterative/setup-cml@v1
-      - name: Publish Screenshots
+        if: always()
+      
+      - name: Publish Screenshots - Find Comment
+        if: always()
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.number }}
+          body-includes: '# 📷 Screenshots of tests:'
+          direction: last
+          comment-author: 'github-actions[bot]'
+      
+      - name: Publish Screenshots - Make comment
+        if: always()
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                echo "Screenshots of tests:" >> comment.md
-                echo "" >> comment.md  # just for the newline
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        shell: bash
+        run: |
+          echo "# 📷 Screenshots of tests:" >> comment.md
+          echo "" >> comment.md
 
-                echo "<details><summary>Obsidian Pre-Test</summary>" >> comment.md
-                echo '<p float="left">' >> comment.md
-                echo '![](logs/obs_post_test.png)' >> comment.md
-                echo '</p></details>' >> comment.md
+          for ss_test in tests/test_config/*.png logs/*.png; do 
+            ss_test_desc=$(basename "$ss_test" .png)
 
-                echo -n '"<details><summary>Obsidian Pre-Test</summary>"' >> comment.md
-                echo '<p float="left">' >> comment.md
-                echo '![](logs/obs_pre_test.png)' >> comment.md
-                echo '</p></details>' >> comment.md
-                cml comment create --publish comment.md
+            # echo "<details><summary>$ss_test_desc</summary>" >> comment.md
+            # echo '<p float="left">' >> comment.md
+            # cml-publish "$ss_test" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
+            # # echo "![](./$ss_test)" >> comment.md
+            # echo '</p></details>' >> comment.md
+
+            echo "" >> comment.md
+            echo "### $ss_test_desc" >> comment.md
+            echo "" >> comment.md
+            echo '<p float="left">' >> comment.md
+            cml-publish "$ss_test" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
+            # echo "![](./$ss_test)" >> comment.md
+            echo '</p>' >> comment.md
+          done
+
+          if [ "$EVENT" == 'pull_request' ]
+          then
+            sha=${{ github.event.pull_request.head.sha}}
+          elif [ "$EVENT" == 'workflow_run' ]
+          then
+            sha=${{ github.event.workflow_run.head_sha}}
+          else
+            sha=$GITHUB_SHA
+          fi
+
+          echo "" >> comment.md
+          echo "###### For commit $sha" >> comment.md
       
-      
+      - name: Publish Screehnshots - Update Comment
+        # if: ${{ steps.fc.outputs.comment-id }} == ''
+        if: always()
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body-file: comment.md
+          edit-mode: replace
+          issue-number: ${{ github.event.number }}
+
       - name: Upload build artifacts
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PLUGIN_NAME }}
@@ -75,3 +139,4 @@ jobs:
             logs/*
             tests/test_config/logs/*
             tests/test_config/*.png
+            # tests/test_config/.xsession-errors

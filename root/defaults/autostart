@@ -1,11 +1,19 @@
 xset -b
 
-mkdir /config/logs
+sudo -u abc
+
+mkdir -p /config/logs
 
 (sleep 2s && export LANG="LANG=C.UTF-8";LANGUAGE="en_US.UTF-8";LC_CTYPE="C.UTF-8" anki >> /config/logs/anki.log) &
-(sleep 8s && echo "Executing PreTest ss" >> /config/logs/gnome.log && gnome-screenshot >> /config/logs/gnome.log) &
+(sleep 8s && echo "Executing PreTest ss" >> /config/logs/gnome.log && gnome-screenshot >> /config/logs/gnome.log && rename 's/Screenshot from .*/Anki PreTest.png/' /config/*.png) &
 
-(sleep 10s && /defaults/obsidian_anki >> /config/logs/obsidian.log) & 
+ls -alh /defaults/ >> /config/logs/obsidian.log
+
+sudo chmod +x /defaults/obsidian_anki.sh
+
+ls -alh /defaults/ >> /config/logs/obsidian.log
+
+(sleep 10s && /defaults/obsidian_anki.sh >> /config/logs/obsidian.log) & 
 # (sleep 5s && cd /obs_to_anki/ && npm run wdio >> logs/npm.log)
 
 (sleep 12s && sudo /etc/init.d/ssh start >> /config/logs/sshd.log )

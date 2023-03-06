@@ -14,7 +14,7 @@ describe('Basic Sync', () => {
         
         await delay(100)        
         
-        await browser.saveScreenshot('logs/obs_pre_test.png')
+        await browser.saveScreenshot('logs/Obsidian PreTest.png')
         const SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
         await expect(SyncButton).toExist()
         await $(SyncButton).click()
@@ -30,7 +30,7 @@ describe('Basic Sync', () => {
         await delay(500);
         console.log(logs);
         console.log('Synced Obsidian and Anki ... Existing Obisdian');
-        await browser.saveScreenshot('logs/obs_post_test.png')
+        await browser.saveScreenshot('logs/Obsidian PostTest.png')
         
         await browser.execute( () => { return window.open('','_self').close(); } );
         await delay(5000); // esp for PostTest ss of Anki

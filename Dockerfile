@@ -17,7 +17,7 @@ RUN \
         dbus-x11 \
         uuid-runtime \
         locales locales-all \ 
-        dbus-x11 x11-xkb-utils
+        dbus-x11 x11-xkb-utils rename
 
 # Credits: https://wiki.debian.org/Locale
 # RUN apt-get install -y aptitude
