@@ -264,15 +264,15 @@ jobs:
             echo '</p>' >> comment.md
           done
 
-          if [ "$EVENT" == 'pull_request' ]
-          then
-            sha=${{ github.event.pull_request.head.sha}}
-          elif [ "$EVENT" == 'workflow_run' ]
-          then
-            sha=${{ github.event.workflow_run.head_sha}}
-          else
-            sha=$GITHUB_SHA
-          fi
+          # if [ "$EVENT" == 'pull_request' ]
+          # then
+          sha=${{ github.event.client_payload.pull_request.head.sha }}
+          # elif [ "$EVENT" == 'workflow_run' ]
+          # then
+          #   sha=${{ github.event.workflow_run.head_sha}}
+          # else
+          #   sha=$GITHUB_SHA
+          # fi
 
           echo "" >> comment.md
           echo "###### For commit $sha" >> comment.md
@@ -284,7 +284,7 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           body-file: comment.md
           edit-mode: replace
-          issue-number: ${{ github.event.number }}
+          issue-number: ${{ github.event.client_payload.pull_request.number }}
 
       - name: Upload build artifacts
         if: always()
