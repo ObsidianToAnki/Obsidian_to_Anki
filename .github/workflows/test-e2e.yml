@@ -338,6 +338,6 @@ jobs:
                 status: 'completed',
                 conclusion: process.env.conclusion
               });
+              return result;
             }
-            return result;
 
