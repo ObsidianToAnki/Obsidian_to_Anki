@@ -204,7 +204,6 @@ jobs:
 
       - name: Publish Test Results in Comment
         uses: EnricoMi/publish-unit-test-result-action@v2
-        # if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
         if: always()
         with:
           report_individual_runs: true
@@ -234,8 +233,6 @@ jobs:
           issue-number: ${{ github.event.client_payload.pull_request.number }}
           body-includes: '# 📷 Screenshots of tests:'
           direction: last
-          commit: ${{ github.event.client_payload.pull_request.head.sha }}
-          # github_token: ${{  }}
           comment-author: 'github-actions[bot]'
       
       - name: Publish Screenshots - build comment
@@ -281,7 +278,7 @@ jobs:
           echo "###### For commit $sha" >> comment.md
       
       - name: Publish Screehnshots - Update or Create Comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
+        if: always()
         uses: peter-evans/create-or-update-comment@v2
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
