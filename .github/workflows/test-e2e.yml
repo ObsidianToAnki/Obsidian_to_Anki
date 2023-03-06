@@ -16,16 +16,12 @@ permissions:
   pull-requests: write
 
 jobs:
-  Test:
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+  checkout-trusted:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x]
-
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     steps:
-      - uses: actions/checkout@v3
+      - name: Branch based PR checkout
+        uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -54,11 +50,14 @@ jobs:
 
       - name: Publish Test Results in Comment
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
+        # if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
+        if: always()
+
         with:
           report_individual_runs: true
           report_suite_logs: 'any'
-          deduplicate_classes_by_file_name: true
+          deduplicate_classes_by_file_name: true          
+          comment_title: '🛠 Test Results'
           files: |
             logs/test-reports/**/*.xml
 
@@ -145,3 +144,202 @@ jobs:
             tests/test_config/logs/*
             tests/test_config/*.png
             # tests/test_config/.xsession-errors
+
+  checkout-signed:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      checks: write
+    if: |
+      github.event_name == 'repository_dispatch' &&
+      github.event.client_payload.slash_command.args.named.sha != '' &&
+      contains(
+        github.event.client_payload.pull_request.head.sha,
+        github.event.client_payload.slash_command.args.named.sha
+      )
+    steps:
+      # Check out merge commit
+      - name: Fork based /ok-to-test checkout
+        uses: actions/checkout@v3
+        with:
+          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+
+  # Test:
+  #   if: always()
+  #   needs: [checkout-trusted, checkout-signed]
+  #   runs-on: ubuntu-latest
+
+  #   strategy:
+  #     matrix:
+  #       node-version: [18.x]
+
+  # steps:
+      # - name: Trusted Checkout
+      #   if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      #   uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run build --if-present
+      # - run: npm test
+      
+      - name: Run Tests
+        run: | 
+          # npm run test
+          npm run test-wdio
+
+          ls -alh
+          ls -alh tests/test_config/
+          ls -alh "tests/test_config/.local/share/Anki2/User 1/"
+
+          sudo npm run test-py
+
+      - name: Package
+        if: always()
+        run: |
+          mkdir ${{ env.PLUGIN_NAME }}
+          cp main.js manifest.json styles.css README.md ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+
+      - name: Publish Test Results in Comment
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        # if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
+        if: always()
+
+        with:
+          report_individual_runs: true
+          report_suite_logs: 'any'
+          deduplicate_classes_by_file_name: true
+          comment_title: '🛠 Test Results'
+          files: |
+            logs/test-reports/**/*.xml
+
+      # - name: Publish Test Results
+      #   uses: dorny/test-reporter@v1
+      #   if: success() || failure()
+      #   with:
+      #     name: JUnit Reprot
+      #     path: logs/test-reports/wdio.xml
+      #     reporter: jest-junit
+      
+      - uses: iterative/setup-cml@v1
+        if: always()
+      
+      - name: Publish Screenshots - Find Comment
+        if: always()
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.client_payload.pull_request.number }}
+          body-includes: '# 📷 Screenshots of tests:'
+          direction: last
+          # commit: ${{ github.event.client_payload.pull_request.head.sha }}
+          # github_token: ${{  }}
+          comment-author: 'github-actions[bot]'
+      
+      - name: Publish Screenshots - build comment
+        if: always()
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        shell: bash
+        run: |
+          echo "# 📷 Screenshots of tests:" >> comment.md
+          echo "" >> comment.md
+
+          for ss_test in tests/test_config/*.png logs/*.png; do 
+            ss_test_desc=$(basename "$ss_test" .png)
+
+            # echo "<details><summary>$ss_test_desc</summary>" >> comment.md
+            # echo '<p float="left">' >> comment.md
+            # cml-publish "$ss_test" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
+            # # echo "![](./$ss_test)" >> comment.md
+            # echo '</p></details>' >> comment.md
+
+            echo "" >> comment.md
+            echo "### $ss_test_desc" >> comment.md
+            echo "" >> comment.md
+            echo '<p float="left">' >> comment.md
+            cml-publish "$ss_test" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
+            # echo "![](./$ss_test)" >> comment.md
+            echo '</p>' >> comment.md
+          done
+
+          if [ "$EVENT" == 'pull_request' ]
+          then
+            sha=${{ github.event.pull_request.head.sha}}
+          elif [ "$EVENT" == 'workflow_run' ]
+          then
+            sha=${{ github.event.workflow_run.head_sha}}
+          else
+            sha=$GITHUB_SHA
+          fi
+
+          echo "" >> comment.md
+          echo "###### For commit $sha" >> comment.md
+      
+      - name: Publish Screehnshots - Update or Create Comment
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body-file: comment.md
+          edit-mode: replace
+          issue-number: ${{ github.event.number }}
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PLUGIN_NAME }}
+          path: |
+            ${{ env.PLUGIN_NAME }}.zip
+            logs/*
+            tests/test_config/logs/*
+            tests/test_config/*.png
+            # tests/test_config/.xsession-errors
+    
+  # MapjobStatus:
+  #   needs: [Test]
+  #   runs-on: ubuntu-latest
+  #   if: |
+  #     github.event_name == 'repository_dispatch' &&
+  #     github.event.client_payload.slash_command.args.named.sha != '' &&
+  #     contains(
+  #       github.event.client_payload.pull_request.head.sha,
+  #       github.event.client_payload.slash_command.args.named.sha
+  #     )
+    
+  #   steps:
+      - uses: actions/github-script@v6
+        id: update-check-run
+        if: ${{ always() }}
+        env:
+          number: ${{ github.event.client_payload.pull_request.number }}
+          job: ${{ github.job }}
+          # Conveniently, job.status maps to https://developer.github.com/v3/checks/runs/#update-a-check-run
+          conclusion: ${{ job.status }} 
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: process.env.number
+            });
+            const ref = pull.head.sha;
+            const { data: checks } = await github.rest.checks.listForRef({
+              ...context.repo,
+              ref
+            });
+            const check = checks.check_runs.filter(c => c.name === process.env.job);
+            const { data: result } = await github.rest.checks.update({
+              ...context.repo,
+              check_run_id: check[0].id,
+              status: 'completed',
+              conclusion: process.env.conclusion
+            });
+            return result;
+
