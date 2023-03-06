@@ -4,10 +4,14 @@ env:
   PLUGIN_NAME: obsidian-to-anki-plugin
 
 on:
-  push:
-    branches: [ master ]
+  # push:
+  #   branches: [ master ]
   pull_request:
     branches: [ master ]
+
+permissions:
+  checks: write
+  pull-requests: write
 
 jobs:
   Test:
