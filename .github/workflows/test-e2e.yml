@@ -331,11 +331,13 @@ jobs:
               ref
             });
             const check = checks.check_runs.filter(c => c.name === process.env.job);
-            const { data: result } = await github.rest.checks.update({
-              ...context.repo,
-              check_run_id: check[0].id,
-              status: 'completed',
-              conclusion: process.env.conclusion
-            });
+            if( check ) {
+              const { data: result } = await github.rest.checks.update({
+                ...context.repo,
+                check_run_id: check[0].id,
+                status: 'completed',
+                conclusion: process.env.conclusion
+              });
+            }
             return result;
 
