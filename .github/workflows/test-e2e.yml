@@ -67,8 +67,7 @@ jobs:
       #   with:
       #     name: JUnit Reprot
       #     path: logs/test-reports/wdio.xml
-      #     reporter: jest-junit
-      
+      #     reporter: jest-junit      
       - uses: iterative/setup-cml@v1
         if: always()
       
@@ -207,12 +206,12 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         # if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
         if: always()
-
         with:
           report_individual_runs: true
           report_suite_logs: 'any'
           deduplicate_classes_by_file_name: true
           comment_title: '🛠 Test Results'
+          commit: ${{ github.event.client_payload.pull_request.head.sha }}
           files: |
             logs/test-reports/**/*.xml
 
@@ -235,7 +234,7 @@ jobs:
           issue-number: ${{ github.event.client_payload.pull_request.number }}
           body-includes: '# 📷 Screenshots of tests:'
           direction: last
-          # commit: ${{ github.event.client_payload.pull_request.head.sha }}
+          commit: ${{ github.event.client_payload.pull_request.head.sha }}
           # github_token: ${{  }}
           comment-author: 'github-actions[bot]'
       
