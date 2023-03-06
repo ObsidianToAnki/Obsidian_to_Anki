@@ -37,6 +37,6 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: build-output
+          name: ${{ env.PLUGIN_NAME }}
           path: |
             ${{ env.PLUGIN_NAME }}.zip

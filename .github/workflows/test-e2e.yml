@@ -1,0 +1,77 @@
+name: Test e2e
+
+env:
+  PLUGIN_NAME: obsidian-to-anki-plugin
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run build --if-present
+      # - run: npm test
+      
+      - name: Run Tests
+        run: | 
+          npm run copy
+          npm run test
+
+      - name: Package
+        run: |
+          mkdir ${{ env.PLUGIN_NAME }}
+          cp main.js manifest.json styles.css README.md ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            logs/test-reports/**/*.xml
+      
+      - uses: iterative/setup-cml@v1
+      - name: Publish Screenshots
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                echo "Screenshots of tests:" >> comment.md
+                echo "" >> comment.md  # just for the newline
+
+                echo "<details><summary>Obsidian Pre-Test</summary>" >> comment.md
+                echo '<p float="left">' >> comment.md
+                echo '![](logs/obs_post_test.png)' >> comment.md
+                echo '</p></details>' >> comment.md
+
+                echo -n '"<details><summary>Obsidian Pre-Test</summary>"' >> comment.md
+                echo '<p float="left">' >> comment.md
+                echo '![](logs/obs_pre_test.png)' >> comment.md
+                echo '</p></details>' >> comment.md
+                cml comment create --publish comment.md
+      
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PLUGIN_NAME }}
+          path: |
+            ${{ env.PLUGIN_NAME }}.zip
+            logs/*
+            tests/test_config/logs/*
+            tests/test_config/*.png

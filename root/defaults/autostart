@@ -1,0 +1,16 @@
+xset -b
+
+mkdir /config/logs
+
+(sleep 2s && export LANG="LANG=C.UTF-8";LANGUAGE="en_US.UTF-8";LC_CTYPE="C.UTF-8" anki >> /config/logs/anki.log) &
+(sleep 8s && echo "Executing PreTest ss" >> /config/logs/gnome.log && gnome-screenshot >> /config/logs/gnome.log) &
+
+(sleep 10s && /defaults/obsidian_anki >> /config/logs/obsidian.log) & 
+# (sleep 5s && cd /obs_to_anki/ && npm run wdio >> logs/npm.log)
+
+(sleep 12s && sudo /etc/init.d/ssh start >> /config/logs/sshd.log )
+
+# remove any left over ssh client config from previous run
+rm -rf /config/.ssh
+(sleep 1s && sshpass -p "abc" ssh -o StrictHostKeyChecking=no -4 -L 0.0.0.0:8888:localhost:8890 abc@localhost -N >> /config/logs/ssh.log ) &
+
