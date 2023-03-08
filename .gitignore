@@ -278,3 +278,4 @@ main.js
 
 tests/test_config
 tests/test_vault
+tests/specs_gen/*

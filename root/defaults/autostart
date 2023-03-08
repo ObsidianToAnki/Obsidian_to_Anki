@@ -1,11 +1,18 @@
 xset -b
+mkdir -p /config/logs
+
+{
+
+(sleep 1s && /defaults/reset_perms.sh) &
 
 sudo -u abc
 
-mkdir -p /config/logs
+# # ss_dir = 
+for file in /vaults/**/*.md; do test_name=$(basename $file); done
+test_name=$(echo $test_name | awk -F [.] '{print $1}')
 
 (sleep 2s && export LANG="LANG=C.UTF-8";LANGUAGE="en_US.UTF-8";LC_CTYPE="C.UTF-8" anki >> /config/logs/anki.log) &
-(sleep 8s && echo "Executing PreTest ss" >> /config/logs/gnome.log && gnome-screenshot >> /config/logs/gnome.log && rename 's/Screenshot from .*/Anki PreTest.png/' /config/*.png) &
+(sleep 8s && echo "Executing PreTest ss" >> /config/logs/gnome.log && gnome-screenshot >> /config/logs/gnome.log && rename "s/Screenshot from .*/Anki PreTest.png/" /config/*.png) &
 
 ls -alh /defaults/ >> /config/logs/obsidian.log
 
@@ -22,3 +29,4 @@ ls -alh /defaults/ >> /config/logs/obsidian.log
 rm -rf /config/.ssh
 (sleep 1s && sshpass -p "abc" ssh -o StrictHostKeyChecking=no -4 -L 0.0.0.0:8888:localhost:8890 abc@localhost -N >> /config/logs/ssh.log ) &
 
+} >> /config/logs/autostart.log 2>&1

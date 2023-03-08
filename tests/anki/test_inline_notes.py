@@ -6,8 +6,8 @@ from anki.collection import Collection
 from anki.collection import SearchNode
 # from conftest import col
 
-col_path = 'tests/test_config/.local/share/basic_sync_Anki/User 1/collection.anki2'
-test_file_path = 'tests/test_config/.local/share/basic_sync_Anki/Obsidian/basic_sync/basic_sync.md'
+col_path = 'tests/test_config/.local/share/inline_notes_Anki/User 1/collection.anki2'
+test_file_path = 'tests/test_config/.local/share/inline_notes_Anki/Obsidian/inline_notes/inline_notes.md'
 
 @pytest.fixture()
 def col():
@@ -22,7 +22,7 @@ def test_deck_default_exists(col: Collection):
     assert col.decks.id_for_name('Default') is not None
 
 def test_cards_count(col: Collection):
-    assert len(col.find_cards( col.build_search_string(SearchNode(deck='Default')) )) == 2
+    assert len(col.find_cards( col.build_search_string(SearchNode(deck='Default')) )) == 1
 
 def test_cards_ids_from_obsidian(col: Collection):
 
@@ -49,13 +49,4 @@ def test_cards_front_back_tag_type(col: Collection):
     assert note1.fields[0] == "This is a test."
     assert note1.fields[1] == "Test successful!"
 
-    note2 = col.get_note(anki_IDs[1])
-    assert note2.fields[0] == "This is a test 2."
-    assert note2.fields[1] == "Test successful! 2"
-
-    assert note1.has_tag("Testing")
-    assert note2.has_tag("Testing")
-    assert note2.has_tag("2")
-
     assert note1.note_type()["name"] == "Basic"
-    assert note2.note_type()["name"] == "Basic"
