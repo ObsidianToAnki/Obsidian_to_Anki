@@ -6,8 +6,8 @@ from anki.collection import Collection
 from anki.collection import SearchNode
 # from conftest import col
 
-col_path = 'tests/test_config/.local/share/inline_notes_Anki/User 1/collection.anki2'
-test_file_path = 'tests/test_config/.local/share/inline_notes_Anki/Obsidian/inline_notes/inline_notes.md'
+col_path = 'tests/test_outputs/inline_notes/Anki2/User 1/collection.anki2'
+test_file_path = 'tests/test_outputs/inline_notes/Obsidian/inline_notes/inline_notes.md'
 
 @pytest.fixture()
 def col():

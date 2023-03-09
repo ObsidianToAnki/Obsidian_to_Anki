@@ -218,7 +218,7 @@ export const config/* : Options.Testrunner */ = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 60000
+        timeout: 600000
     },
     //
     // =====
@@ -234,9 +234,10 @@ export const config/* : Options.Testrunner */ = {
      * @param {Array.<Object>} capabilities list of capabilities details
      */
     onPrepare: function (config, capabilities) {
-        let vault_suites_dir = 'tests/defaults/test_vault_suites';
+        let vault_suites_dir = 'tests/defaults/test_vault_suites';        
         (async ()=>{
             try {
+                // fse.removeq
                 const files = await fs.promises.readdir( vault_suites_dir );
 
                 // Loop them all with the new for...of
@@ -294,9 +295,36 @@ export const config/* : Options.Testrunner */ = {
      * @param  {[type]} specs    specs to be run in the worker process
      * @param  {Number} retries  number of retries used
      */
-    // onWorkerEnd: function (cid, exitCode, specs, retries) {
-    // TODO: Maybe we can do the last spec file's test delay here ?
-    // },
+    onWorkerEnd: function (cid, exitCode, specs, retries) {
+        // TODO: Maybe we can do the last spec file's test delay here ?
+        (async () => {
+            try {
+                let test_outputs_dir = 'tests/test_config/.local/share/test_outputs';                
+                const files = await fs.promises.readdir( test_outputs_dir );
+
+                // Loop them all with the new for...of
+                for( const file of files ) {
+                    // Get the full paths
+                    const fromPath = path.join( test_outputs_dir, file );
+        
+                    // Stat the file to see if we have a file or dir
+                    const stat = await fs.promises.stat( fromPath );
+        
+                    if( stat.isDirectory() ) {
+                        console.log( `'%s' is a test_output directory. Moving for further python tests`, fromPath );
+                        fse.move(fromPath, `tests/test_outputs/${file}`, { overwrite: true }, err => {
+                            if (err) {
+                                console.log(`Error on trying to copying test_output of ${file}:`, err);
+                            }
+                        })
+                    }
+                } // End for...of
+            }
+            catch( e ) {
+                console.error( "We've thrown! Whoops!", e );
+            }  
+        })(); // Wrap in parenthesis and call now
+    },
     /**
      * Gets executed just before initialising the webdriver session and test framework. It allows you
      * to manipulate configurations depending on the capability or spec.

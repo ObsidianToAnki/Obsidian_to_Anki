@@ -74,6 +74,10 @@ describe(test_name_fmt, () => {
             else
                 console.log('Could not copy default Test_vault_suite.')
 
+            if (fse.pathExistsSync(`tests/defaults/test_vault_suites/${test_name}/.obsidian`))
+                fse.copySync(`tests/defaults/test_vault_suites/${test_name}/.obsidian`, `tests/test_vault/.obsidian`, { overwrite: true });
+          
+
             // fse.copySync(`tests/defaults/test_vault_suites/${test_name}`, `tests/test_vault/${test_name}`, { overwrite: true });
             // if (fse.pathExistsSync(`tests/test_vault/${test_name}`))
             //     console.log('Copied default Test_vault_suite.');
