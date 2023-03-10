@@ -16,6 +16,41 @@ function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
+async function syncObsidianAnki() {
+    const SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
+    await expect(SyncButton).toExist()
+    await $(SyncButton).click()
+
+    let logs: Array<Object> = [];
+    do
+    {
+        logs = logs.concat( await browser.getLogs('browser'));
+        console.log(logs);
+        await delay(100);
+    }
+    while (!logs.find( e => (e['message'] as string).includes('All done!') ));
+
+    let warningsLogs = logs.filter( e => { return e['level'] == 'WARNING' });
+    let errorLogs = logs.filter( e => { return e['level'] == 'ERROR' || e['level'] == 'SEVERE' });
+
+    if (warningsLogs.length > 0 ) 
+    {
+        console.warn(`${FgYellow}Warnings: `)
+        console.warn(warningsLogs);
+        console.warn(Reset)
+    }
+    if (errorLogs.length > 0 ) 
+    {
+        console.error(`${FgRed}Errors: `);
+        console.error(errorLogs);
+        console.error(Reset)
+    }
+
+    // await delay(500);
+    console.log(logs);
+    console.log('Synced Obsidian and Anki ... Existing Obisdian');
+}
+
 describe(test_name_fmt, () => {
     // before(async () => {
     //     // Clean Worker's Anki and Obs
@@ -104,59 +139,53 @@ describe(test_name_fmt, () => {
         //     console.error(err)
         // }
 
-        // await delay(5000);
+        await delay(5000);
         // await browser.debug();
-        const TrustButton = await $('button*=Trust')
-        await expect(TrustButton).toExist()
         await browser.execute( () => { var btn = [...document.querySelectorAll('button')].find(btn => btn.textContent.includes('Trust')); if(btn) btn.click(); } );
         
         await delay(5000);
         await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'})); } );
-        // await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'r', ctrlKey: true, shiftKey: true})); } );
         
         await delay(100);        
         
-        let SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
-        await expect(SyncButton).toExist()
-        await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'r', ctrlKey: true, shiftKey: true})); } );
-        await delay(100);     
-        SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
-        await expect(SyncButton).toExist()
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PreTest.png`)
-        await $(SyncButton).click()
+        // const SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
+        // await expect(SyncButton).toExist()
+        // await $(SyncButton).click()
 
-        let logs: Array<Object> = [];
-        do
-        {
-            logs = logs.concat( await browser.getLogs('browser'));
-            console.log(logs);
-            await delay(100);
-        }
-        while (!logs.find( e => (e['message'] as string).includes('All done!') ));
+        // let logs: Array<Object> = [];
+        // do
+        // {
+        //     logs = logs.concat( await browser.getLogs('browser'));
+        //     console.log(logs);
+        //     await delay(100);
+        // }
+        // while (!logs.find( e => (e['message'] as string).includes('All done!') ));
 
-        let warningsLogs = logs.filter( e => { return e['level'] == 'WARNING' });
-        let errorLogs = logs.filter( e => { return e['level'] == 'ERROR' || e['level'] == 'SEVERE' });
+        // let warningsLogs = logs.filter( e => { return e['level'] == 'WARNING' });
+        // let errorLogs = logs.filter( e => { return e['level'] == 'ERROR' || e['level'] == 'SEVERE' });
 
-        if (warningsLogs.length > 0 ) 
-        {
-            console.warn(`${FgYellow}Warnings: `)
-            console.warn(warningsLogs);
-            console.warn(Reset)
-        }
-        if (errorLogs.length > 0 ) 
-        {
-            console.error(`${FgRed}Errors: `);
-            console.error(errorLogs);
-            console.error(Reset)
-        }
+        // if (warningsLogs.length > 0 ) 
+        // {
+        //     console.warn(`${FgYellow}Warnings: `)
+        //     console.warn(warningsLogs);
+        //     console.warn(Reset)
+        // }
+        // if (errorLogs.length > 0 ) 
+        // {
+        //     console.error(`${FgRed}Errors: `);
+        //     console.error(errorLogs);
+        //     console.error(Reset)
+        // }
 
-        // await delay(500);
-        console.log(logs);
-        console.log('Synced Obsidian and Anki ... Existing Obisdian');
+        // // await delay(500);
+        // console.log(logs);
+        // console.log('Synced Obsidian and Anki ... Existing Obisdian');
+        await syncObsidianAnki();        
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest.png`)
         
         // await browser.debug(); // You can safely Pause for debugging here, else it may create unintended consequences
-        await browser.execute( () => { return window.open('','_self').close(); } );
+        // await browser.execute( () => { return window.open('','_self').close(); } );
         await delay(1000); // esp for PostTest ss of Anki and wait for obsidian teardown
         
         try {
@@ -189,6 +218,58 @@ describe(test_name_fmt, () => {
         
         assert (number_of_cards == number_of_test_cards);
         // assert( fileDefault.split('\n').length == filePostTest.split('\n').length-number_of_cards ) 
+        // fse.writeFile('tests/test_vault/unlock', 'meow', (err) => {
+        //     if (err)
+        //         console.log('reset_perms file could not be created. Err: ', err);
+        // });
+
+        // await delay(5000); // >3000ms req; the last test of this spec, wait for anki and obsidian to close properly
+    })
+
+    it('post delete, it should not give any errors', async () => {
+        let folder = await $('.nav-folder-title*=ng_delete_sync')
+        await expect(folder).toExist();
+        await folder.click(); // Should drop down files
+
+        let file = await $('.nav-file-title*=ng_delete_sync')
+        await expect(folder).toExist();
+        await file.click(); // Should open file in Editor
+
+        await browser.execute( () => { 
+            var span = [...document.querySelectorAll('span')].find(s => s.textContent.includes('REPLACE ME FOR TEST')); 
+            if(span)
+            {
+                span.innerText = 'DELETE'                
+            }
+        });
+
+        const newline = await $('div*=DELETE')
+        await expect(newline).toExist()
+        
+        await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 's', ctrlKey: true})); } );
+
+        await syncObsidianAnki();        
+        await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest2.png`)
+
+        await browser.debug();
+        await browser.execute( () => { return window.open('','_self').close(); } );
+    })
+
+    it('should have not have Anki ID in note', async () => {
+        const fileDefault = readFileSync( path.join(__dirname,`./../../tests/defaults/test_vault_suites/${test_name}/${test_name}.md`), 'utf-8');
+        const filePostTest = readFileSync( path.join(__dirname,`./../../tests/test_vault/${test_name}/${test_name}.md`), 'utf-8');
+        
+        const ID_REGEXP_STR = /\n?(?:<!--)?(?:ID: (\d+).*?)/g;
+        const ID_REGEXP_STR_CARD = /<!-- CARD -->/g;
+
+        let number_of_cards = (filePostTest.match(ID_REGEXP_STR) || []).length;
+        let number_of_test_cards = (filePostTest.match(ID_REGEXP_STR_CARD) || []).length;
+
+        console.log(`Number of cards in test file are - ${number_of_cards}, number_of_test_cards - ${number_of_test_cards}`);
+        
+        expect(number_of_cards).toBe(0)
+        expect(number_of_test_cards).toBe(1)
+
         fse.writeFile('tests/test_vault/unlock', 'meow', (err) => {
             if (err)
                 console.log('reset_perms file could not be created. Err: ', err);

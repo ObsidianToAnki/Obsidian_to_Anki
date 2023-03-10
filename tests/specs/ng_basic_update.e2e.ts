@@ -218,10 +218,6 @@ describe(test_name_fmt, () => {
         
         assert (number_of_cards == number_of_test_cards);
         // assert( fileDefault.split('\n').length == filePostTest.split('\n').length-number_of_cards ) 
-        fse.writeFile('tests/test_vault/unlock', 'meow', (err) => {
-            if (err)
-                console.log('reset_perms file could not be created. Err: ', err);
-        });
 
         // await delay(5000); // >3000ms req; the last test of this spec, wait for anki and obsidian to close properly
     })
@@ -243,7 +239,7 @@ describe(test_name_fmt, () => {
             }
         });
 
-        await browser.debug();
+        // await browser.debug();
         const newline = await $('div*=updated content meow')
         await expect(newline).toExist()
 
@@ -251,6 +247,11 @@ describe(test_name_fmt, () => {
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest2.png`)
 
         await browser.execute( () => { return window.open('','_self').close(); } );
+        
+        fse.writeFile('tests/test_vault/unlock', 'meow', (err) => {
+            if (err)
+                console.log('reset_perms file could not be created. Err: ', err);
+        });
         await delay(5000); // >3000ms req; the last test of this spec, wait for anki and obsidian to close properly
     })
 })
