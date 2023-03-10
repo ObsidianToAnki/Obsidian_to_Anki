@@ -1432,6 +1432,7 @@ class AnkiConnect:
         try:
             self.collection().remNotes(notes)
         finally:
+            self.collection().autosave()
             self.stopEditing()
 
 
