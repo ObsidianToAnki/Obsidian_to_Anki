@@ -119,7 +119,9 @@ describe(test_name_fmt, () => {
         let SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
         await expect(SyncButton).toExist()
         await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'r', ctrlKey: true, shiftKey: true})); } );
-        await delay(100);     
+        
+        await delay(2000);     
+        
         SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
         await expect(SyncButton).toExist()
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PreTest.png`)
