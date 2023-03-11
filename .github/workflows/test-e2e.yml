@@ -33,7 +33,7 @@ jobs:
       - name: Run Tests
         run: | 
           # npm run test
-          npm run test-wdio
+          sudo npm run test-wdio
 
           ls -alh
           ls -alh tests/test_config/
