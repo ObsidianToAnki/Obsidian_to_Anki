@@ -104,8 +104,6 @@ describe(test_name_fmt, () => {
         //     console.error(err)
         // }
 
-        // await delay(5000);
-        // await browser.debug();
         const TrustButton = await $('button*=Trust')
         await expect(TrustButton).toExist()
         await browser.execute( () => { var btn = [...document.querySelectorAll('button')].find(btn => btn.textContent.includes('Trust')); if(btn) btn.click(); } );
