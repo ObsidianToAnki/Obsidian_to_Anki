@@ -47,8 +47,7 @@ async function syncObsidianAnki() {
     }
 
     // await delay(500);
-    console.log(logs);
-    console.log('Synced Obsidian and Anki ... Existing Obisdian');
+    // console.log(logs);
 }
 
 describe(test_name_fmt, () => {
@@ -146,6 +145,14 @@ describe(test_name_fmt, () => {
         await delay(5000);
         await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'})); } );
         
+        let folder = await $('.nav-folder-title*=ng_delete_sync')
+        await expect(folder).toExist();
+        await folder.click(); // Should drop down files
+
+        let file = await $('.nav-file-title*=ng_delete_sync')
+        await expect(folder).toExist();
+        await file.click(); // Should open file in Editor
+
         await delay(100);        
         
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PreTest.png`)
@@ -186,26 +193,11 @@ describe(test_name_fmt, () => {
         
         // await browser.debug(); // You can safely Pause for debugging here, else it may create unintended consequences
         // await browser.execute( () => { return window.open('','_self').close(); } );
-        await delay(1000); // esp for PostTest ss of Anki and wait for obsidian teardown
-        
-        try {
-            function errHandler(err) {
-                if (err) {
-                    console.log(`Error on trying to copy vault_suite ${test_name}:`, err);
-                }
-            }
-
-            fse.copyFile(`tests/test_config/Anki PreTest_${test_name}.png`, `logs/${test_name}/Anki PreTest_${test_name}.png`, errHandler);
-            fse.copyFile(`tests/test_config/Anki PostTest_${test_name}.png`, `logs/${test_name}/Anki PostTest_${test_name}.png`, errHandler);
-        }
-        catch( e ) {
-            console.error( "We've thrown! Whoops!", e );
-        }
-              
+        await delay(1000); // esp for PostTest ss of Anki and wait for obsidian teardown               
     })
 
     it('should have Anki card IDs in Obsidian note', async () => {
-        const fileDefault = readFileSync( path.join(__dirname,`./../../tests/defaults/test_vault_suites/${test_name}/${test_name}.md`), 'utf-8');
+        // const fileDefault = readFileSync( path.join(__dirname,`./../../tests/defaults/test_vault_suites/${test_name}/${test_name}.md`), 'utf-8');
         const filePostTest = readFileSync( path.join(__dirname,`./../../tests/test_vault/${test_name}/${test_name}.md`), 'utf-8');
         
         const ID_REGEXP_STR = /\n?(?:<!--)?(?:ID: (\d+).*?)/g;
@@ -227,14 +219,6 @@ describe(test_name_fmt, () => {
     })
 
     it('post delete, it should not give any errors', async () => {
-        let folder = await $('.nav-folder-title*=ng_delete_sync')
-        await expect(folder).toExist();
-        await folder.click(); // Should drop down files
-
-        let file = await $('.nav-file-title*=ng_delete_sync')
-        await expect(folder).toExist();
-        await file.click(); // Should open file in Editor
-
         await browser.execute( () => { 
             var span = [...document.querySelectorAll('span')].find(s => s.textContent.includes('REPLACE ME FOR TEST')); 
             if(span)
@@ -253,6 +237,22 @@ describe(test_name_fmt, () => {
 
         // await browser.debug();
         await browser.execute( () => { return window.open('','_self').close(); } );
+        
+        await delay(3000); // esp for PostTest ss of Anki and wait for obsidian teardown
+
+        try {
+            function errHandler(err) {
+                if (err) {
+                    console.log(`Error on trying to copy vault_suite ${test_name}:`, err);
+                }
+            }
+
+            fse.copyFile(`tests/test_config/Anki PreTest_${test_name}.png`, `logs/${test_name}/Anki PreTest_${test_name}.png`, errHandler);
+            fse.copyFile(`tests/test_config/Anki PostTest_${test_name}.png`, `logs/${test_name}/Anki PostTest_${test_name}.png`, errHandler);
+        }
+        catch( e ) {
+            console.error( "We've thrown! Whoops!", e );
+        }
     })
 
     it('should have not have Anki ID in note', async () => {
