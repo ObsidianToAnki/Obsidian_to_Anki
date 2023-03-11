@@ -33,11 +33,10 @@ export const config/* : Options.Testrunner */ = {
     // will be called from there.
     //
     specs: [
-        // [
-            './tests/specs_gen/**/*.ts'
-            // './tests/specs/**/*.ts'
-            // './tests/specs/basic_sync.e2e.ts',
-            // './tests/specs/basic_sync_results.e2e.ts'
+        //  [
+            // './tests/specs_gen/**/*.ts',
+            './tests/specs_gen/**/*.ts',
+            './tests/specs/**/*.ts'
         // ]
     ],
     // Patterns to exclude.
@@ -188,10 +187,10 @@ export const config/* : Options.Testrunner */ = {
     framework: 'mocha',
     //
     // The number of times to retry the entire specfile when it fails as a whole
-    // specFileRetries: 1,
+    specFileRetries: 1,
     //
     // Delay in seconds between the spec file retry attempts
-    // specFileRetriesDelay: 0,
+    specFileRetriesDelay: 10,
     //
     // Whether or not retried specfiles should be retried immediately or deferred to the end of the queue
     // specFileRetriesDeferred: false,
@@ -212,13 +211,13 @@ export const config/* : Options.Testrunner */ = {
             }
         }]
     ],
-    
+    outputDir: 'logs',
     //
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 600000
+        timeout: 60000
     },
     //
     // =====
@@ -234,21 +233,28 @@ export const config/* : Options.Testrunner */ = {
      * @param {Array.<Object>} capabilities list of capabilities details
      */
     onPrepare: function (config, capabilities) {
-        let vault_suites_dir = 'tests/defaults/test_vault_suites';        
+        let vault_suites_dir = 'tests/defaults/test_vault_suites';   
+
         (async ()=>{
             try {
-                // fse.removeq
+                fse.emptyDirSync('tests/specs_gen')
                 const files = await fs.promises.readdir( vault_suites_dir );
 
                 // Loop them all with the new for...of
-                for( const file of files ) {
+                for( const file of files ) {                    
                     // Get the full paths
                     const fromPath = path.join( vault_suites_dir, file );
         
                     // Stat the file to see if we have a file or dir
                     const stat = await fs.promises.stat( fromPath );
-        
+                    
                     if( stat.isDirectory() ) {
+                        if(file[0] == 'n' && file[1] == 'g' && file[2] == '_') {
+                            // No Auto Generation flag is set on folder
+                            // Dont generate spec file
+                            console.log( `'%s' is a directory. But Skipping specs generation`, fromPath );
+                            continue;
+                        }
                         console.log( `'%s' is a directory. Making tests/specs/${file}.e2e.ts`, fromPath );
                         fs.copyFile("tests/defaults/specs/template.e2e.ts", `tests/specs_gen/${file}.e2e.ts`, (err) => {
                             if (err) {
