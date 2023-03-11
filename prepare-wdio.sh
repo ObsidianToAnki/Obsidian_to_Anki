@@ -1,5 +1,10 @@
 #!/bin/bash
 
+mkdir -p tests/test_config
+mkdir -p tests/test_vault
+mkdir -p tests/specs_gen
+mkdir -p tests/test_outputs
+
 # Copy Built plugin
 rm -rf tests/defaults/test_vault/.obsidian/plugins/obsidian-to-anki-plugin 
 mkdir -p tests/defaults/test_vault/.obsidian/plugins/obsidian-to-anki-plugin 
