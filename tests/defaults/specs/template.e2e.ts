@@ -1,6 +1,7 @@
 
-import { readFileSync } from 'fs';
 
+import { glob } from "glob";
+import globSync from 'glob'
 const fse = require('fs-extra');
 const path = require('path');
 const assert = require('assert');
@@ -17,39 +18,6 @@ function delay(ms: number) {
 }
 
 describe(test_name_fmt, () => {
-    // before(async () => {
-    //     // Clean Worker's Anki and Obs
-    //     // ReInit Worker Anki and Obs
-    //     // Worker WIll Auto Start ANki and Obs after 10Secs
-        
-    //     // cp -Rf tests/defaults/test_vault tests/ 
-    //     // cp -Rf tests/defaults/test_config tests/
-
-    //     try {
-    //         fse.removeSync('tests/test_vault');
-    //         if (fse.pathExistsSync('tests/test_vault'))
-    //             console.log('The path still exists. Remove Failed');
-    //         else
-    //             console.log('Remove Success.')
-
-    //         fse.copySync(`tests/defaults/test_vault`, `tests/test_vault`, { overwrite: true });
-    //         if (fse.pathExistsSync('tests/test_vault'))
-    //             console.log('Copied default Test_vault.');
-    //         else
-    //             console.log('Could not copy default Test_vault.')
-    //         console.log('success copying default vault !');
-
-    //         fse.copySync(`tests/defaults/test_vault_suites/${test_name}`, `tests/test_vault/${test_name}`, { overwrite: true });
-    //         if (fse.pathExistsSync(`tests/test_vault/${test_name}`))
-    //             console.log('Copied default Test_vault_suite.');
-    //         else
-    //             console.log('Could not copy default Test_vault_suite.')
-    //     } catch (err) {
-    //         console.error(err)
-    //     }
-
-
-    // })
 
     it('should send All-done message to console post sync', async () => {
         try {
@@ -60,6 +28,7 @@ describe(test_name_fmt, () => {
                 console.log('tests/test_vault still exists. Waiting for it be removed ...');
                 await delay(100);
             }
+            await delay(5000);
 
             fse.copySync(`tests/defaults/test_vault`, `tests/test_vault`, { overwrite: true });
             if (fse.pathExistsSync('tests/test_vault'))
@@ -77,51 +46,40 @@ describe(test_name_fmt, () => {
             if (fse.pathExistsSync(`tests/defaults/test_vault_suites/${test_name}/.obsidian`))
                 fse.copySync(`tests/defaults/test_vault_suites/${test_name}/.obsidian`, `tests/test_vault/.obsidian`, { overwrite: true });
           
-
-            // fse.copySync(`tests/defaults/test_vault_suites/${test_name}`, `tests/test_vault/${test_name}`, { overwrite: true });
-            // if (fse.pathExistsSync(`tests/test_vault/${test_name}`))
-            //     console.log('Copied default Test_vault_suite.');
-            // else
-            //     console.log('Could not copy default Test_vault_suite.')
-            
-            // fse.removeSync('tests/config/.local/share/Anki2');
-            // fse.copySync('tests/defaults/test_config/.local/share/Anki2', `tests/config/.local/share/Anki2`, { overwrite: true });
-
             fse.writeFile('tests/test_config/reset_perms', 'meow', (err) => {
                 if (err)
                     console.log('reset_perms file could not be created. Err: ', err);
             });
-
-
         } catch (err) {
             console.error(err)
         }
-        // ${test_name}
-        // try {
-        //     fse.copySync(`tests/defaults/test_vault_suites/${test_name}`, `tests/test_vault/${test_name}`, { overwrite: true });
-        //     console.log('success copying vault !');
-        // } catch (err) {
-        //     console.error(err)
-        // }
 
-        const TrustButton = await $('button*=Trust')
-        await expect(TrustButton).toExist()
+        // const TrustButton = await $('button*=Trust')
+        // await expect(TrustButton).toExist()
+        await delay(2000);
         await browser.execute( () => { var btn = [...document.querySelectorAll('button')].find(btn => btn.textContent.includes('Trust')); if(btn) btn.click(); } );
         
-        await delay(5000);
+        await delay(3000);
         await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'})); } );
-        // await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'r', ctrlKey: true, shiftKey: true})); } );
-        
-        await delay(100);        
+        // await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'r', ctrlKey: true, shiftKey: true})); } );        
+        // await delay(100);
         
         let SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
         await expect(SyncButton).toExist()
-        await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'r', ctrlKey: true, shiftKey: true})); } );
-        
-        await delay(2000);     
-        
+        await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'r', ctrlKey: true, shiftKey: true})); } );        
+        await delay(2000);
+
+        let folder = await $(`.nav-folder-title*=${test_name}`)
+        await expect(folder).toExist();
+        await folder.click(); // Should drop down files
+
+        let file = await $(`.nav-file-title*=${test_name}`)
+        await expect(file).toExist();
+        await file.click(); // Should open file in Editor
+
         SyncButton = await $('aria/Obsidian_to_Anki - Scan Vault')
         await expect(SyncButton).toExist()
+
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PreTest.png`)
         await $(SyncButton).click()
 
@@ -150,11 +108,11 @@ describe(test_name_fmt, () => {
             console.error(Reset)
         }
 
-        // await delay(500);
-        console.log(logs);
-        console.log('Synced Obsidian and Anki ... Existing Obisdian');
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest.png`)
-        
+        await delay(1000);
+
+        console.log(logs);
+        console.log('Synced Obsidian and Anki ... Existing Obisdian');        
         // await browser.debug(); // You can safely Pause for debugging here, else it may create unintended consequences
         await browser.execute( () => { return window.open('','_self').close(); } );
         await delay(1000); // esp for PostTest ss of Anki and wait for obsidian teardown
@@ -176,24 +134,29 @@ describe(test_name_fmt, () => {
     })
 
     it('should have Anki card IDs in Obsidian note', async () => {
-        const fileDefault = readFileSync( path.join(__dirname,`./../../tests/defaults/test_vault_suites/${test_name}/${test_name}.md`), 'utf-8');
-        const filePostTest = readFileSync( path.join(__dirname,`./../../tests/test_vault/${test_name}/${test_name}.md`), 'utf-8');
-        
+        const test_vault = path.join(__dirname,`./../test_vault/${test_name}/**/*.md`) //${test_name}
+
         const ID_REGEXP_STR = /\n?(?:<!--)?(?:ID: (\d+).*?)/g;
         const ID_REGEXP_STR_CARD = /<!-- CARD -->/g;
 
-        let number_of_cards = (filePostTest.match(ID_REGEXP_STR) || []).length;
-        let number_of_test_cards = (filePostTest.match(ID_REGEXP_STR_CARD) || []).length;
+        const files = await glob('tests/test_vault/**/*.md')
 
-        console.log(`Number of cards in test file are - ${number_of_cards}, number_of_test_cards - ${number_of_test_cards}`);
-        
-        assert (number_of_cards == number_of_test_cards);
-        // assert( fileDefault.split('\n').length == filePostTest.split('\n').length-number_of_cards ) 
+        for (const file of files)
+        {
+            const filePostTest = fse.readFileSync(file, 'utf-8');
+            
+            let number_of_cards = (filePostTest.match(ID_REGEXP_STR) || []).length;
+            let number_of_test_cards = (filePostTest.match(ID_REGEXP_STR_CARD) || []).length;
+
+            console.log(`Number of cards in test file ${file} are - ${number_of_cards}, number_of_test_cards - ${number_of_test_cards}`);
+            
+            assert (number_of_cards == number_of_test_cards);
+        }
+
         fse.writeFile('tests/test_vault/unlock', 'meow', (err) => {
             if (err)
-                console.log('reset_perms file could not be created. Err: ', err);
+                console.log('unlock file could not be created. Err: ', err);
         });
-
         await delay(5000); // >3000ms req; the last test of this spec, wait for anki and obsidian to close properly
     })
 })

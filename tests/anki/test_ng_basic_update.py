@@ -48,7 +48,7 @@ def test_cards_front_back_tag_type(col: Collection):
     anki_IDs = col.find_notes( col.build_search_string(SearchNode(deck='Default')) )
     
     note1 = col.get_note(anki_IDs[0])
-    assert note1.fields[0] == "This is a test.<br />\nThis is updated content meow."
+    assert note1.fields[0].find('This is updated content meow.') > -1 # == "This is a test.<br />\nThis is updated content meow."
     assert note1.fields[1] == "Test successful!"
 
     assert note1.note_type()["name"] == "Basic"

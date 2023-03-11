@@ -28,6 +28,7 @@
         "@wdio/spec-reporter": "^8.4.0",
         "chromedriver": "^100.0.0",
         "devtools": "^8.5.5",
+        "glob": "^9.2.1",
         "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
         "rollup": "^2.32.1",
         "rollup-plugin-node-polyfills": "^0.2.1",

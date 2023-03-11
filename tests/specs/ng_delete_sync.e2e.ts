@@ -251,7 +251,7 @@ describe(test_name_fmt, () => {
         await syncObsidianAnki();        
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest2.png`)
 
-        await browser.debug();
+        // await browser.debug();
         await browser.execute( () => { return window.open('','_self').close(); } );
     })
 

@@ -47,8 +47,7 @@ async function syncObsidianAnki() {
     }
 
     // await delay(500);
-    console.log(logs);
-    console.log('Synced Obsidian and Anki ... Existing Obisdian');
+    // console.log(logs);
 }
 
 describe(test_name_fmt, () => {
@@ -146,6 +145,14 @@ describe(test_name_fmt, () => {
         await delay(5000);
         await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'})); } );
         
+        let folder = await $('.nav-folder-title*=ng_basic_update')
+        await expect(folder).toExist();
+        await folder.click(); // Should drop down files
+
+        let file = await $('.nav-file-title*=ng_basic_update')
+        await expect(file).toExist();
+        await file.click(); // Should open file in Editor
+
         await delay(100);        
         
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PreTest.png`)
@@ -184,24 +191,9 @@ describe(test_name_fmt, () => {
         await syncObsidianAnki();        
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest.png`)
         
+        await delay(5000);
         // await browser.debug(); // You can safely Pause for debugging here, else it may create unintended consequences
         // await browser.execute( () => { return window.open('','_self').close(); } );
-        await delay(1000); // esp for PostTest ss of Anki and wait for obsidian teardown
-        
-        try {
-            function errHandler(err) {
-                if (err) {
-                    console.log(`Error on trying to copy vault_suite ${test_name}:`, err);
-                }
-            }
-
-            fse.copyFile(`tests/test_config/Anki PreTest_${test_name}.png`, `logs/${test_name}/Anki PreTest_${test_name}.png`, errHandler);
-            fse.copyFile(`tests/test_config/Anki PostTest_${test_name}.png`, `logs/${test_name}/Anki PostTest_${test_name}.png`, errHandler);
-        }
-        catch( e ) {
-            console.error( "We've thrown! Whoops!", e );
-        }
-              
     })
 
     it('should have Anki card IDs in Obsidian note', async () => {
@@ -218,18 +210,17 @@ describe(test_name_fmt, () => {
         
         assert (number_of_cards == number_of_test_cards);
         // assert( fileDefault.split('\n').length == filePostTest.split('\n').length-number_of_cards ) 
-
         // await delay(5000); // >3000ms req; the last test of this spec, wait for anki and obsidian to close properly
     })
 
     it('post update, it should not give any errors', async () => {
-        let folder = await $('.nav-folder-title*=ng_basic_update')
-        await expect(folder).toExist();
-        await folder.click(); // Should drop down files
+        // let folder = await $('.nav-folder-title*=ng_basic_update')
+        // await expect(folder).toExist();
+        // await folder.click(); // Should drop down files
 
-        let file = await $('.nav-file-title*=ng_basic_update')
-        await expect(folder).toExist();
-        await file.click(); // Should open file in Editor
+        // let file = await $('.nav-file-title*=ng_basic_update')
+        // await expect(folder).toExist();
+        // await file.click(); // Should open file in Editor
 
         await browser.execute( () => { 
             var span = [...document.querySelectorAll('span')].find(s => s.textContent.includes('EDIT ABOVE THIS LINE FOR TEST')); 
@@ -239,15 +230,34 @@ describe(test_name_fmt, () => {
             }
         });
 
-        // await browser.debug();
         const newline = await $('div*=updated content meow')
         await expect(newline).toExist()
+
+        await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 's', ctrlKey: true})); } );
 
         await syncObsidianAnki();        
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest2.png`)
 
+        // await browser.debug();
+        console.log('Synced Obsidian and Anki ... Existing Obisdian');
         await browser.execute( () => { return window.open('','_self').close(); } );
         
+        await delay(1000); // esp for PostTest ss of Anki and wait for obsidian teardown
+        
+        try {
+            function errHandler(err) {
+                if (err) {
+                    console.log(`Error on trying to copy vault_suite ${test_name}:`, err);
+                }
+            }
+
+            fse.copyFile(`tests/test_config/Anki PreTest_${test_name}.png`, `logs/${test_name}/Anki PreTest_${test_name}.png`, errHandler);
+            fse.copyFile(`tests/test_config/Anki PostTest_${test_name}.png`, `logs/${test_name}/Anki PostTest_${test_name}.png`, errHandler);
+        }
+        catch( e ) {
+            console.error( "We've thrown! Whoops!", e );
+        }
+
         fse.writeFile('tests/test_vault/unlock', 'meow', (err) => {
             if (err)
                 console.log('reset_perms file could not be created. Err: ', err);
