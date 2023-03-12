@@ -1,4 +1,6 @@
 import type { Options } from '@wdio/types'
+const fs = require('fs')
+const fse = require('fs-extra');
 const path = require('path');
 
 export const config/* : Options.Testrunner */ = {
@@ -31,11 +33,11 @@ export const config/* : Options.Testrunner */ = {
     // will be called from there.
     //
     specs: [
-        [
-            // './tests/specs/**/*.ts'
-            './tests/specs/basic_sync.e2e.ts',
-            './tests/specs/basic_sync_results.e2e.ts'
-        ]
+        //  [
+            // './tests/specs_gen/**/*.ts',
+            './tests/specs_gen/**/*.ts',
+            './tests/specs/**/*.ts'
+        // ]
     ],
     // Patterns to exclude.
     exclude: [
@@ -68,7 +70,7 @@ export const config/* : Options.Testrunner */ = {
         // maxInstances can get overwritten per capability. So if you have an in-house Selenium
         // grid with only 5 firefox instances available you can make sure that not more than
         // 5 instances get started at a time.
-        maxInstances: 5,
+        // maxInstances: 5,
         //
         browserName: 'chrome',
         acceptInsecureCerts: true,
@@ -185,10 +187,10 @@ export const config/* : Options.Testrunner */ = {
     framework: 'mocha',
     //
     // The number of times to retry the entire specfile when it fails as a whole
-    // specFileRetries: 1,
+    specFileRetries: 1,
     //
     // Delay in seconds between the spec file retry attempts
-    // specFileRetriesDelay: 0,
+    specFileRetriesDelay: 10,
     //
     // Whether or not retried specfiles should be retried immediately or deferred to the end of the queue
     // specFileRetriesDeferred: false,
@@ -209,7 +211,7 @@ export const config/* : Options.Testrunner */ = {
             }
         }]
     ],
-    
+    outputDir: 'logs',
     //
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
@@ -230,8 +232,43 @@ export const config/* : Options.Testrunner */ = {
      * @param {Object} config wdio configuration object
      * @param {Array.<Object>} capabilities list of capabilities details
      */
-    // onPrepare: function (config, capabilities) {
-    // },
+    onPrepare: function (config, capabilities) {
+        let vault_suites_dir = 'tests/defaults/test_vault_suites';   
+
+        (async ()=>{
+            try {
+                fse.emptyDirSync('tests/specs_gen')
+                const files = await fs.promises.readdir( vault_suites_dir );
+
+                // Loop them all with the new for...of
+                for( const file of files ) {                    
+                    // Get the full paths
+                    const fromPath = path.join( vault_suites_dir, file );
+        
+                    // Stat the file to see if we have a file or dir
+                    const stat = await fs.promises.stat( fromPath );
+                    
+                    if( stat.isDirectory() ) {
+                        if(file[0] == 'n' && file[1] == 'g' && file[2] == '_') {
+                            // No Auto Generation flag is set on folder
+                            // Dont generate spec file
+                            console.log( `'%s' is a directory. But Skipping specs generation`, fromPath );
+                            continue;
+                        }
+                        console.log( `'%s' is a directory. Making tests/specs/${file}.e2e.ts`, fromPath );
+                        fs.copyFile("tests/defaults/specs/template.e2e.ts", `tests/specs_gen/${file}.e2e.ts`, (err) => {
+                            if (err) {
+                              console.log(`Error on trying to make specs test file ${file}:`, err);
+                            }
+                        });
+                    }
+                } // End for...of
+            }
+            catch( e ) {
+                console.error( "We've thrown! Whoops!", e );
+            }        
+        })(); // Wrap in parenthesis and call now
+    },
     /**
      * Gets executed before a worker process is spawned and can be used to initialise specific service
      * for that worker as well as modify runtime environments in an async fashion.
@@ -241,8 +278,22 @@ export const config/* : Options.Testrunner */ = {
      * @param  {[type]} args     object that will be merged with the main configuration once worker is initialized
      * @param  {[type]} execArgv list of string arguments passed to the worker process
      */
-    // onWorkerStart: function (cid, caps, specs, args, execArgv) {
-    // },
+    onWorkerStart: function (cid, caps, specs, args, execArgv) {
+        // console.log('onWorkerStart : ' + specs);
+        specs.forEach(spec => {
+            let test_name = (path.basename(spec) as string).split('.')[0];
+            try {
+                fs.mkdir(`logs/${test_name}`, { recursive: true }, (err) => {
+                    if (err) {
+                        console.log(`Error on trying to make logs test folder ${test_name}:`, err);
+                    }
+                });
+            }
+            catch( e ) {
+                console.error( "We've thrown! Whoops!", e );
+            }            
+        });
+    },
     /**
      * Gets executed just after a worker process has exited.
      * @param  {String} cid      capability id (e.g 0-0)
@@ -250,8 +301,36 @@ export const config/* : Options.Testrunner */ = {
      * @param  {[type]} specs    specs to be run in the worker process
      * @param  {Number} retries  number of retries used
      */
-    // onWorkerEnd: function (cid, exitCode, specs, retries) {
-    // },
+    onWorkerEnd: function (cid, exitCode, specs, retries) {
+        // TODO: Maybe we can do the last spec file's test delay here ?
+        (async () => {
+            try {
+                let test_outputs_dir = 'tests/test_config/.local/share/test_outputs';                
+                const files = await fs.promises.readdir( test_outputs_dir );
+
+                // Loop them all with the new for...of
+                for( const file of files ) {
+                    // Get the full paths
+                    const fromPath = path.join( test_outputs_dir, file );
+        
+                    // Stat the file to see if we have a file or dir
+                    const stat = await fs.promises.stat( fromPath );
+        
+                    if( stat.isDirectory() ) {
+                        console.log( `'%s' is a test_output directory. Moving for further python tests`, fromPath );
+                        fse.move(fromPath, `tests/test_outputs/${file}`, { overwrite: true }, err => {
+                            if (err) {
+                                console.log(`Error on trying to copying test_output of ${file}:`, err);
+                            }
+                        })
+                    }
+                } // End for...of
+            }
+            catch( e ) {
+                console.error( "We've thrown! Whoops!", e );
+            }  
+        })(); // Wrap in parenthesis and call now
+    },
     /**
      * Gets executed just before initialising the webdriver session and test framework. It allows you
      * to manipulate configurations depending on the capability or spec.

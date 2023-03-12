@@ -273,8 +273,11 @@ Vagrantfile
 
 *.cid
 
+# Obsidian-to-Anki plugin Specifc
 # Complied Plugin Outputs
 main.js
 
-tests/test_config
-tests/test_vault
+tests/test_config/*
+tests/test_vault/*
+tests/specs_gen/*
+tests/test_outputs/*

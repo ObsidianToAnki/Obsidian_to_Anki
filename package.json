@@ -9,7 +9,7 @@
         "copy": "rm -rf tests/defaults/test_vault/.obsidian/plugins/obsidian-to-anki-plugin && mkdir -p tests/defaults/test_vault/.obsidian/plugins/obsidian-to-anki-plugin && cp manifest.json styles.css main.js tests/defaults/test_vault/.obsidian/plugins/obsidian-to-anki-plugin/",
         "prep-wdio": "bash prepare-wdio.sh",
         "test-wdio": "npm run prep-wdio && docker build -t anki-obsidian . && wdio run ./wdio.conf.ts",
-        "test-py": "pip install pytest anki && pytest -v tests/anki/ --junitxml logs/test-reports/pytest.xml",
+        "test-py": "pip install pytest anki && pytest -vvvs tests/anki/ --junitxml logs/test-reports/pytest.xml",
         "test": "npm run test-wdio && npm run test-py"
     },
     "keywords": [],
@@ -28,6 +28,7 @@
         "@wdio/spec-reporter": "^8.4.0",
         "chromedriver": "^100.0.0",
         "devtools": "^8.5.5",
+        "glob": "^9.2.1",
         "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
         "rollup": "^2.32.1",
         "rollup-plugin-node-polyfills": "^0.2.1",

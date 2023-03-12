@@ -163,6 +163,12 @@ export class FileManager {
     async requests_1() {
         let requests: AnkiConnect.AnkiConnectRequest[] = []
         let temp: AnkiConnect.AnkiConnectRequest[] = []
+        console.info("Requesting addition of new deck into Anki...")
+        for (let file of this.ownFiles) {
+            temp.push(file.getCreateDecks())
+        }
+        requests.push(AnkiConnect.multi(temp))
+        temp = []
         console.info("Requesting addition of notes into Anki...")
         for (let file of this.ownFiles) {
             temp.push(file.getAddNotes())
@@ -213,7 +219,7 @@ export class FileManager {
         }
         requests.push(AnkiConnect.multi(temp))
         temp = []
-        this.requests_1_result = await AnkiConnect.invoke('multi', {actions: requests})
+        this.requests_1_result = ((await AnkiConnect.invoke('multi', {actions: requests}) as Array<Object>).slice(1) as any)
         await this.parse_requests_1()
     }
 

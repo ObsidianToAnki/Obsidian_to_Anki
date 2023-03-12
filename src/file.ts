@@ -187,6 +187,14 @@ abstract class AbstractFile {
         this.file = this.file.replace(this.data.EMPTY_REGEXP, "")
     }
 
+    getCreateDecks(): AnkiConnect.AnkiConnectRequest {        
+        let actions: AnkiConnect.AnkiConnectRequest[] = []
+        for (let note of this.all_notes_to_add) {
+            actions.push(AnkiConnect.createDeck(note.deckName))
+        }
+        return AnkiConnect.multi(actions)
+    }
+
     getAddNotes(): AnkiConnect.AnkiConnectRequest {
         let actions: AnkiConnect.AnkiConnectRequest[] = []
         for (let note of this.all_notes_to_add) {

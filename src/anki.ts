@@ -69,6 +69,10 @@ export function addNote(note: AnkiConnectNote): AnkiConnectRequest {
 	return request('addNote', {note: note})
 }
 
+export function createDeck(deck: string): AnkiConnectRequest {
+	return request('createDeck', {deck: deck})
+}
+
 export function deleteNotes(note_ids: number[]): AnkiConnectRequest {
 	return request('deleteNotes', {notes: note_ids})
 }
