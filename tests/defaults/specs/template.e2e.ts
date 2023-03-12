@@ -88,6 +88,10 @@ describe(test_name_fmt, () => {
         {
             logs = logs.concat( await browser.getLogs('browser'));
             console.log(logs);
+
+            if (logs.find( e => (e['level'] as string).includes('SEVERE') ))
+                break;
+
             await delay(100);
         }
         while (!logs.find( e => (e['message'] as string).includes('All done!') ));
