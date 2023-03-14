@@ -34,6 +34,10 @@ jobs:
           # npm run test
           sudo npm run test-wdio
 
+          echo "Current user for this action is - $USER"
+          chown -R $USER: tests/test_config
+          chown -R $USER: tests/test_vault
+
           ls -alh
           ls -alh tests/test_config/
           ls -alh "tests/test_config/.local/share/Anki2/User 1/"
@@ -172,6 +176,15 @@ jobs:
             tests/test_config/logs/*
             tests/test_config/*.png
             # tests/test_config/.xsession-errors
+
+      - name: Upload build artifacts for failed builds
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PLUGIN_NAME }}-fail
+          path: |
+            tests/test_config
+            tests/test_vault
 
   checkout-signed:
     runs-on: ubuntu-latest
