@@ -3,7 +3,7 @@ mkdir -p /config/logs
 
 {
 
-(sleep 1s && /defaults/reset_perms.sh) &
+(sleep 1s && echo "abc" | sudo -s /defaults/reset_perms.sh) &
 
 sudo -u abc
 
