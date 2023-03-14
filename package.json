@@ -20,7 +20,7 @@
         "@rollup/plugin-node-resolve": "^9.0.0",
         "@rollup/plugin-typescript": "^6.1.0",
         "@types/node": "^18.15.3",
-        "@types/showdown": "^1.9.3",
+        "@types/showdown": "^2.0.0",
         "@wdio/cli": "^8.5.1",
         "@wdio/junit-reporter": "^8.4.0",
         "@wdio/local-runner": "^8.5.4",
@@ -43,7 +43,7 @@
     },
     "dependencies": {
         "byte-base64": "^1.1.0",
-        "showdown": "^1.9.1",
+        "showdown": "^2.1.0",
         "ts-md5": "^1.2.7",
         "webdriver": "^8.5.5"
     }
