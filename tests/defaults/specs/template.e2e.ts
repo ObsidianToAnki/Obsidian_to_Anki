@@ -117,6 +117,7 @@ describe(test_name_fmt, () => {
         if( errorLogs.length > 0 || warningsLogs.length > 0)
         {            
             await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'i', ctrlKey: true, shiftKey: true})); } );   
+            await delay(1000);
             await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest_Error.png`)
         }
         await delay(1000);
