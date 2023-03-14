@@ -39,8 +39,8 @@ jobs:
         if: always()
         run: |
           echo "Current user for this action is - $USER $(id -u)"
-          sudo chown -R $(id -u): tests/test_config
-          sudo chown -R $(id -u): tests/test_vault
+          sudo chown -R $(whoami) tests/test_config
+          sudo chown -R $(whoami) tests/test_vault
 
           ls -alh
           ls -alh tests/test_config/
@@ -105,7 +105,7 @@ jobs:
             fi
 
             echo "" >> comment.md
-            echo "#### $ss_test_desc" >> comment.md
+            echo "### $ss_test_desc" >> comment.md
             echo "" >> comment.md
 
             echo '<details><summary>Pre Test</summary>' >> comment.md
@@ -238,8 +238,8 @@ jobs:
         if: always()
         run: |
           echo "Current user for this action is - $USER $(id -u)"
-          sudo chown -R $(id -u): tests/test_config
-          sudo chown -R $(id -u): tests/test_vault
+          sudo chown -R $(whoami) tests/test_config
+          sudo chown -R $(whoami) tests/test_vault
 
           ls -alh
           ls -alh tests/test_config/
@@ -304,7 +304,7 @@ jobs:
             fi
 
             echo "" >> comment.md
-            echo "#### $ss_test_desc" >> comment.md
+            echo "### $ss_test_desc" >> comment.md
             echo "" >> comment.md
 
             echo '<details><summary>Pre Test</summary>' >> comment.md
