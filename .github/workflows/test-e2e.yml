@@ -36,6 +36,7 @@ jobs:
           sudo npm run test-py
       
       - name: Set output perms
+        if: always()
         run: |
           echo "Current user for this action is - $USER $(id -u)"
           sudo chown -R $(id -u): tests/test_config
@@ -234,6 +235,7 @@ jobs:
           sudo npm run test-py
       
       - name: Set output perms
+        if: always()
         run: |
           echo "Current user for this action is - $USER $(id -u)"
           sudo chown -R $(id -u): tests/test_config
