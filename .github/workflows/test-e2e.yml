@@ -105,14 +105,14 @@ jobs:
             fi
 
             echo "" >> comment.md
-            echo "### $ss_test_desc" >> comment.md
+            echo "### 🔧 $ss_test_desc" >> comment.md
             echo "" >> comment.md
 
             echo '<details><summary>Pre Test</summary>' >> comment.md
 
             for ss in "$ss_test"*Pre*.png; do 
               echo '<p float="left">' >> comment.md
-              cml-publish "$ss" | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+              cml-publish "$ss" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
               echo '</p>' >> comment.md
             done 
             
@@ -120,7 +120,7 @@ jobs:
 
             for ss in "$ss_test"*Post*.png; do 
               echo '<p float="left">' >> comment.md
-              cml-publish "$ss" | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+              cml-publish "$ss" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
               echo '</p>' >> comment.md
             done 
 
@@ -304,14 +304,14 @@ jobs:
             fi
 
             echo "" >> comment.md
-            echo "### $ss_test_desc" >> comment.md
+            echo "### 🔧 $ss_test_desc" >> comment.md
             echo "" >> comment.md
 
             echo '<details><summary>Pre Test</summary>' >> comment.md
 
             for ss in "$ss_test"*Pre*.png; do 
               echo '<p float="left">' >> comment.md
-              cml-publish "$ss" | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+              cml-publish "$ss" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
               echo '</p>' >> comment.md
             done 
             
@@ -319,7 +319,7 @@ jobs:
 
             for ss in "$ss_test"*Post*.png; do 
               echo '<p float="left">' >> comment.md
-              cml-publish "$ss" | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+              cml-publish "$ss" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
               echo '</p>' >> comment.md
             done 
 
