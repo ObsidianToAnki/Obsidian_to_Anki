@@ -35,8 +35,8 @@ jobs:
           sudo npm run test-wdio
 
           echo "Current user for this action is - $USER"
-          chown -R $USER: tests/test_config
-          chown -R $USER: tests/test_vault
+          sudo chown -R $USER: tests/test_config
+          sudo chown -R $USER: tests/test_vault
 
           ls -alh
           ls -alh tests/test_config/
@@ -229,7 +229,11 @@ jobs:
       - name: Run Tests
         run: | 
           # npm run test
-          npm run test-wdio
+          sudo npm run test-wdio
+
+          echo "Current user for this action is - $USER"
+          sudo chown -R $USER: tests/test_config
+          sudo chown -R $USER: tests/test_vault
 
           ls -alh
           ls -alh tests/test_config/
@@ -288,23 +292,53 @@ jobs:
           echo "# 📷 Screenshots of tests:" >> comment.md
           echo "" >> comment.md
 
-          for ss_test in tests/test_config/*.png logs/*.png; do 
+          for ss_test in logs/**/; do 
             ss_test_desc=$(basename "$ss_test" .png)
-
-            # echo "<details><summary>$ss_test_desc</summary>" >> comment.md
-            # echo '<p float="left">' >> comment.md
-            # cml-publish "$ss_test" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
-            # # echo "![](./$ss_test)" >> comment.md
-            # echo '</p></details>' >> comment.md
+            
+            if [ "$ss_test_desc" == "test-reports" ]; then
+              continue
+            fi
 
             echo "" >> comment.md
-            echo "### $ss_test_desc" >> comment.md
+            echo "#### $ss_test_desc" >> comment.md
             echo "" >> comment.md
-            echo '<p float="left">' >> comment.md
-            cml-publish "$ss_test" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
-            # echo "![](./$ss_test)" >> comment.md
-            echo '</p>' >> comment.md
+
+            echo '<details><summary>Pre Test</summary>' >> comment.md
+
+            for ss in "$ss_test"*Pre*.png; do 
+              echo '<p float="left">' >> comment.md
+              cml-publish "$ss" | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+              echo '</p>' >> comment.md
+            done 
+            
+            echo '</details><details><summary>Post Test</summary>' >> comment.md
+
+            for ss in "$ss_test"*Post*.png; do 
+              echo '<p float="left">' >> comment.md
+              cml-publish "$ss" | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+              echo '</p>' >> comment.md
+            done 
+
+            echo '</details>' >> comment.md
           done
+
+          # for ss_test in tests/test_config/*.png logs/*.png; do 
+          #   ss_test_desc=$(basename "$ss_test" .png)
+
+          #   # echo "<details><summary>$ss_test_desc</summary>" >> comment.md
+          #   # echo '<p float="left">' >> comment.md
+          #   # cml-publish "$ss_test" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
+          #   # # echo "![](./$ss_test)" >> comment.md
+          #   # echo '</p></details>' >> comment.md
+
+          #   echo "" >> comment.md
+          #   echo "### $ss_test_desc" >> comment.md
+          #   echo "" >> comment.md
+          #   echo '<p float="left">' >> comment.md
+          #   cml-publish "$ss_test" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
+          #   # echo "![](./$ss_test)" >> comment.md
+          #   echo '</p>' >> comment.md
+          # done
 
           # if [ "$EVENT" == 'pull_request' ]
           # then
@@ -339,6 +373,15 @@ jobs:
             tests/test_config/logs/*
             tests/test_config/*.png
             # tests/test_config/.xsession-errors
+
+      - name: Upload build artifacts for failed builds
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PLUGIN_NAME }}-fail
+          path: |
+            tests/test_config
+            tests/test_vault
     
   # MapjobStatus:
   #   needs: [Test]
