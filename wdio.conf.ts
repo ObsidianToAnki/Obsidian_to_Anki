@@ -33,7 +33,7 @@ export const config/* : Options.Testrunner */ = {
     // will be called from there.
     //
     specs: [
-        //  [
+        // [
             // './tests/specs_gen/**/*.ts',
             './tests/specs_gen/**/*.ts',
             './tests/specs/**/*.ts'
@@ -110,7 +110,7 @@ export const config/* : Options.Testrunner */ = {
     // Define all options that are relevant for the WebdriverIO instance here
     //
     // Level of logging verbosity: trace | debug | info | warn | error | silent
-    logLevel: 'info',
+    logLevel: 'debug',
     //
     // Set specific log levels per logger
     // loggers:
@@ -187,10 +187,10 @@ export const config/* : Options.Testrunner */ = {
     framework: 'mocha',
     //
     // The number of times to retry the entire specfile when it fails as a whole
-    specFileRetries: 1,
+    // specFileRetries: 1,
     //
     // Delay in seconds between the spec file retry attempts
-    specFileRetriesDelay: 10,
+    // specFileRetriesDelay: 10,
     //
     // Whether or not retried specfiles should be retried immediately or deferred to the end of the queue
     // specFileRetriesDeferred: false,

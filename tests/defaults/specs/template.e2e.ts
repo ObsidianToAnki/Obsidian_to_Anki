@@ -56,7 +56,7 @@ describe(test_name_fmt, () => {
 
         // const TrustButton = await $('button*=Trust')
         // await expect(TrustButton).toExist()
-        await delay(2000);
+        await delay(2000); // even for reset perms
         await browser.execute( () => { var btn = [...document.querySelectorAll('button')].find(btn => btn.textContent.includes('Trust')); if(btn) btn.click(); } );
         
         await delay(3000);
@@ -88,6 +88,10 @@ describe(test_name_fmt, () => {
         {
             logs = logs.concat( await browser.getLogs('browser'));
             console.log(logs);
+
+            if (logs.find( e => (e['level'] as string).includes('SEVERE') ))
+                break;
+
             await delay(100);
         }
         while (!logs.find( e => (e['message'] as string).includes('All done!') ));
@@ -109,6 +113,13 @@ describe(test_name_fmt, () => {
         }
 
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest.png`)
+
+        if( errorLogs.length > 0 || warningsLogs.length > 0)
+        {            
+            await browser.execute( () => { return dispatchEvent(new KeyboardEvent('keydown', {'key': 'i', ctrlKey: true, shiftKey: true})); } );   
+            await delay(1000);
+            await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest_Error.png`)
+        }
         await delay(1000);
 
         console.log(logs);
