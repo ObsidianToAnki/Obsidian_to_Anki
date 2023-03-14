@@ -33,7 +33,10 @@ jobs:
         run: | 
           # npm run test
           sudo npm run test-wdio
-
+          sudo npm run test-py
+      
+      - name: Set output perms
+        run: |
           echo "Current user for this action is - $USER $(id -u)"
           sudo chown -R $(id -u): tests/test_config
           sudo chown -R $(id -u): tests/test_vault
@@ -41,8 +44,6 @@ jobs:
           ls -alh
           ls -alh tests/test_config/
           ls -alh "tests/test_config/.local/share/Anki2/User 1/"
-
-          sudo npm run test-py
 
       - name: Package
         if: always()
@@ -230,7 +231,10 @@ jobs:
         run: | 
           # npm run test
           sudo npm run test-wdio
-
+          sudo npm run test-py
+      
+      - name: Set output perms
+        run: |
           echo "Current user for this action is - $USER $(id -u)"
           sudo chown -R $(id -u): tests/test_config
           sudo chown -R $(id -u): tests/test_vault
@@ -238,8 +242,6 @@ jobs:
           ls -alh
           ls -alh tests/test_config/
           ls -alh "tests/test_config/.local/share/Anki2/User 1/"
-
-          sudo npm run test-py
 
       - name: Package
         if: always()
