@@ -97,4 +97,5 @@ done
 
 sleep 1s
 
+echo "abc" | sudo -S chmod +x /defaults/autostart
 /defaults/autostart

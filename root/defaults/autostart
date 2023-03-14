@@ -17,7 +17,7 @@ test_name=$(echo $test_name | awk -F [.] '{print $1}')
 
 ls -alh /defaults/ >> /config/logs/obsidian.log
 
-sudo chmod +x /defaults/obsidian_anki.sh
+echo "abc" | sudo -S chmod +x /defaults/obsidian_anki.sh
 
 ls -alh /defaults/ >> /config/logs/obsidian.log
 
