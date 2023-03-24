@@ -41,7 +41,10 @@ export default class MyPlugin extends Plugin {
 				"CurlyCloze - Highlights to Clozes": false,
 				"ID Comments": true,
 				"Add Obsidian Tags": false,
-			}
+				"Auto Target Deck from Path": true,
+				"Rescan Error Throwing Files": true
+			},
+			IGNORED_FILE_GLOBS: [],
 		}
 		/*Making settings from scratch, so need note types*/
 		this.note_types = await AnkiConnect.invoke('modelNames') as Array<string>
@@ -58,7 +61,7 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async generateFieldsDict(): Promise<Record<string, string[]>> {
-		let fields_dict = {}
+		let fields_dict: {[note_type: string]: string[]} = {}
 		for (let note_type of this.note_types) {
 			const field_names: string[] = await AnkiConnect.invoke(
 				'modelFieldNames', {modelName: note_type}
@@ -167,13 +170,18 @@ export default class MyPlugin extends Plugin {
 		}
 		new Notice("Successfully connected to Anki! This could take a few minutes - please don't close Anki until the plugin is finished")
 		const data: ParsedSettings = await settingToData(this.app, this.settings, this.fields_dict)
-		const manager = new FileManager(this.app, data, this.app.vault.getMarkdownFiles(), this.file_hashes, this.added_media)
+		const manager = new FileManager(this.app, this, data, this.app.vault.getMarkdownFiles(), this.file_hashes, this.added_media)
 		await manager.initialiseFiles()
 		await manager.requests_1()
 		this.added_media = Array.from(manager.added_media_set)
 		const hashes = manager.getHashes()
 		for (let key in hashes) {
 			this.file_hashes[key] = hashes[key]
+		}
+		if (this.settings.Defaults['Rescan Error Throwing Files']) {
+			for (let errorPath of manager.errorFilePaths) {
+				delete this.file_hashes[errorPath]
+			}
 		}
 		new Notice("All done! Saving file hashes and added media now...")
 		this.saveAllData()

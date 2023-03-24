@@ -4,11 +4,12 @@ import { FROZEN_FIELDS_DICT } from './interfaces/field-interface'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'
 import { FileData } from './interfaces/settings-interface'
 import { Note, InlineNote, RegexNote, CLOZE_ERROR, NOTE_TYPE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
-import { Md5 } from 'ts-md5/dist/md5';
+import { Md5 } from 'ts-md5';
 import * as AnkiConnect from './anki'
 import * as c from './constants'
 import { FormatConverter } from './format'
 import { CachedMetadata, HeadingCache } from 'obsidian'
+import { FileManager } from './files-manager';
 
 const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?ID: \d+)/g
 
@@ -244,6 +245,7 @@ abstract class AbstractFile {
 }
 
 export class AllFile extends AbstractFile {
+    file_manager: FileManager
     ignore_spans: [number, number][]
     custom_regexps: Record<string, string>
     inline_notes_to_add: AnkiConnectNote[]
@@ -251,8 +253,9 @@ export class AllFile extends AbstractFile {
     regex_notes_to_add: AnkiConnectNote[]
     regex_id_indexes: number[]
 
-    constructor(file_contents: string, path:string, url: string, data: FileData, file_cache: CachedMetadata) {
+    constructor(manager: FileManager, file_contents: string, path:string, url: string, data: FileData, file_cache: CachedMetadata) {
         super(file_contents, path, url, data, file_cache)
+        this.file_manager = manager
         this.custom_regexps = data.custom_regexps
     }
 
@@ -321,6 +324,7 @@ export class AllFile extends AbstractFile {
                     console.warn("Did not recognise note type ", parsed.note.modelName, " in file ", this.path)
                 } else {
                     console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                    this.file_manager.errorFilePaths.push(this.path)
                 }
             } else {
                 this.notes_to_edit.push(parsed)
@@ -356,6 +360,7 @@ export class AllFile extends AbstractFile {
                     continue
                 }
                 console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                this.file_manager.errorFilePaths.push(this.path)
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -391,6 +396,7 @@ export class AllFile extends AbstractFile {
                                 continue
                             }
                             console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                            this.file_manager.errorFilePaths.push(this.path)
                         } else {
                             this.notes_to_edit.push(parsed)
                         }

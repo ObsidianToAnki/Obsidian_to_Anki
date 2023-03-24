@@ -1,7 +1,7 @@
 import { PluginSettingTab, Setting, Notice, TFolder } from 'obsidian'
 import * as AnkiConnect from './anki'
 
-const defaultDescs = {
+const defaultDescs: {[settingName: string]: string} = {
 	"Tag": "The tag that the plugin automatically adds to any generated cards.",
 	"Deck": "The deck the plugin adds cards to if TARGET DECK is not specified in the file.",
 	"Scheduling Interval": "The time, in minutes, between automatic scans of the vault. Set this to 0 to disable automatic scanning.",
@@ -10,7 +10,9 @@ const defaultDescs = {
 	"CurlyCloze": "Convert {cloze deletions} -> {{c1::cloze deletions}} on note types that have a 'Cloze' in their name.",
 	"CurlyCloze - Highlights to Clozes": "Convert ==highlights== -> {highlights} to be processed by CurlyCloze.",
 	"ID Comments": "Wrap note IDs in a HTML comment.",
-	"Add Obsidian Tags": "Interpret #tags in the fields of a note as Anki tags, removing them from the note text in Anki."
+	"Add Obsidian Tags": "Interpret #tags in the fields of a note as Anki tags, removing them from the note text in Anki.",
+	"Auto Target Deck from Path": "Automatically add decks from path of note if no deck specified",
+	"Rescan Error Throwing Files": "Rescan files that throw errors e.g. if their deck was created"
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -186,6 +188,12 @@ export class SettingsTab extends PluginSettingTab {
 		if (!(plugin.settings["Defaults"].hasOwnProperty("Add Obsidian Tags"))) {
 			plugin.settings["Defaults"]["Add Obsidian Tags"] = false
 		}
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Auto Target Deck from Path"))) {
+			plugin.settings["Defaults"]["Auto Target Deck from Path"] = false
+		}
+		if (!(plugin.settings["Defaults"].hasOwnProperty("Rescan Error Throwing Files"))) {
+			plugin.settings["Defaults"]["Rescan Error Throwing Files"] = false
+		}
 		for (let key of Object.keys(plugin.settings["Defaults"])) {
 			// To account for removal of regex setting
 			if (key === "Regex") {
@@ -338,19 +346,17 @@ export class SettingsTab extends PluginSettingTab {
 					.onClick(async () => {
 						new Notice("Need to connect to Anki to update note types...")
 						try {
+							new Notice('Need to connect to Anki to generate fields dictionary...')
 							plugin.note_types = await AnkiConnect.invoke('modelNames')
 							plugin.regenerateSettingsRegexps()
 							plugin.fields_dict = await plugin.loadFieldsDict()
-							if (Object.keys(plugin.fields_dict).length != plugin.note_types.length) {
-								new Notice('Need to connect to Anki to generate fields dictionary...')
-								try {
-									plugin.fields_dict = await plugin.generateFieldsDict()
-									new Notice("Fields dictionary successfully generated!")
-								}
-								catch(e) {
-									new Notice("Couldn't connect to Anki! Check console for error message.")
-									return
-								}
+							try {
+								plugin.fields_dict = await plugin.generateFieldsDict()
+								new Notice("Fields dictionary successfully generated!")
+							}
+							catch(e) {
+								new Notice("Couldn't connect to Anki! Check console for error message.")
+								return
 							}
 							await plugin.saveAllData()
 							this.setup_display()
@@ -393,6 +399,31 @@ export class SettingsTab extends PluginSettingTab {
 			)
 	}
 
+	setup_ignore_files(){
+		let {containerEl} = this;
+		const plugin = (this as any).plugin
+		let ignored_files_settings = containerEl.createEl('h3', {text: 'Ignored File Settings'})
+		plugin.settings["IGNORED_FILE_GLOBS"] = plugin.settings.hasOwnProperty("IGNORED_FILE_GLOBS")?plugin.settings["IGNORED_FILE_GLOBS"]:[]
+		new Setting(ignored_files_settings)
+			.setName("Ignored File Settings")
+			.addTextArea(
+				text => { 
+					text.setValue(plugin.settings.IGNORED_FILE_GLOBS.join("\n"))
+						.setPlaceholder("This works like a .gitignore file. Files that match any of the lines in this file will not be scanned.")
+						.onChange((value) => {
+							let ignoreLines = value.split("\n")
+							ignoreLines = ignoreLines.filter(e => e.trim() != "") //filter out empty lines and blank lines
+							plugin.settings.IGNORED_FILE_GLOBS = ignoreLines
+
+							plugin.saveAllData()
+						}
+					)
+					text.inputEl.rows = 10
+					text.inputEl.cols = 30
+				}
+			)
+	}
+
 	setup_display() {
 		let {containerEl} = this
 
@@ -404,6 +435,7 @@ export class SettingsTab extends PluginSettingTab {
 		this.setup_syntax()
 		this.setup_defaults()
 		this.setup_buttons()
+		this.setup_ignore_files()
 	}
 
 	async display() {

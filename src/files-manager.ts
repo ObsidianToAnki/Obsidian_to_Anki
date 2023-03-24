@@ -3,7 +3,9 @@ import { ParsedSettings, FileData } from './interfaces/settings-interface'
 import { App, TFile, TFolder, TAbstractFile, CachedMetadata, FileSystemAdapter, Notice } from 'obsidian'
 import { AllFile } from './file'
 import * as AnkiConnect from './anki'
+import multimatch from "multimatch"
 import { basename } from 'path'
+import MyPlugin from 'main'
 
 interface addNoteResponse {
     result: number,
@@ -53,17 +55,21 @@ function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
 
 export class FileManager {
     app: App
+    plugin: MyPlugin
     data: ParsedSettings
     files: TFile[]
+    errorFilePaths: string[]
     ownFiles: Array<AllFile>
     file_hashes: Record<string, string>
     requests_1_result: any
     added_media_set: Set<string>
 
-    constructor(app: App, data:ParsedSettings, files: TFile[], file_hashes: Record<string, string>, added_media: string[]) {
+    constructor(app: App, plugin: MyPlugin, data:ParsedSettings, files: TFile[], file_hashes: Record<string, string>, added_media: string[]) {
         this.app = app
+        this.plugin = plugin
         this.data = data
-        this.files = files
+        this.files = this.findFilesThatAreNotIgnored(files, data);
+        this.errorFilePaths = []
         this.ownFiles = []
         this.file_hashes = file_hashes
         this.added_media_set = new Set(added_media)
@@ -71,6 +77,13 @@ export class FileManager {
 
     getUrl(file: TFile): string {
         return "obsidian://open?vault=" + encodeURIComponent(this.data.vault_name) + String.raw`&file=` + encodeURIComponent(file.path)
+    }
+
+    findFilesThatAreNotIgnored(files:TFile[], data:ParsedSettings):TFile[]{
+        let ignoredFiles: string | string[] = []
+        ignoredFiles = multimatch(files.map(file => file.path), data.ignored_file_globs)
+        let notIgnoredFiles = files.filter(file => !ignoredFiles.contains(file.path))
+        return notIgnoredFiles;
     }
 
     getFolderPathList(file: TFile): TFolder[] {
@@ -85,6 +98,10 @@ export class FileManager {
     }
 
     getDefaultDeck(file: TFile, folder_path_list: TFolder[]): string {
+        if (this.plugin.settings.Defaults['Auto Target Deck from Path']) {
+            // @ts-ignore
+            return file.path.slice(0, -3).replaceAll("/", "::")
+        }
         let folder_decks = this.data.folder_decks
         for (let folder of folder_path_list) {
             // Loops over them from innermost folder
@@ -105,6 +122,7 @@ export class FileManager {
                 tags_list.push(...folder_tags[folder.path].split(" "))
             }
         }
+        
         tags_list.push(...this.data.template.tags)
         return tags_list
     }
@@ -131,6 +149,7 @@ export class FileManager {
             const file_data = this.dataToFileData(file)
             this.ownFiles.push(
                 new AllFile(
+                    this,
                     content,
                     file.path,
                     this.data.add_file_link ? this.getUrl(file) : "",
@@ -219,10 +238,10 @@ export class FileManager {
 
     async parse_requests_1() {
         const response = this.requests_1_result as Requests1Result
-        if (response[5].result.length >= 1 && response[5].result[0].error != null) {
-            new Notice("Please update AnkiConnect! The way the script has added media files has changed.")
-            console.warn("Please update AnkiConnect! The way the script has added media files has changed.")
-        }
+        // if (response[5].result.length >= 1 && response[5].result[0].error != null) {
+        //     new Notice("Please update AnkiConnect! The way the script has added media files has changed.")
+        //     console.warn("Please update AnkiConnect! The way the script has added media files has changed.")
+        // }
         let note_ids_array_by_file: Requests1Result[0]["result"]
         try {
             note_ids_array_by_file = AnkiConnect.parse(response[0])
@@ -251,6 +270,7 @@ export class FileManager {
                 } catch (error) {
                     console.warn("Failed to add note ", file.all_notes_to_add[i], " in file", file.path, " due to error ", error)
                     file.note_ids.push(response.result)
+                    this.errorFilePaths.push(file.path)
                 }
             }
         }
@@ -309,7 +329,5 @@ export class FileManager {
         await AnkiConnect.invoke('multi', {actions: requests})
         console.info("All done!")
     }
-
-
 
 }
