@@ -47,9 +47,9 @@ jobs:
        uses: softprops/action-gh-release@v1
        with:
          # main.css
-         #  main.js
-         #  manifest.json
-         #  styles.css
          generate_release_notes: true
          files: |
+           main.js
+           manifest.json
+           styles.css
            ${{ env.PLUGIN_NAME }}-${{ env.tag }}.zip
