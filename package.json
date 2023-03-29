@@ -21,7 +21,7 @@
         "@rollup/plugin-typescript": "^11.0.0",
         "@types/node": "^18.15.3",
         "@types/showdown": "^2.0.0",
-        "@wdio/cli": "^8.6.0",
+        "@wdio/cli": "^8.6.9",
         "@wdio/junit-reporter": "^8.4.0",
         "@wdio/local-runner": "^8.6.9",
         "@wdio/mocha-framework": "^8.5.6",
