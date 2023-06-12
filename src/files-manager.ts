@@ -1,8 +1,10 @@
-/*Class for managing a list of files, and their Anki requests.*/
-import { ParsedSettings, FileData } from './interfaces/settings-interface'
-import { App, TFile, TFolder, TAbstractFile, CachedMetadata, FileSystemAdapter, Notice } from 'obsidian'
-import { AllFile } from './file'
 import * as AnkiConnect from './anki'
+
+import { App, CachedMetadata, FileSystemAdapter, Notice, TAbstractFile, TFile, TFolder } from 'obsidian'
+/*Class for managing a list of files, and their Anki requests.*/
+import { FileData, ParsedSettings } from './interfaces/settings-interface'
+
+import { AllFile } from './file'
 import { basename } from 'path'
 
 interface addNoteResponse {
@@ -96,20 +98,28 @@ export class FileManager {
         return this.data.template.deckName
     }
 
-    getDefaultTags(file: TFile, folder_path_list: TFolder[]): string[] {
-        let folder_tags = this.data.folder_tags
+    getTags(file: TFile, cache: CachedMetadata, folder_path_list: TFolder[]): string[] {
         let tags_list: string[] = []
-        for (let folder of folder_path_list) {
-            // Loops over them from innermost folder
-            if (folder_tags[folder.path]) {
-                tags_list.push(...folder_tags[folder.path].split(" "))
+        if (this.data.add_file_tags == true) {
+            if ("tags" in cache) {
+                for (let tag of cache.tags) {
+                    tags_list.push(tag.tag.slice(1).replaceAll("/", "::"))
+                }
+            }
+        } else {
+            let folder_tags = this.data.folder_tags
+            for (let folder of folder_path_list) {
+                // Loops over them from innermost folder
+                if (folder_tags[folder.path]) {
+                    tags_list.push(...folder_tags[folder.path].split(" "))
+                }
             }
         }
         tags_list.push(...this.data.template.tags)
         return tags_list
     }
 
-    dataToFileData(file: TFile): FileData {
+    dataToFileData(file: TFile, cache: CachedMetadata): FileData {
         const folder_path_list: TFolder[] = this.getFolderPathList(file)
         let result: FileData = JSON.parse(JSON.stringify(this.data))
         //Lost regexp, so have to get them back
@@ -119,8 +129,12 @@ export class FileManager {
         result.NOTE_REGEXP = this.data.NOTE_REGEXP
         result.INLINE_REGEXP = this.data.INLINE_REGEXP
         result.EMPTY_REGEXP = this.data.EMPTY_REGEXP
-        result.template.deckName = this.getDefaultDeck(file, folder_path_list)
-        result.template.tags = this.getDefaultTags(file, folder_path_list)
+        if (this.data.folder_as_deck == true) {
+            result.template.deckName = file.path.slice(0, -3).split("/").join("::")
+        } else {
+            result.template.deckName = this.getDefaultDeck(file, folder_path_list)
+        }
+        result.template.tags = this.getTags(file, cache, folder_path_list)
         return result
     }
 
@@ -128,7 +142,7 @@ export class FileManager {
         for (let file of this.files) {
             const content: string = await this.app.vault.read(file)
             const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
-            const file_data = this.dataToFileData(file)
+            const file_data = this.dataToFileData(file, cache)
             this.ownFiles.push(
                 new AllFile(
                     content,

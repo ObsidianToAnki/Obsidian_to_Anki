@@ -1,5 +1,6 @@
-import { PluginSettingTab, Setting, Notice, TFolder } from 'obsidian'
 import * as AnkiConnect from './anki'
+
+import { Notice, PluginSettingTab, Setting, TFolder } from 'obsidian'
 
 const defaultDescs = {
 	"Tag": "The tag that the plugin automatically adds to any generated cards.",
@@ -10,7 +11,8 @@ const defaultDescs = {
 	"CurlyCloze": "Convert {cloze deletions} -> {{c1::cloze deletions}} on note types that have a 'Cloze' in their name.",
 	"CurlyCloze - Highlights to Clozes": "Convert ==highlights== -> {highlights} to be processed by CurlyCloze.",
 	"ID Comments": "Wrap note IDs in a HTML comment.",
-	"Add Obsidian Tags": "Interpret #tags in the fields of a note as Anki tags, removing them from the note text in Anki."
+	"Add Obsidian Tags": "Interpret #tags in the fields of a note as Anki tags, removing them from the note text in Anki.",
+	"Add File Tags to Card": "Add tags in the file to the card"
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -292,7 +294,17 @@ export class SettingsTab extends PluginSettingTab {
 		let {containerEl} = this;
 		const plugin = (this as any).plugin
 		const folder_list = this.get_folders()
-		containerEl.createEl('h3', {text: 'Folder settings'})
+		containerEl.createEl('h3', { text: 'Folder settings' })
+		new Setting(containerEl.createEl('h3'))
+			.setName("Folder as Deck")
+			.setDesc("Use folder path as deck. Suitable if you have large vault with many folders")
+			.addToggle(
+				toggle => toggle.setValue(plugin.settings["Defaults"]["Folder as Deck"])
+					.onChange((value) => {
+						plugin.settings["Defaults"]["Folder as Deck"] = value
+						plugin.saveAllData()
+					})
+			)
 		this.create_collapsible("Folder Table")
 		let folder_table = containerEl.createEl('table', {cls: "anki-settings-table"})
 		let head = folder_table.createTHead()
@@ -394,11 +406,11 @@ export class SettingsTab extends PluginSettingTab {
 	}
 
 	setup_display() {
-		let {containerEl} = this
-
+		let { containerEl } = this
+		const plugin = (this as any).plugin
 		containerEl.empty()
 		containerEl.createEl('h2', {text: 'Obsidian_to_Anki settings'})
-		containerEl.createEl('a', {text: 'For more information check the wiki', href: "https://github.com/Pseudonium/Obsidian_to_Anki/wiki"})
+		containerEl.createEl('a', { text: 'For more information check the wiki', href: "https://github.com/Pseudonium/Obsidian_to_Anki/wiki" })
 		this.setup_note_table()
 		this.setup_folder_table()
 		this.setup_syntax()

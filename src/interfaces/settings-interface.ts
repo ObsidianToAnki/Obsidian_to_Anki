@@ -1,5 +1,5 @@
-import { FIELDS_DICT } from './field-interface'
 import { AnkiConnectNote } from './note-interface'
+import { FIELDS_DICT } from './field-interface'
 
 export interface PluginSettings {
 	CUSTOM_REGEXPS: Record<string, string>,
@@ -18,6 +18,7 @@ export interface PluginSettings {
 		"Frozen Fields Line": string
 	},
 	Defaults: {
+		"Folder as Deck": boolean,
 		"Tag": string,
 		"Deck": string,
 		"Scheduling Interval": number
@@ -26,7 +27,8 @@ export interface PluginSettings {
 		"CurlyCloze": boolean,
 		"CurlyCloze - Highlights to Clozes": boolean,
 		"ID Comments": boolean,
-		"Add Obsidian Tags": boolean
+		"Add Obsidian Tags": boolean,
+		"Add File Tags to Card": boolean
 	}
 }
 
@@ -47,11 +49,13 @@ export interface FileData {
 	INLINE_REGEXP: RegExp
 	EMPTY_REGEXP: RegExp
 
+	folder_as_deck: boolean
 	curly_cloze: boolean
 	highlights_to_cloze: boolean
 	comment: boolean
 	add_context: boolean
-	add_obs_tags: boolean
+	add_obs_tags: boolean,
+	add_file_tags: boolean
 }
 
 export interface ParsedSettings extends FileData {
