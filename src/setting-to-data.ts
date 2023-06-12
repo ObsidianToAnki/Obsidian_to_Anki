@@ -36,12 +36,14 @@ export async function settingToData(app: App, settings: PluginSettings, fields_d
     result.EMPTY_REGEXP = new RegExp(escapeRegex(settings.Syntax["Delete Note Line"]) + ID_REGEXP_STR, "g")
 
     //Just a simple transfer
+    result.folder_as_deck = settings.Defaults["Folder as Deck"]
     result.curly_cloze = settings.Defaults.CurlyCloze
     result.highlights_to_cloze = settings.Defaults["CurlyCloze - Highlights to Clozes"]
     result.add_file_link = settings.Defaults["Add File Link"]
     result.comment = settings.Defaults["ID Comments"]
     result.add_context = settings.Defaults["Add Context"]
     result.add_obs_tags = settings.Defaults["Add Obsidian Tags"]
+    result.add_file_tags = settings.Defaults["Add File Tags to Card"]
 
     return result
 }

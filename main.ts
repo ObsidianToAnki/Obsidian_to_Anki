@@ -1,10 +1,12 @@
-import { Notice, Plugin, addIcon } from 'obsidian'
 import * as AnkiConnect from './src/anki'
-import { PluginSettings, ParsedSettings } from './src/interfaces/settings-interface'
-import { SettingsTab } from './src/settings'
+
+import { Notice, Plugin, addIcon } from 'obsidian'
+import { ParsedSettings, PluginSettings } from './src/interfaces/settings-interface'
+
 import { ANKI_ICON } from './src/constants'
-import { settingToData } from './src/setting-to-data'
 import { FileManager } from './src/files-manager'
+import { SettingsTab } from './src/settings'
+import { settingToData } from './src/setting-to-data'
 
 export default class MyPlugin extends Plugin {
 
@@ -32,6 +34,7 @@ export default class MyPlugin extends Plugin {
 				"Frozen Fields Line": "FROZEN"
 			},
 			Defaults: {
+				"Folder as Deck": true,
 				"Tag": "Obsidian_to_Anki",
 				"Deck": "Default",
 				"Scheduling Interval": 0,
@@ -41,6 +44,7 @@ export default class MyPlugin extends Plugin {
 				"CurlyCloze - Highlights to Clozes": false,
 				"ID Comments": true,
 				"Add Obsidian Tags": false,
+				"Add File Tags to Card": false,
 			}
 		}
 		/*Making settings from scratch, so need note types*/
