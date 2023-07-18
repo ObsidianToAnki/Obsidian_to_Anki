@@ -19,7 +19,7 @@
         "@rollup/plugin-commonjs": "^15.1.0",
         "@rollup/plugin-node-resolve": "^9.0.0",
         "@rollup/plugin-typescript": "^11.0.0",
-        "@types/node": "^18.15.3",
+        "@types/node": "^20.4.2",
         "@types/showdown": "^2.0.0",
         "@wdio/cli": "^8.6.9",
         "@wdio/junit-reporter": "^8.4.0",
