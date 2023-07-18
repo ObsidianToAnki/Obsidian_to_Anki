@@ -2,6 +2,7 @@ name: Test e2e
 
 env:
   PLUGIN_NAME: obsidian-to-anki-plugin
+  NODE_V: '16'
 
 on:
   # push:
@@ -22,10 +23,10 @@ jobs:
     steps:
       - name: Branch based PR checkout
         uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js ${{ env.NODE_V }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_V }}
       - run: npm ci
       - run: npm run build --if-present
       
@@ -106,25 +107,32 @@ jobs:
 
             echo "" >> comment.md
             echo "### 🔧 $ss_test_desc" >> comment.md
+            echo "$ss_test - $ss_test_desc"
             echo "" >> comment.md
 
-            echo '<details><summary>Pre Test</summary>' >> comment.md
+            # echo '<details><summary>Pre Test</summary>' >> comment.md
+            echo '#### Pre Test' >> comment.md
 
             for ss in "$ss_test"*Pre*.png; do 
               echo '<p float="left">' >> comment.md
+              echo "  $ss"
               cml-publish "$ss" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
               echo '</p>' >> comment.md
             done 
             
-            echo '</details><details><summary>Post Test</summary>' >> comment.md
+            echo "" >> comment.md
+            # echo '</details><details><summary>Post Test</summary>' >> comment.md
+            echo '#### Post Test' >> comment.md
 
             for ss in "$ss_test"*Post*.png; do 
               echo '<p float="left">' >> comment.md
+              echo "  $ss"
               cml-publish "$ss" | sed -E 's/.+/<img width="90%" src="\0"\/>/' >> comment.md
               echo '</p>' >> comment.md
             done 
 
-            echo '</details>' >> comment.md
+            # echo '</details>' >> comment.md
+            echo "" >> comment.md
           done
 
           # for ss_test in tests/test_config/*.png logs/*.png; do 
@@ -220,10 +228,10 @@ jobs:
       # - name: Trusted Checkout
       #   if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
       #   uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js ${{ env.NODE_V }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_V }}
       - run: npm ci
       - run: npm run build --if-present
       # - run: npm test
