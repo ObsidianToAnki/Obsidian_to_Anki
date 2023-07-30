@@ -27,7 +27,7 @@
         "@wdio/mocha-framework": "^8.12.1",
         "@wdio/spec-reporter": "^8.12.2",
         "chromedriver": "^100.0.0",
-        "devtools": "^8.6.9",
+        "devtools": "^8.12.1",
         "glob": "^9.3.0",
         "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
         "rollup": "^2.32.1",
