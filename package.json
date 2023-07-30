@@ -29,7 +29,7 @@
         "chromedriver": "^100.0.0",
         "devtools": "^8.12.1",
         "glob": "^9.3.0",
-        "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
+        "obsidian": "latest",
         "rollup": "^2.32.1",
         "rollup-plugin-node-polyfills": "^0.2.1",
         "showdown-highlight": "^3.1.0",
