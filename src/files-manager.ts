@@ -303,7 +303,10 @@ export class FileManager {
         temp = []
         console.info("Requesting tags to be replaced...")
         for (let file of this.ownFiles) {
-            temp.push(file.getClearTags())
+             let rem = file.getClearTags()
+             if(rem.params.notes.length) {
+                  temp.push(rem))
+             }
         }
         requests.push(AnkiConnect.multi(temp))
         temp = []
