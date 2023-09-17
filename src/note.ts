@@ -10,7 +10,7 @@ import { FileData } from './interfaces/settings-interface'
 
 const TAG_PREFIX:string = "Tags: "
 export const TAG_SEP:string = " "
-export const ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:ID: (\d+).*)`
+export const ID_REGEXP_STR: string = String.raw`\n?(?:<!--)?(?:\^?ID(?:: )?(\d+).*)`
 export const TAG_REGEXP_STR: string = String.raw`(Tags: .*)`
 const OBS_TAG_REGEXP: RegExp = /#(\w+)/g
 
@@ -43,7 +43,7 @@ abstract class AbstractNote {
     note_type: string
     field_names: string[]
     current_field: string
-    ID_REGEXP: RegExp = /(?:<!--)?ID: (\d+)/
+    ID_REGEXP: RegExp = /(?:<!--)?\^?ID(?:: )?(\d+)/
     formatter: FormatConverter
     curly_cloze: boolean
 	highlights_to_cloze: boolean
@@ -174,7 +174,7 @@ export class Note extends AbstractNote {
 export class InlineNote extends AbstractNote {
 
     static TAG_REGEXP: RegExp = /Tags: (.*)/;
-    static ID_REGEXP: RegExp = /(?:<!--)?ID: (\d+)/;
+    static ID_REGEXP: RegExp = /(?:<!--)?\^?ID:? ?(\d+)/;
     static TYPE_REGEXP: RegExp = /\[(.*?)\]/;
 
     getSplitText(): string[] {
@@ -290,7 +290,12 @@ export class RegexNote {
 		template["fields"] = this.getFields()
 		const file_link_fields = data.file_link_fields
 		if (url) {
-            this.formatter.format_note_with_url(template, url, file_link_fields[this.note_type])
+            if (this.identifier != null)
+            {
+                console.info('adding block to url with id: '+ this.identifier)
+                url = url + '&block=ID' + this.identifier.toString()
+            }
+            this.formatter.format_note_with_url(template, url , file_link_fields[this.note_type])
         }
         if (Object.keys(frozen_fields_dict).length) {
             this.formatter.format_note_with_frozen_fields(template, frozen_fields_dict)

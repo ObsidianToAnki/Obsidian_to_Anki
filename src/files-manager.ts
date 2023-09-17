@@ -70,7 +70,7 @@ export class FileManager {
     }
 
     getUrl(file: TFile): string {
-        return "obsidian://open?vault=" + encodeURIComponent(this.data.vault_name) + String.raw`&file=` + encodeURIComponent(file.path)
+        return "obsidian://advanced-uri?vault=" + encodeURIComponent(this.data.vault_name) + String.raw`&filepath=` + encodeURIComponent(file.path)
     }
 
     getFolderPathList(file: TFile): TFolder[] {
@@ -110,6 +110,7 @@ export class FileManager {
     }
 
     dataToFileData(file: TFile): FileData {
+        const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
         const folder_path_list: TFolder[] = this.getFolderPathList(file)
         let result: FileData = JSON.parse(JSON.stringify(this.data))
         //Lost regexp, so have to get them back
@@ -119,15 +120,28 @@ export class FileManager {
         result.NOTE_REGEXP = this.data.NOTE_REGEXP
         result.INLINE_REGEXP = this.data.INLINE_REGEXP
         result.EMPTY_REGEXP = this.data.EMPTY_REGEXP
-        result.template.deckName = this.getDefaultDeck(file, folder_path_list)
-        result.template.tags = this.getDefaultTags(file, folder_path_list)
+        if (cache.frontmatter?.deck) {
+            console.info('Deck specified in frontmatter', cache.frontmatter.deck)
+            result.template.deckName = cache.frontmatter.deck
+        }
+        else{
+            result.template.deckName = this.getDefaultDeck(file, folder_path_list)
+        }
+        if (cache.frontmatter?.tags) {
+            result.template.tags = cache.frontmatter.tags
+        }
+        else {
+            result.template.tags = this.getDefaultTags(file, folder_path_list)
+        }
         return result
     }
 
     async genAllFiles() {
+        this.files = this.files.filter(f => this.app.metadataCache.getCache(f.path).frontmatter?.ankifiable)
         for (let file of this.files) {
-            const content: string = await this.app.vault.read(file)
             const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
+            console.info('File deck', cache.frontmatter?.deck)
+            const content: string = await this.app.vault.read(file)
             const file_data = this.dataToFileData(file)
             this.ownFiles.push(
                 new AllFile(
@@ -248,11 +262,13 @@ export class FileManager {
                 let response = file_response[i]
                 try {
                     file.note_ids.push(AnkiConnect.parse(response))
+                    console.info('DEBUG: adding note id',  file.note_ids.slice(-1)[0]))
                 } catch (error) {
                     console.warn("Failed to add note ", file.all_notes_to_add[i], " in file", file.path, " due to error ", error)
                     file.note_ids.push(response.result)
                 }
             }
+            console.info(file.note_ids)
         }
         for (let index in note_info_array_by_file) {
             let i: number = parseInt(index)
@@ -269,9 +285,12 @@ export class FileManager {
             let ownFile = this.ownFiles[i]
             let obFile = this.files[i]
             ownFile.tags = tag_list
+            console.info('Writing IDs to file: ', ownFile.path, '...')
             ownFile.writeIDs()
             ownFile.removeEmpties()
             if (ownFile.file !== ownFile.original_file) {
+                console.info('updating file')
+                console.info(obFile)
                 await this.app.vault.modify(obFile, ownFile.file)
             }
         }
