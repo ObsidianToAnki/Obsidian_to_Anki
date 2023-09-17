@@ -70,13 +70,13 @@ export class FileManager {
     }
 
     getUrl(file: TFile): string {
-        return "obsidian://open?vault=" + encodeURIComponent(this.data.vault_name) + String.raw`&file=` + encodeURIComponent(file.path)
+        return "obsidian://advanced-uri?vault=" + encodeURIComponent(this.data.vault_name) + String.raw`&filepath=` + encodeURIComponent(file.path)
     }
 
     getFolderPathList(file: TFile): TFolder[] {
         let result: TFolder[] = []
         let abstractFile: TAbstractFile = file
-        while (abstractFile.hasOwnProperty('parent')) {
+        while (abstractFile && abstractFile.hasOwnProperty('parent')) {
             result.push(abstractFile.parent)
             abstractFile = abstractFile.parent
         }
@@ -88,7 +88,7 @@ export class FileManager {
         let folder_decks = this.data.folder_decks
         for (let folder of folder_path_list) {
             // Loops over them from innermost folder
-            if (folder_decks[folder.path] !== "") {
+            if (folder_decks[folder.path]) {
                 return folder_decks[folder.path]
             }
         }
@@ -101,7 +101,7 @@ export class FileManager {
         let tags_list: string[] = []
         for (let folder of folder_path_list) {
             // Loops over them from innermost folder
-            if (folder_tags[folder.path] !== "") {
+            if (folder_tags[folder.path]) {
                 tags_list.push(...folder_tags[folder.path].split(" "))
             }
         }
@@ -110,6 +110,7 @@ export class FileManager {
     }
 
     dataToFileData(file: TFile): FileData {
+        const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
         const folder_path_list: TFolder[] = this.getFolderPathList(file)
         let result: FileData = JSON.parse(JSON.stringify(this.data))
         //Lost regexp, so have to get them back
@@ -119,15 +120,26 @@ export class FileManager {
         result.NOTE_REGEXP = this.data.NOTE_REGEXP
         result.INLINE_REGEXP = this.data.INLINE_REGEXP
         result.EMPTY_REGEXP = this.data.EMPTY_REGEXP
-        result.template.deckName = this.getDefaultDeck(file, folder_path_list)
-        result.template.tags = this.getDefaultTags(file, folder_path_list)
+        if (cache.frontmatter?.deck) {
+            result.template.deckName = cache.frontmatter.deck
+        }
+        else{
+            result.template.deckName = this.getDefaultDeck(file, folder_path_list)
+        }
+        if (cache.frontmatter?.tags) {
+            result.template.tags = cache.frontmatter.tags
+        }
+        else {
+            result.template.tags = this.getDefaultTags(file, folder_path_list)
+        }
         return result
     }
 
     async genAllFiles() {
+        this.files = this.files.filter(f => this.app.metadataCache.getCache(f.path).frontmatter?.ankifiable)
         for (let file of this.files) {
-            const content: string = await this.app.vault.read(file)
             const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
+            const content: string = await this.app.vault.read(file)
             const file_data = this.dataToFileData(file)
             this.ownFiles.push(
                 new AllFile(
@@ -194,15 +206,21 @@ export class FileManager {
             const mediaLinks = difference(file.formatter.detectedMedia, this.added_media_set)
             for (let mediaLink of mediaLinks) {
                 console.log("Adding media file: ", mediaLink)
-                this.added_media_set.add(mediaLink)
                 const dataFile = this.app.metadataCache.getFirstLinkpathDest(mediaLink, file.path)
-                const realPath = (this.app.vault.adapter as FileSystemAdapter).getFullPath(dataFile.path)
-                temp.push(
-                    AnkiConnect.storeMediaFileByPath(
-                        basename(mediaLink),
-                        realPath
+                if (!(dataFile)) {
+                    console.warn("Couldn't locate media file ", mediaLink)
+                }
+                else {
+                    // Located successfully, so treat as if we've added the media
+                    this.added_media_set.add(mediaLink)
+                    const realPath = (this.app.vault.adapter as FileSystemAdapter).getFullPath(dataFile.path)
+                    temp.push(
+                        AnkiConnect.storeMediaFileByPath(
+                            basename(mediaLink),
+                            realPath
+                        )
                     )
-                )
+                }
             }
         }
         requests.push(AnkiConnect.multi(temp))
@@ -263,6 +281,7 @@ export class FileManager {
             let ownFile = this.ownFiles[i]
             let obFile = this.files[i]
             ownFile.tags = tag_list
+            console.info('Writing IDs to file: ', ownFile.path, '...')
             ownFile.writeIDs()
             ownFile.removeEmpties()
             if (ownFile.file !== ownFile.original_file) {

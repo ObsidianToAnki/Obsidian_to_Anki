@@ -3,17 +3,17 @@
 import { FROZEN_FIELDS_DICT } from './interfaces/field-interface'
 import { AnkiConnectNote, AnkiConnectNoteAndID } from './interfaces/note-interface'
 import { FileData } from './interfaces/settings-interface'
-import { Note, InlineNote, RegexNote, CLOZE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
+import { Note, InlineNote, RegexNote, CLOZE_ERROR, NOTE_TYPE_ERROR, TAG_SEP, ID_REGEXP_STR, TAG_REGEXP_STR } from './note'
 import { Md5 } from 'ts-md5/dist/md5';
 import * as AnkiConnect from './anki'
 import * as c from './constants'
 import { FormatConverter } from './format'
 import { CachedMetadata, HeadingCache } from 'obsidian'
 
-const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?ID: \d+)/g
+const double_regexp: RegExp = /(?:\r\n|\r|\n)((?:\r\n|\r|\n)(?:<!--)?\^?ID(?:: )?\d+)/g
 
 function id_to_str(identifier:number, inline:boolean = false, comment:boolean = false): string {
-    let result = "ID: " + identifier.toString()
+    let result = "^ID" + identifier.toString()
     if (comment) {
         result = "<!--" + result + "-->"
     }
@@ -313,11 +313,15 @@ export class AllFile extends AbstractFile {
                 this.notes_to_add.push(parsed.note)
                 this.id_indexes.push(position)
             } else if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
-                // Need to show an error
                 if (parsed.identifier == CLOZE_ERROR) {
                     continue
                 }
-                console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                // Need to show an error otherwise
+                else if (parsed.identifier == NOTE_TYPE_ERROR) {
+                    console.warn("Did not recognise note type ", parsed.note.modelName, " in file ", this.path)
+                } else {
+                    console.warn("Note with id", parsed.identifier, " in file ", this.path, " does not exist in Anki!")
+                }
             } else {
                 this.notes_to_edit.push(parsed)
             }
@@ -448,6 +452,9 @@ export class AllFile extends AbstractFile {
                 const identifier: number | null = this.note_ids[index + this.notes_to_add.length + this.inline_notes_to_add.length] // Since regular then inline then regex
                 if (identifier) {
                     regex_inserts.push([id_position, "\n" + id_to_str(identifier, false, this.data.comment)])
+                }
+                else{
+                    console.info("Regex note with no id! This is a bug!")
                 }
             }
         )
