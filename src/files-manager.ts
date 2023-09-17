@@ -121,7 +121,6 @@ export class FileManager {
         result.INLINE_REGEXP = this.data.INLINE_REGEXP
         result.EMPTY_REGEXP = this.data.EMPTY_REGEXP
         if (cache.frontmatter?.deck) {
-            console.info('Deck specified in frontmatter', cache.frontmatter.deck)
             result.template.deckName = cache.frontmatter.deck
         }
         else{
@@ -140,7 +139,6 @@ export class FileManager {
         this.files = this.files.filter(f => this.app.metadataCache.getCache(f.path).frontmatter?.ankifiable)
         for (let file of this.files) {
             const cache: CachedMetadata = this.app.metadataCache.getCache(file.path)
-            console.info('File deck', cache.frontmatter?.deck)
             const content: string = await this.app.vault.read(file)
             const file_data = this.dataToFileData(file)
             this.ownFiles.push(
@@ -262,13 +260,11 @@ export class FileManager {
                 let response = file_response[i]
                 try {
                     file.note_ids.push(AnkiConnect.parse(response))
-                    console.info('DEBUG: adding note id',  file.note_ids.slice(-1)[0]))
                 } catch (error) {
                     console.warn("Failed to add note ", file.all_notes_to_add[i], " in file", file.path, " due to error ", error)
                     file.note_ids.push(response.result)
                 }
             }
-            console.info(file.note_ids)
         }
         for (let index in note_info_array_by_file) {
             let i: number = parseInt(index)
@@ -289,8 +285,6 @@ export class FileManager {
             ownFile.writeIDs()
             ownFile.removeEmpties()
             if (ownFile.file !== ownFile.original_file) {
-                console.info('updating file')
-                console.info(obFile)
                 await this.app.vault.modify(obFile, ownFile.file)
             }
         }

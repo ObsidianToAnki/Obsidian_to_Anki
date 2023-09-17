@@ -292,7 +292,6 @@ export class RegexNote {
 		if (url) {
             if (this.identifier != null)
             {
-                console.info('adding block to url with id: '+ this.identifier)
                 url = url + '&block=ID' + this.identifier.toString()
             }
             this.formatter.format_note_with_url(template, url , file_link_fields[this.note_type])

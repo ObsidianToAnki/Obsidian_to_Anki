@@ -450,11 +450,8 @@ export class AllFile extends AbstractFile {
         this.regex_id_indexes.forEach(
             (id_position: number, index: number) => {
                 const identifier: number | null = this.note_ids[index + this.notes_to_add.length + this.inline_notes_to_add.length] // Since regular then inline then regex
-                console.info('index:', index)
-                console.info(this.note_ids)
                 if (identifier) {
                     regex_inserts.push([id_position, "\n" + id_to_str(identifier, false, this.data.comment)])
-                    console.info('inserts:', regex_inserts)
                 }
                 else{
                     console.info("Regex note with no id! This is a bug!")
