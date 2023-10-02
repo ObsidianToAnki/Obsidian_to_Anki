@@ -234,7 +234,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_V }}
-      - run: npm ci
+      - run: |
+          npm install obsidian 
+          npm ci
       - run: npm run build --if-present
       # - run: npm test
       
