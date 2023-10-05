@@ -60,6 +60,9 @@ The script needs to be able to:
 
 Current features (check out the wiki for more details):
 * **Custom note types** - You're not limited to the 6 built-in note types of Anki.
+* **Custom scan directory** 
+  * The plugin will scan the entire vault by default
+  * You can also set which directory (includes all sub-directories as well) to scan via plugin settings
 * **Updating notes from file** - Your text files are the canonical source of the notes.
 * **Tags**, including **tags for an entire file**.
 * **Adding to user-specified deck** on a *per-file* basis.

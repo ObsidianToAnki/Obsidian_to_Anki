@@ -36,6 +36,7 @@
       "Frozen Fields Line": "FROZEN"
     },
     "Defaults": {
+      "Scan Directory": "",
       "Tag": "Obsidian_to_Anki",
       "Deck": "Default",
       "Scheduling Interval": 0,
