@@ -39,7 +39,7 @@
         "wdio-chromedriver-service": "^8.1.1",
         "wdio-docker-service": "^3.2.1",
         "wdio-electron-service": "^4.3.0",
-        "wdio-wait-for": "^3.0.2"
+        "wdio-wait-for": "^3.0.7"
     },
     "dependencies": {
         "byte-base64": "^1.1.0",
