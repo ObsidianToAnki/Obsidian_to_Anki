@@ -38,10 +38,15 @@ export class SettingsTab extends PluginSettingTab {
     super(app, plugin);
     this.plugin = plugin;
   }
-
+  getScanFolders(): string[] {
+    if (typeof this.plugin.settings.ScanFolder === "string") {
+      return [this.plugin.settings.ScanFolder];
+    }
+    return this.plugin.settings.ScanFolder ?? [];
+  }
   setup_scan_folder() {
     this.doSearchAndRemoveList({
-      currentList: this.plugin.ScanFolder(),
+      currentList: this.plugin.getScanFolders(),
       setValue: async (newValue) => {
         this.plugin.settings.ScanFolder = newValue;
       },
