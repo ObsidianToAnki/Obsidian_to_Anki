@@ -348,14 +348,18 @@ export class SettingsTab extends PluginSettingTab {
   get_folders(): TFolder[] {
     const app = (this as any).plugin.app;
 
-    let folder_list: TFolder[] = [app.vault.getRoot()];
+    let folder_list: TFolder[] = [];
+
+    for (let i of this.plugin.settings.ScanFolder) {
+      folder_list.push(app.vault.fileMap[i]);
+    }
     for (let folder of folder_list) {
       let filtered_list: TFolder[] = folder.children.filter((element) =>
         element.hasOwnProperty("children")
       ) as TFolder[];
       folder_list.push(...filtered_list);
     }
-    return folder_list.slice(1); //Removes initial vault folder
+    return folder_list.slice(this.plugin.settings.ScanFolder.length); //Removes initial vault folder
   }
 
   setup_folder_deck(folder: TFolder, row_cells: HTMLCollection) {
