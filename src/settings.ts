@@ -46,7 +46,7 @@ export class SettingsTab extends PluginSettingTab {
   }
   setup_scan_folder() {
     this.doSearchAndRemoveList({
-      currentList: this.plugin.getScanFolders(),
+      currentList: this.getScanFolders(),
       setValue: async (newValue) => {
         this.plugin.settings.ScanFolder = newValue;
       },
