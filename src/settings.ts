@@ -50,9 +50,9 @@ export class SettingsTab extends PluginSettingTab {
       setValue: async (newValue) => {
         this.plugin.settings.ScanFolder = newValue;
       },
-      name: "Folder to exclude of all updates",
+      name: "Folder to include of all updates",
       description:
-        "Any file updated in this folder will not trigger an updated and created update.",
+        "Only file updated in this folder will trigger an updated and created update.",
     });
   }
 
@@ -73,13 +73,13 @@ export class SettingsTab extends PluginSettingTab {
         cb.setIcon("plus");
         cb.setTooltip("Add folder");
         cb.onClick(async () => {
-          if (!searchInput) {
+          if (!searchInput || searchInput.getValue() === "") {
             return;
           }
           const newFolder = searchInput.getValue();
 
           await setValue([...currentList, newFolder].filter(onlyUniqueArray));
-          await plugin.saveSettings();
+          this.plugin.saveAllData();
           searchInput.setValue("");
           this.display();
         });
@@ -89,7 +89,7 @@ export class SettingsTab extends PluginSettingTab {
       new Setting(this.containerEl).setName(ignoreFolder).addButton((button) =>
         button.setButtonText("Remove").onClick(async () => {
           await setValue(currentList.filter((value) => value !== ignoreFolder));
-          await plugin.saveSettings();
+          this.plugin.saveAllData();
           this.display();
         })
       )
