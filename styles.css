@@ -17,3 +17,7 @@
 .anki-rotated {
     transform: rotate(-90deg);
 }
+
+.time_search {
+  width: calc(100% - 20px);
+}
