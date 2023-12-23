@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       # obsidian package often fails integrity checks since its a tarball, hence will get the get the tarball -> npm will cache it -> npm ci will test integrity of that cache vs package-lock.json 
