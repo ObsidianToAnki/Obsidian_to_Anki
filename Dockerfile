@@ -36,6 +36,27 @@ RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen
 
 # Might only work if your host user and group IDs are both 1000.
 
+RUN \
+    echo "**** install runtime packages ****" && \
+    apt-get update && \
+    apt-get install -y \
+    logrotate \
+    nano \
+    netcat-openbsd sshpass \
+    sudo && \
+    echo "**** install openssh-server ****" && \
+    apt-get install -y \
+    openssh-client \
+    openssh-server && \
+    ## openssh-sftp-server && \
+    echo "**** setup openssh environment ****" && \
+    ## sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config && \
+    usermod --shell /bin/bash abc && \
+    rm -rf \
+    /tmp/*
+
+RUN apt-get install -y '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-xinerama0 libxcb-image0 libxcb-icccm4 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 gnome-screenshot
+
 RUN echo "**** download anki ****" && curl https://github.com/ankitects/anki/releases/download/2.1.60/anki-2.1.60-linux-qt6.tar.zst -L -o anki.tar.zst
 RUN chmod +x ./anki.tar.zst && \
     mkdir anki && \
@@ -44,8 +65,6 @@ RUN chmod +x ./anki.tar.zst && \
     cd anki/anki-2.1.60-linux-qt6/ && \ 
     chmod +x ./install.sh && \
     ./install.sh
-
-RUN apt-get install -y '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-xinerama0 libxcb-image0 libxcb-icccm4 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 gnome-screenshot
 
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
@@ -61,7 +80,7 @@ ENV QT_DEBUG_PLUGINS 1
 # CMD /bin/bash -c "anki"
 
 # # set version label
-ARG OBSIDIAN_VERSION=0.15.9
+ARG OBSIDIAN_VERSION=1.5.3
 
 RUN \
     echo "**** download obsidian ****" && \
@@ -80,24 +99,6 @@ ENV \
     GUIAUTOSTART="true" \
     HOME="/vaults" \
     TITLE="Obsidian v$OBSIDIAN_VERSION"
-
-RUN \
-    echo "**** install runtime packages ****" && \
-    apt-get install -y \
-    logrotate \
-    nano \
-    netcat-openbsd sshpass \
-    sudo && \
-    echo "**** install openssh-server ****" && \
-    apt-get install -y \
-    openssh-client \
-    openssh-server && \
-    ## openssh-sftp-server && \
-    echo "**** setup openssh environment ****" && \
-    ## sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config && \
-    usermod --shell /bin/bash abc && \
-    rm -rf \
-    /tmp/*
 
 RUN echo "**** cleanup ****" && \
     apt-get autoclean && \

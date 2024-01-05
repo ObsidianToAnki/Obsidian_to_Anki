@@ -1,5 +1,5 @@
 
-echo "Starting Obsisidan .... " >> /config/logs/obsidian.log
+echo "Starting Obsisidan .... " >> /config/logs/obsidian.log 2>&1
 
 # permissions
 echo "abc" | sudo -S chown -R abc:abc /vaults
@@ -23,13 +23,13 @@ sleep 1s
 
 /squashfs-root/obsidian --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --remote-debugging-port=8890 --window-position=400,10 
 
-echo "Obsisidan Ended .... " >> /config/logs/obsidian.log
+echo "Obsisidan Ended .... " >> /config/logs/obsidian.log 2>&1
 
 # ss_dir = 
 for file in /vaults/**/*.md; do test_name=$(basename $file); done
 test_name=$(echo $test_name | awk -F [.] '{print $1}')
 
-echo "Executing PostTest ss" >> /config/logs/gnome.log && gnome-screenshot >> /config/logs/gnome.log && rename "s/Screenshot from .*/Anki PostTest_${test_name}.png/" /config/*.png
+echo "Executing PostTest ss" >> /config/logs/gnome.log 2>&1 && gnome-screenshot >> /config/logs/gnome.log 2>&1 && rename "s/Screenshot from .*/Anki PostTest_${test_name}.png/" /config/*.png
 rename "s/Anki PreTest.png/Anki PreTest_${test_name}.png/" /config/*.png
 
 # ls -alh >> /config/logs/gnome.log

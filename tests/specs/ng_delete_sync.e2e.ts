@@ -1,5 +1,6 @@
 
 import { readFileSync } from 'fs';
+import { browser } from '@wdio/globals';
 
 const fse = require('fs-extra');
 const path = require('path');
@@ -236,7 +237,7 @@ describe(test_name_fmt, () => {
         await browser.saveScreenshot(`logs/${test_name}/Obsidian PostTest2.png`)
 
         // await browser.debug();
-        await browser.execute( () => { return window.open('','_self').close(); } );
+        await browser.closeWindow();
         
         await delay(3000); // esp for PostTest ss of Anki and wait for obsidian teardown
 

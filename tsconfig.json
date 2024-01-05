@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "lib": ["esnext", "dom"],
+        "lib": ["esnext", "dom", "dom.iterable"],
         "downlevelIteration": true,
         "target": "esnext",
         "moduleResolution": "node",

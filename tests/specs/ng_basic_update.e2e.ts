@@ -1,5 +1,6 @@
 
 import { readFileSync } from 'fs';
+import { browser } from '@wdio/globals';
 
 const fse = require('fs-extra');
 const path = require('path');
@@ -232,7 +233,7 @@ describe(test_name_fmt, () => {
 
         // await browser.debug();
         console.log('Synced Obsidian and Anki ... Existing Obisdian');
-        await browser.execute( () => { return window.open('','_self').close(); } );
+        await browser.closeWindow();
         
         await delay(3000); // esp for PostTest ss of Anki and wait for obsidian teardown
         

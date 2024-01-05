@@ -1,7 +1,8 @@
 
 
 import { glob } from "glob";
-import globSync from 'glob'
+import { browser } from '@wdio/globals';
+
 const fse = require('fs-extra');
 const path = require('path');
 const assert = require('assert');
@@ -125,7 +126,7 @@ describe(test_name_fmt, () => {
         console.log(logs);
         console.log('Synced Obsidian and Anki ... Existing Obisdian');        
         // await browser.debug(); // You can safely Pause for debugging here, else it may create unintended consequences
-        await browser.execute( () => { return window.open('','_self').close(); } );
+        await browser.closeWindow();
         await delay(1000); // esp for PostTest ss of Anki and wait for obsidian teardown
         
         try {

@@ -2,7 +2,7 @@ name: Test e2e
 
 env:
   PLUGIN_NAME: obsidian-to-anki-plugin
-  NODE_V: '16'
+  NODE_V: '18.x'
 
 on:
   # push:
@@ -76,6 +76,9 @@ jobs:
       #     name: JUnit Reprot
       #     path: logs/test-reports/wdio.xml
       #     reporter: jest-junit      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - uses: iterative/setup-cml@v1
         if: always()
       
