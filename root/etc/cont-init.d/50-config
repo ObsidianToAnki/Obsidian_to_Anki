@@ -1,0 +1,43 @@
+#!/usr/bin/with-contenv bash
+
+if [ -n "$PASSWORD" ]; then
+    echo "abc:${PASSWORD}" | chpasswd
+    echo "**** Setting password from environment variable. ****"
+else
+    echo "**** No auth enabled. To enable auth, you can set the PASSWORD var in docker arguments. ****"
+fi
+
+
+if [ ! -d /vaults ]; then
+    echo "**** Creating vaults folder. ****"
+    mkdir -p /vaults;
+fi
+
+echo "********************************"
+echo "****   Debug Information    ****"
+echo "********************************"
+echo ""
+echo "********************************"
+echo "**** Start Date Information ****"
+echo "********************************"
+echo "TZ: ${TZ}"
+echo "Running dpkg-reconfigure -f noninteractive tzdata"
+echo "${TZ}" >/etc/timezone
+dpkg-reconfigure -f noninteractive tzdata
+echo "Date UTC"
+date --utc
+echo "Date Local"
+date
+echo "Zone Info"
+zdump /usr/share/zoneinfo/${TZ}
+echo "Time Zone Offsets"
+zdump -v /etc/localtime
+echo "********************************"
+echo "****  End Date Information  ****"
+echo "********************************"
+
+# permissions
+chown -R abc:abc \
+    /config \
+    /vaults \
+    /squashfs-root

@@ -1,9 +1,10 @@
 {
     "compilerOptions": {
-        "lib": ["esnext", "dom"],
+        "lib": ["esnext", "dom", "dom.iterable"],
         "downlevelIteration": true,
         "target": "esnext",
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
-    }
+    },
+    "exclude": ["node_modules", "tests/**/*.ts"]
 }

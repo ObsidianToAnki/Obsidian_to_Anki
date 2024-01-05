@@ -243,3 +243,41 @@ dist
 .vscode-test
 
 # End of https://www.toptal.com/developers/gitignore/api/node
+
+# Docker project generated files to ignore
+#  if you want to ignore files created by your editor/tools,
+#  please consider a global .gitignore https://help.github.com/articles/ignoring-files
+# https://github.com/atlassian/docker/blob/master/.gitignore
+.vagrant*
+bin
+docker/docker
+.*.swp
+a.out
+*.orig
+build_src
+.flymake*
+.idea
+.DS_Store
+docs/_build
+docs/_static
+docs/_templates
+.gopath/
+.dotcloud
+*.test
+bundles/
+.hg/
+.git/
+vendor/pkg/
+pyenv
+Vagrantfile
+
+*.cid
+
+# Obsidian-to-Anki plugin Specifc
+# Complied Plugin Outputs
+main.js
+
+tests/test_config/*
+tests/test_vault/*
+tests/specs_gen/*
+tests/test_outputs/*
