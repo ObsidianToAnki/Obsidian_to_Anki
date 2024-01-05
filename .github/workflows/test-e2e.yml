@@ -182,7 +182,7 @@ jobs:
 
       - name: Upload build artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PLUGIN_NAME }}
           path: |
@@ -194,7 +194,7 @@ jobs:
 
       - name: Upload build artifacts for failed builds
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PLUGIN_NAME }}-fail
           path: |
@@ -383,7 +383,7 @@ jobs:
 
       - name: Upload build artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PLUGIN_NAME }}
           path: |
@@ -395,7 +395,7 @@ jobs:
 
       - name: Upload build artifacts for failed builds
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PLUGIN_NAME }}-fail
           path: |
