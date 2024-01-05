@@ -22,7 +22,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Branch based PR checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_V }}
         uses: actions/setup-node@v4
         with:
@@ -216,7 +216,7 @@ jobs:
     steps:
       # Check out merge commit
       - name: Fork based /ok-to-test checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
 
@@ -232,7 +232,7 @@ jobs:
   # steps:
       # - name: Trusted Checkout
       #   if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-      #   uses: actions/checkout@v3
+      #   uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_V }}
         uses: actions/setup-node@v4
         with:
