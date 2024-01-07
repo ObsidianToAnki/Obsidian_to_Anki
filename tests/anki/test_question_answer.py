@@ -24,7 +24,7 @@ def test_deck_default_exists(col: Collection):
     assert col.decks.id_for_name('Default') is not None
 
 def test_cards_count(col: Collection):
-    assert len(col.find_cards( col.build_search_string(SearchNode(deck='Default')) )) == 4
+    assert len(col.find_cards( col.build_search_string(SearchNode(deck='Default')) )) == 5
 
 def test_cards_ids_from_obsidian(col: Collection):
 
@@ -63,7 +63,14 @@ def test_cards_front_back_tag_type(col: Collection):
     assert note4.fields[0] == "How is this possible?"
     assert note4.fields[1] == "The 'magic' of regular expressions!"
 
+    note5 = col.get_note(anki_IDs[4])
+    assert note5.fields[0] == "How is this possible? "
+    assert note5.fields[1] == "The 'magic' of regular expressions! "
+    assert note5.has_tag('tag2')
+    assert note5.has_tag('tag1')
+
     assert note1.note_type()["name"] == "Basic"
     assert note2.note_type()["name"] == "Basic"
     assert note3.note_type()["name"] == "Basic"
     assert note4.note_type()["name"] == "Basic"
+    assert note5.note_type()["name"] == "Basic"

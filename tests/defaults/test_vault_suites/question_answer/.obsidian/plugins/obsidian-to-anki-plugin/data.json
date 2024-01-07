@@ -37,7 +37,7 @@
       "CurlyCloze": true,
       "CurlyCloze - Highlights to Clozes": false,
       "ID Comments": true,
-      "Add Obsidian Tags": false
+      "Add Obsidian Tags": true
     }
   },
   "Added Media": [],
