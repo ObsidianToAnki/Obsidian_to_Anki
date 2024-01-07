@@ -33,7 +33,9 @@ jobs:
      - name: Build
        id: build
        run: |
+         npm install obsidian
          npm install
+         npm ci
          npm run build
 
      # Package the required files into a zip
@@ -48,6 +50,7 @@ jobs:
        with:
          # main.css
          generate_release_notes: true
+         draft: true
          files: |
            main.js
            manifest.json
