@@ -19,3 +19,7 @@ A: No, and preceding whitespace will be ignored.
 <!-- CARD -->
 Q: How is this possible?
 A: The 'magic' of regular expressions!
+
+<!-- CARD -->
+Q: How is this possible? #tag2
+A: The 'magic' of regular expressions! #tag1
