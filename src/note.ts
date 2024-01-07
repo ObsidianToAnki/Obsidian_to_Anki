@@ -302,7 +302,7 @@ export class RegexNote {
 		if (this.note_type.includes("Cloze") && !(note_has_clozes(template))) {
 			this.identifier = CLOZE_ERROR //An error code that says "don't add this note!"
 		}
-        if (data.add_obs_tags) {
+		if (data.add_obs_tags) {
 			for (let key in template["fields"]) {
 				for (let match of template["fields"][key].matchAll(OBS_TAG_REGEXP)) {
 					this.tags.push(match[1])
