@@ -305,7 +305,7 @@ export class FileManager {
         for (let file of this.ownFiles) {
              let rem = file.getClearTags()
              if(rem.params.notes.length) {
-                  temp.push(rem))
+                  temp.push(rem)
              }
         }
         requests.push(AnkiConnect.multi(temp))
