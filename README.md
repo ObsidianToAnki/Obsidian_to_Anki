@@ -10,7 +10,7 @@ Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It ha
 
 ### All users
 1. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
-2. Ensure that you've installed [AnkiConnect](https://github.com/FooSoft/anki-connect).
+2. Ensure that you've installed [AnkiConnect](https://git.foosoft.net/alex/anki-connect).
 
 ### Obsidian plugin users
 3. Have [Obsidian](https://obsidian.md/) downloaded
