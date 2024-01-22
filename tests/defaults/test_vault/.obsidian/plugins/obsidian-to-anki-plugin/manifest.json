@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-to-anki-plugin",
+  "name": "Obsidian_to_Anki",
+  "version": "3.4.2",
+  "minAppVersion": "0.9.20",
+  "description": "This is an Anki integration plugin! Designed for efficient bulk exporting.",
+  "author": "Pseudonium",
+  "authorUrl": "https://github.com/Pseudonium/Obsidian_to_Anki",
+  "isDesktopOnly": true
+}

@@ -1,0 +1,33 @@
+xset -b
+mkdir -p /config/logs
+
+{
+
+echo "abc" | sudo -s chmod +x /defaults/reset_perms.sh
+(sleep 1s && echo "abc" | sudo -s /defaults/reset_perms.sh) &
+
+sudo -u abc
+
+# # ss_dir = 
+for file in /vaults/**/*.md; do test_name=$(basename $file); done
+test_name=$(echo $test_name | awk -F [.] '{print $1}')
+
+(sleep 2s && export LANG="LANG=C.UTF-8";LANGUAGE="en_US.UTF-8";LC_CTYPE="C.UTF-8" anki >> /config/logs/anki.log 2>&1) &
+(sleep 8s && echo "Executing PreTest ss" >> /config/logs/gnome.log 2>&1 && gnome-screenshot >> /config/logs/gnome.log 2>&1 && rename "s/Screenshot from .*/Anki PreTest.png/" /config/*.png) &
+
+ls -alh /defaults/ >> /config/logs/obsidian.log 2>&1
+
+echo "abc" | sudo -S chmod +x /defaults/obsidian_anki.sh
+
+ls -alh /defaults/ >> /config/logs/obsidian.log 2>&1
+
+(sleep 10s && /defaults/obsidian_anki.sh >> /config/logs/obsidian.log 2>&1) & 
+# (sleep 5s && cd /obs_to_anki/ && npm run wdio >> logs/npm.log)
+
+(sleep 12s && sudo /etc/init.d/ssh start >> /config/logs/sshd.log 2>&1 )
+
+# remove any left over ssh client config from previous run
+rm -rf /config/.ssh
+(sleep 1s && sshpass -p "abc" ssh -o StrictHostKeyChecking=no -4 -L 0.0.0.0:8888:localhost:8890 abc@localhost -N >> /config/logs/ssh.log ) &
+
+} >> /config/logs/autostart.log 2>&1

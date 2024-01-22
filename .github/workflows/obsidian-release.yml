@@ -1,0 +1,58 @@
+name: Release Obsidian Plugin
+
+env:
+  PLUGIN_NAME: obsidian-to-anki-plugin # Change this to match the id of your plugin.
+
+on:
+  workflow_dispatch:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - '*' # Push events to matching any tag format, i.e. 1.0, 20.15.10
+
+jobs:
+  build:
+   runs-on: ubuntu-latest
+
+   steps:
+     - uses: actions/checkout@v4
+       with:
+         fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+     - name: Use Node.js
+       uses: actions/setup-node@v4
+       with:
+         node-version: "18.x" # You might need to adjust this value to your own version.
+
+     # Get the version number and put it in an environment file
+     - name: Get Version
+       id: version
+       run: |
+         echo "tag=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
+
+     # Build the plugin
+     - name: Build
+       id: build
+       run: |
+         npm install obsidian
+         npm install
+         npm ci
+         npm run build
+
+     # Package the required files into a zip
+     - name: Package
+       run: |
+         mkdir ${{ env.PLUGIN_NAME }}
+         cp main.js manifest.json styles.css README.md ${{ env.PLUGIN_NAME }}
+         zip -r ${{ env.PLUGIN_NAME }}-${{ env.tag }}.zip ${{ env.PLUGIN_NAME }}
+
+     - name: Release
+       uses: softprops/action-gh-release@v1
+       with:
+         # main.css
+         generate_release_notes: true
+         draft: true
+         files: |
+           main.js
+           manifest.json
+           styles.css
+           ${{ env.PLUGIN_NAME }}-${{ env.tag }}.zip

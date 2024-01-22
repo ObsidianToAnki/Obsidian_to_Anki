@@ -1,0 +1,58 @@
+name: Build
+
+env:
+  PLUGIN_NAME: obsidian-to-anki-plugin
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+        install-exact: [1, 0] 
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      # obsidian package often fails integrity checks since its a tarball, hence will get the get the tarball -> npm will cache it -> npm ci will test integrity of that cache vs package-lock.json 
+      # https://github.com/ShootingKing-AM/Obsidian_to_Anki/pull/122
+      # Installing exact tree would be used in CI/CD to exactly reproduce tests
+      - name: Node install exact tree
+        if: matrix.install-exact == 1
+        run: |
+          npm install obsidian 
+          npm ci
+        
+      # Install latest tree would be usually done by devs/who locally build the plugin
+      - name: Node install latest tree
+        if: matrix.install-exact == 0
+        run: |
+          npm update
+          npm install
+
+      - run: npm run build --if-present
+      # - run: npm test
+      
+      - name: Package
+        run: |
+          mkdir ${{ env.PLUGIN_NAME }}
+          cp main.js manifest.json styles.css README.md ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PLUGIN_NAME }}
+          path: |
+            ${{ env.PLUGIN_NAME }}.zip
