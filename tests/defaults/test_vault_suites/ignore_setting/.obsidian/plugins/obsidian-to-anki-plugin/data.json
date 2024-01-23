@@ -28,7 +28,7 @@
       "Frozen Fields Line": "FROZEN"
     },
     "Defaults": {
-      "Scan Directory": "",
+      "Scan Directory": "ignore_setting/scan_dir",
       "Tag": "Obsidian_to_Anki",
       "Deck": "Default",
       "Scheduling Interval": 0,
@@ -40,7 +40,7 @@
       "Add Obsidian Tags": false
     },
     "IGNORED_FILE_GLOBS": [
-      "ignore_setting*/*ignored/**"
+      "ignore_setting/scan_dir/*ignored/**"
     ]
   },
   "Added Media": [],
