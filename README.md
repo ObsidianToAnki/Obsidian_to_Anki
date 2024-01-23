@@ -64,7 +64,7 @@ Current features (check out the wiki for more details):
   * The plugin will scan the entire vault by default
   * You can also set which directory (includes all sub-directories as well) to scan via plugin settings
 * **Ignore Folders and Files**
-  * You can specify which files and folders are not going to be scanned for flashcards. 
+  * You can specify which files and folders to ignore 
   * This can be done in the settings of this plugin with [Glob syntax](https://en.wikipedia.org/wiki/Glob_(programming)#Syntax).
   * If you're working on your own globs, you can test them out [here](https://globster.xyz/)
   * Examples:
