@@ -1,6 +1,6 @@
 {
     "name": "obsidian-to-anki-plugin",
-    "version": "3.4.2",
+    "version": "3.6.0",
     "description": "This is an Anki integration plugin! Designed for efficient bulk exporting.",
     "main": "main.js",
     "scripts": {
