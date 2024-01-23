@@ -1,7 +1,7 @@
 import { Notice, Plugin, addIcon, TFile, TFolder } from 'obsidian'
 import * as AnkiConnect from './src/anki'
 import { PluginSettings, ParsedSettings } from './src/interfaces/settings-interface'
-import { SettingsTab } from './src/settings'
+import { DEFAULT_IGNORED_FILE_GLOBS, SettingsTab } from './src/settings'
 import { ANKI_ICON } from './src/constants'
 import { settingToData } from './src/setting-to-data'
 import { FileManager } from './src/files-manager'
@@ -43,7 +43,7 @@ export default class MyPlugin extends Plugin {
 				"ID Comments": true,
 				"Add Obsidian Tags": false,
 			},
-			IGNORED_FILE_GLOBS:[]
+			IGNORED_FILE_GLOBS: DEFAULT_IGNORED_FILE_GLOBS,
 		}
 		/*Making settings from scratch, so need note types*/
 		this.note_types = await AnkiConnect.invoke('modelNames') as Array<string>
