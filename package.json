@@ -43,6 +43,6 @@
         "multimatch": "^7.0.0",
         "showdown": "^2.1.0",
         "ts-md5": "^1.2.7",
-        "webdriver": "^8.5.5"
+        "webdriver": "^8.29.0"
     }
 }
