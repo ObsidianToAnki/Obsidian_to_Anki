@@ -6,7 +6,7 @@ from anki.collection import SearchNode
 
 # from conftest import col
 
-test_name = "folder_scan"
+test_name = "ignore_setting"
 col_path = "tests/test_outputs/{}/Anki2/User 1/collection.anki2".format(test_name)
 
 test_file_paths = [
@@ -25,7 +25,7 @@ test_file_no_cards_paths = [
     "tests/test_outputs/{}/Obsidian/{}/scan_dir/ignored_by_setting_ignored/not_supposed_to_be_scanned.md".format(
         test_name, test_name
     ),
-    "tests/test_outputs/{}/Obsidian/{}/scan_dir/ignored_by_setting_ignored/some/oother/subdir/not_supposed_to_be_scanned.md".format(
+    "tests/test_outputs/{}/Obsidian/{}/scan_dir/ignored_by_setting_ignored/some/other/subdir/not_supposed_to_be_scanned.md".format(
         test_name, test_name
     ),
 ]

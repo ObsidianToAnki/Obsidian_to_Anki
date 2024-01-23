@@ -38,18 +38,18 @@ def test_cards_ids_from_obsidian(col: Collection):
 
     ID_REGEXP_STR = r'\n?(?:<!--)?(?:ID: (\d+).*)'
 
+    obs_IDs = []
     for obsidian_test_md in test_file_paths:
-        obs_IDs = []
         with open(obsidian_test_md) as file:
             for line in file:            
                 output = re.search(ID_REGEXP_STR, line.rstrip())
                 if output is not None:
                     output = output.group(1)
-                    obs_IDs.append(output)
-
+                    obs_IDs.append(int(output))
+    obs_IDs = set(obs_IDs)
     anki_IDs = col.find_notes( col.build_search_string(SearchNode(deck='Default')) )
-    for aid, oid in zip(anki_IDs, obs_IDs):
-        assert str(aid) == oid
+    for aid in anki_IDs:
+        assert aid in obs_IDs
 
 def test_no_cards_added_from_obsidian(col: Collection):
 
@@ -73,36 +73,36 @@ def test_cards_front_back_tag_type(col: Collection):
     # assert that should_not_add_notes weren't added
     assert len(anki_IDs) == 8
     
-    note1 = col.get_note(anki_IDs[0])
+    note1 = col.get_note(anki_IDs[4])
     assert note1.fields[0] == "Style Subdir"
     assert note1.fields[1] == "This style is suitable for having the header as the front, and the answer as the back"
 
-    note2 = col.get_note(anki_IDs[1])
+    note2 = col.get_note(anki_IDs[5])
     assert note2.fields[0] == "Subheading 1 Subdir"
     assert note2.fields[1] == "You're allowed to nest headers within each other"
 
-    note3 = col.get_note(anki_IDs[2])
+    note3 = col.get_note(anki_IDs[6])
     assert note3.fields[0] == "Subheading 2 Subdir"
     assert note3.fields[1] == "It'll take the deepest level for the question"
 
-    note4 = col.get_note(anki_IDs[3])
+    note4 = col.get_note(anki_IDs[7])
     assert note4.fields[0] == "Subheading 3 Subdir"
     assert note4.fields[1] == "It'll even<br />\nSpan over<br />\nMultiple lines, and ignore preceding whitespace"
 
 
-    note5 = col.get_note(anki_IDs[4])
+    note5 = col.get_note(anki_IDs[0])
     assert note5.fields[0] == "Style"
     assert note5.fields[1] == "This style is suitable for having the header as the front, and the answer as the back"
 
-    note6 = col.get_note(anki_IDs[5])
+    note6 = col.get_note(anki_IDs[1])
     assert note6.fields[0] == "Subheading 1"
     assert note6.fields[1] == "You're allowed to nest headers within each other"
 
-    note7 = col.get_note(anki_IDs[6])
+    note7 = col.get_note(anki_IDs[2])
     assert note7.fields[0] == "Subheading 2"
     assert note7.fields[1] == "It'll take the deepest level for the question"
 
-    note8 = col.get_note(anki_IDs[7])
+    note8 = col.get_note(anki_IDs[3])
     assert note8.fields[0] == "Subheading 3"
     assert note8.fields[1] == "It'll even<br />\nSpan over<br />\nMultiple lines, and ignore preceding whitespace"
 
