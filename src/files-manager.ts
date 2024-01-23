@@ -4,7 +4,7 @@ import { App, TFile, TFolder, TAbstractFile, CachedMetadata, FileSystemAdapter, 
 import { AllFile } from './file'
 import * as AnkiConnect from './anki'
 import { basename } from 'path'
-
+import multimatch from "multimatch"
 interface addNoteResponse {
     result: number,
     error: string | null
@@ -63,14 +63,23 @@ export class FileManager {
     constructor(app: App, data:ParsedSettings, files: TFile[], file_hashes: Record<string, string>, added_media: string[]) {
         this.app = app
         this.data = data
-        this.files = files
+
+        this.files = this.findFilesThatAreNotIgnored(files, data);
+
         this.ownFiles = []
         this.file_hashes = file_hashes
         this.added_media_set = new Set(added_media)
     }
-
     getUrl(file: TFile): string {
         return "obsidian://open?vault=" + encodeURIComponent(this.data.vault_name) + String.raw`&file=` + encodeURIComponent(file.path)
+    }
+
+    findFilesThatAreNotIgnored(files:TFile[], data:ParsedSettings):TFile[]{
+        let ignoredFiles = []
+        ignoredFiles = multimatch(files.map(file => file.path), data.ignored_file_globs)
+
+        let notIgnoredFiles = files.filter(file => !ignoredFiles.contains(file.path))
+        return notIgnoredFiles;
     }
 
     getFolderPathList(file: TFile): TFolder[] {

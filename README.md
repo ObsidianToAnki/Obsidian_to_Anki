@@ -63,6 +63,16 @@ Current features (check out the wiki for more details):
 * **Custom scan directory** 
   * The plugin will scan the entire vault by default
   * You can also set which directory (includes all sub-directories as well) to scan via plugin settings
+* **Ignore Folders and Files**
+  * You can specify which files and folders to ignore 
+  * This can be done in the settings of this plugin with [Glob syntax](https://en.wikipedia.org/wiki/Glob_(programming)#Syntax).
+  * If you're working on your own globs, you can test them out [here](https://globster.xyz/)
+  * Examples:
+    * `**/*.excalidraw.md` - Ignore all files that end in `.excalidraw.md`
+      * => avoids excalidraw files from being scanned which can be extremely slow
+    * `Template/**` - Ignore all files in the `Template` folder (including subfolders)
+    * `**/private/**` - Ignore all files in folders that are called `private` no matter where they are in the vault
+    * `[Pp]rivate*/**` - Ignore all files and folders in the root of the vault that start with `private` or with `Private`
 * **Updating notes from file** - Your text files are the canonical source of the notes.
 * **Tags**, including **tags for an entire file**.
 * **Adding to user-specified deck** on a *per-file* basis.

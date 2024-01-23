@@ -14,6 +14,10 @@ const defaultDescs = {
 	"Add Obsidian Tags": "Interpret #tags in the fields of a note as Anki tags, removing them from the note text in Anki."
 }
 
+export const DEFAULT_IGNORED_FILE_GLOBS = [
+	'**/*.excalidraw.md'
+];
+
 export class SettingsTab extends PluginSettingTab {
 
 	setup_custom_regexp(note_type: string, row_cells: HTMLCollection) {
@@ -397,6 +401,35 @@ export class SettingsTab extends PluginSettingTab {
 				}
 			)
 	}
+	setup_ignore_files() {
+		let { containerEl } = this;
+		const plugin = (this as any).plugin
+		let ignored_files_settings = containerEl.createEl('h3', { text: 'Ignored File Settings' })
+		plugin.settings["IGNORED_FILE_GLOBS"] = plugin.settings.hasOwnProperty("IGNORED_FILE_GLOBS") ? plugin.settings["IGNORED_FILE_GLOBS"] : DEFAULT_IGNORED_FILE_GLOBS
+		const descriptionFragment = document.createDocumentFragment();
+		descriptionFragment.createEl("span", { text: "Glob patterns for files to ignore. You can add multiple patterns. One per line. Have a look at the " })
+		descriptionFragment.createEl("a", { text: "README.md", href: "https://github.com/Pseudonium/Obsidian_to_Anki?tab=readme-ov-file#features" });
+		descriptionFragment.createEl("span", { text: " for more information, examples and further resources." })
+
+
+		new Setting(ignored_files_settings)
+			.setName("Patterns to ignore")
+			.setDesc(descriptionFragment)
+			.addTextArea(text => {
+				text.setValue(plugin.settings.IGNORED_FILE_GLOBS.join("\n"))
+					.setPlaceholder("Examples: '**/*.excalidraw.md', 'Templates/**'")
+					.onChange((value) => {
+						let ignoreLines = value.split("\n")
+						ignoreLines = ignoreLines.filter(e => e.trim() != "") //filter out empty lines and blank lines
+						plugin.settings.IGNORED_FILE_GLOBS = ignoreLines
+
+						plugin.saveAllData()
+					}
+					)
+				text.inputEl.rows = 10
+				text.inputEl.cols = 30
+			});
+	}
 
 	setup_display() {
 		let {containerEl} = this
@@ -409,6 +442,7 @@ export class SettingsTab extends PluginSettingTab {
 		this.setup_syntax()
 		this.setup_defaults()
 		this.setup_buttons()
+		this.setup_ignore_files()
 	}
 
 	async display() {
