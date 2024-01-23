@@ -53,8 +53,8 @@ def test_cards_count(col: Collection):
 def test_cards_ids_from_obsidian(col: Collection):
     ID_REGEXP_STR = r"\n?(?:<!--)?(?:ID: (\d+).*)"
 
+    obs_IDs = []
     for obsidian_test_md in test_file_paths:
-        obs_IDs = []
         with open(obsidian_test_md) as file:
             for line in file:
                 output = re.search(ID_REGEXP_STR, line.rstrip())
