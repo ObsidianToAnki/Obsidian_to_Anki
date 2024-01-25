@@ -68,11 +68,15 @@ export class FormatConverter {
 	}
 
 	obsidian_to_anki_math(note_text: string): string {
+		const replaceDoubleCurlyBraces = (input: string): string => {
+			return input.replace(/{{/g, "{ {").replace(/}}/g, "} }")
+		}
+
 		return note_text.replace(
-				c.OBS_DISPLAY_MATH_REGEXP, "\\[$1\\]"
+				c.OBS_DISPLAY_MATH_REGEXP, (match, p1) => `\\[${replaceDoubleCurlyBraces(p1)}\\]`
 		).replace(
 			c.OBS_INLINE_MATH_REGEXP,
-			"\\($1\\)"
+			(match, p1) => `\\(${replaceDoubleCurlyBraces(p1)}\\)`
 		)
 	}
 
