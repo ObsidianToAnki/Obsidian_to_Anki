@@ -173,7 +173,7 @@ jobs:
       
       - name: Publish Screehnshots - Update or Create Comment
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           body-file: comment.md
@@ -374,7 +374,7 @@ jobs:
       
       - name: Publish Screehnshots - Update or Create Comment
         if: always()
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           body-file: comment.md
