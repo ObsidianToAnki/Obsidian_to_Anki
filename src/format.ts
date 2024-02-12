@@ -58,7 +58,7 @@ export class FormatConverter {
     }
 
 	format_note_with_url(note: AnkiConnectNote, url: string, field: string): void {
-		note.fields[field] += '<br><a href="' + url + '" class="obsidian-link">Obsidian</a>'
+		note.fields[field] += '<a href="' + url + '" class="obsidian-link">Obsidian</a>'
 	}
 
 	format_note_with_frozen_fields(note: AnkiConnectNote, frozen_fields_dict: Record<string, Record<string, string>>): void {
