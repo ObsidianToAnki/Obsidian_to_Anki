@@ -288,7 +288,7 @@ class FormatConverter:
     @staticmethod
     def format_note_with_url(note, url):
         for key in note["fields"]:
-            note["fields"][key] += "<br>" + "".join([
+            note["fields"][key] += "".join([
                 '<a',
                 ' href="{}" class="obsidian-link">Obsidian</a>'.format(url)
             ])
