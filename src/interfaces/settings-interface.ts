@@ -23,6 +23,7 @@ export interface PluginSettings {
 		"Deck": string,
 		"Scheduling Interval": number
 		"Add File Link": boolean,
+    "Prepend File Link Line Break": boolean,
 		"Add Context": boolean,
 		"CurlyCloze": boolean,
 		"CurlyCloze - Highlights to Clozes": boolean,
@@ -52,6 +53,7 @@ export interface FileData {
 	curly_cloze: boolean
 	highlights_to_cloze: boolean
 	comment: boolean
+  prepend_file_link_line_break: boolean
 	add_context: boolean
 	add_obs_tags: boolean
 }
