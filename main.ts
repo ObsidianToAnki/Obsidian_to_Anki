@@ -6,6 +6,38 @@ import { ANKI_ICON } from './src/constants'
 import { settingToData } from './src/setting-to-data'
 import { FileManager } from './src/files-manager'
 
+const DEFAULT_SETTINGS:  PluginSettings = {
+    CUSTOM_REGEXPS: {},
+    FILE_LINK_FIELDS: {},
+    CONTEXT_FIELDS: {},
+    FOLDER_DECKS: {},
+    FOLDER_TAGS: {},
+    Syntax: {
+      "Begin Note": "START",
+      "End Note": "END",
+      "Begin Inline Note": "STARTI",
+      "End Inline Note": "ENDI",
+      "Target Deck Line": "TARGET DECK",
+      "File Tags Line": "FILE TAGS",
+      "Delete Note Line": "DELETE",
+      "Frozen Fields Line": "FROZEN"
+    },
+    Defaults: {
+      "Scan Directory": "",
+      "Tag": "Obsidian_to_Anki",
+      "Deck": "Default",
+      "Scheduling Interval": 0,
+      "Add File Link": false,
+      "Prepend File Link Line Break": false,
+      "Add Context": false,
+      "CurlyCloze": false,
+      "CurlyCloze - Highlights to Clozes": false,
+      "ID Comments": true,
+      "Add Obsidian Tags": false,
+    },
+    IGNORED_FILE_GLOBS: DEFAULT_IGNORED_FILE_GLOBS,
+}
+
 export default class MyPlugin extends Plugin {
 
 	settings: PluginSettings
@@ -15,36 +47,7 @@ export default class MyPlugin extends Plugin {
 	file_hashes: Record<string, string>
 
 	async getDefaultSettings(): Promise<PluginSettings> {
-		let settings: PluginSettings = {
-			CUSTOM_REGEXPS: {},
-			FILE_LINK_FIELDS: {},
-			CONTEXT_FIELDS: {},
-			FOLDER_DECKS: {},
-			FOLDER_TAGS: {},
-			Syntax: {
-				"Begin Note": "START",
-				"End Note": "END",
-				"Begin Inline Note": "STARTI",
-				"End Inline Note": "ENDI",
-				"Target Deck Line": "TARGET DECK",
-				"File Tags Line": "FILE TAGS",
-				"Delete Note Line": "DELETE",
-				"Frozen Fields Line": "FROZEN"
-			},
-			Defaults: {
-				"Scan Directory": "",
-				"Tag": "Obsidian_to_Anki",
-				"Deck": "Default",
-				"Scheduling Interval": 0,
-				"Add File Link": false,
-				"Add Context": false,
-				"CurlyCloze": false,
-				"CurlyCloze - Highlights to Clozes": false,
-				"ID Comments": true,
-				"Add Obsidian Tags": false,
-			},
-			IGNORED_FILE_GLOBS: DEFAULT_IGNORED_FILE_GLOBS,
-		}
+		let settings: PluginSettings = DEFAULT_SETTINGS
 		/*Making settings from scratch, so need note types*/
 		this.note_types = await AnkiConnect.invoke('modelNames') as Array<string>
 		this.fields_dict = await this.generateFieldsDict()
@@ -98,9 +101,19 @@ export default class MyPlugin extends Plugin {
 			new Notice("Default settings successfully generated!")
 			return default_sets
 		} else {
-			return current_data.settings
+      // Copy any missing settings with default value and fill saved settings
+      return this.mergeSettings(structuredClone(DEFAULT_SETTINGS), current_data.settings)
 		}
 	}
+
+  mergeSettings(def_setting: any, data_setting: any): PluginSettings {
+    if (Object(data_setting) !== data_setting) return data_setting
+    if (Object(def_setting) !== def_setting) def_setting = {}
+    for (let key in data_setting) {
+      def_setting[key] = this.mergeSettings(def_setting[key], data_setting[key])
+    }
+    return def_setting
+  }
 
 	async loadAddedMedia(): Promise<string[]> {
 		let current_data = await this.loadData()
