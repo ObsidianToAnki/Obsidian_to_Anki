@@ -1,4 +1,5 @@
 # Obsidian_to_Anki
+
 Plugin to add flashcards from a text or markdown file to Anki. Run in Obsidian as a plugin, or from the command-line as a python script. Built with [Obsidian](https://obsidian.md/) markdown syntax in mind. Supports **user-defined custom syntax for flashcards.**  
 See the [Trello](https://trello.com/b/6MXEizGg/obsidiantoanki) for planned features.
 
@@ -9,10 +10,12 @@ Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It ha
 ## Setup
 
 ### All users
+
 1. Start up [Anki](https://apps.ankiweb.net/), and navigate to your desired profile.
 2. Ensure that you've installed [AnkiConnect](https://git.foosoft.net/alex/anki-connect).
 
 ### Obsidian plugin users
+
 3. Have [Obsidian](https://obsidian.md/) downloaded
 4. Search the 'Community plugins' list for this plugin
 5. Install the plugin.
@@ -34,62 +37,65 @@ Check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)! It ha
 7. Restart Anki to apply the above changes
 8. With Anki running in the background, load the plugin. This will generate the plugin settings.
 
-
 You shouldn't need Anki running to load Obsidian in the future, though of course you will need it for using the plugin!
 
 To run the plugin, look for an Anki icon on your ribbon (the place where buttons such as 'open Graph view' and 'open Quick Switcher' are).
 For more information on use, please check out the [Wiki](https://github.com/Pseudonium/Obsidian_to_Anki/wiki)!
 
 ### Python script users
+
 3. Install the latest version of [Python](https://www.python.org/downloads/).
-4. If you are a new user, download `obstoanki_setup.py` from the [releases page](https://github.com/Pseudonium/Obsidian_to_Anki/releases), and place it in the folder you want the script installed (for example your notes folder).  
-5. Run `obstoanki_setup.py`, for example by double-clicking it in a file explorer. This will download the latest version of the script and required dependencies automatically. Existing users should be able to run their existing `obstoanki_setup.py` to get the latest version of the script.  
+4. If you are a new user, download `obstoanki_setup.py` from the [releases page](https://github.com/Pseudonium/Obsidian_to_Anki/releases), and place it in the folder you want the script installed (for example your notes folder).
+5. Run `obstoanki_setup.py`, for example by double-clicking it in a file explorer. This will download the latest version of the script and required dependencies automatically. Existing users should be able to run their existing `obstoanki_setup.py` to get the latest version of the script.
 6. Check the Permissions tab below to ensure the script is able to run.
 7. Run `obsidian_to_anki.py`, for example by double-clicking it in a file explorer. This will generate a config file, `obsidian_to_anki_config.ini`.
 
 #### Permissions
+
 The script needs to be able to:
-* Make a config file in the directory the script is installed.
-* Read the file in the directory the script is used.
-* Make a backup file in the directory the script is used.
-* Rename files in the directory the script is used.
-* Remove a backup file in the directory the script is used.
-* Change the current working directory temporarily (so that local image paths are resolved correctly).
+
+- Make a config file in the directory the script is installed.
+- Read the file in the directory the script is used.
+- Make a backup file in the directory the script is used.
+- Rename files in the directory the script is used.
+- Remove a backup file in the directory the script is used.
+- Change the current working directory temporarily (so that local image paths are resolved correctly).
 
 ## Features
 
 Current features (check out the wiki for more details):
-* **Custom note types** - You're not limited to the 6 built-in note types of Anki.
-* **Custom scan directory** 
-  * The plugin will scan the entire vault by default
-  * You can also set which directory (includes all sub-directories as well) to scan via plugin settings
-* **Ignore Folders and Files**
-  * You can specify which files and folders to ignore 
-  * This can be done in the settings of this plugin with [Glob syntax](https://en.wikipedia.org/wiki/Glob_(programming)#Syntax).
-  * If you're working on your own globs, you can test them out [here](https://globster.xyz/)
-  * Examples:
-    * `**/*.excalidraw.md` - Ignore all files that end in `.excalidraw.md`
-      * => avoids excalidraw files from being scanned which can be extremely slow
-    * `Template/**` - Ignore all files in the `Template` folder (including subfolders)
-    * `**/private/**` - Ignore all files in folders that are called `private` no matter where they are in the vault
-    * `[Pp]rivate*/**` - Ignore all files and folders in the root of the vault that start with `private` or with `Private`
-* **Updating notes from file** - Your text files are the canonical source of the notes.
-* **Tags**, including **tags for an entire file**.
-* **Adding to user-specified deck** on a *per-file* basis.
-* **Markdown formatting**.
-* **Math formatting**.
-* **Embedded images**. GIFs should work too.
-* **Audio**.
-* **Auto-deleting notes from the file**.
-* **Reading from all files in a directory automatically** - recursively too!
-* **Inline Notes** - Shorter syntax for typing out notes on a single line.
-* **Easy cloze formatting** - A more compact syntax to do Cloze text
-* **Frozen Fields**
-* **Obsidian integration** - A link to the file that made the flashcard, full link and image embed support.
-* **Custom syntax** - Using **regular expressions**, add custom syntax to generate **notes that make sense for you.** Some examples:
-  * RemNote single-line style. `This is how to use::Remnote single-line style`  
-  ![Remnote 1](Images/Remnote_1.png)
-  * Header paragraph style.
+
+- **Custom note types** - You're not limited to the 6 built-in note types of Anki.
+- **Custom scan directory**
+  - The plugin will scan the entire vault by default
+  - You can also set which directory (includes all sub-directories as well) to scan via plugin settings
+- **Ignore Folders and Files**
+  - You can specify which files and folders to ignore
+  - This can be done in the settings of this plugin with [Glob syntax](<https://en.wikipedia.org/wiki/Glob_(programming)#Syntax>).
+  - If you're working on your own globs, you can test them out [here](https://globster.xyz/)
+  - Examples:
+    - `**/*.excalidraw.md` - Ignore all files that end in `.excalidraw.md`
+      - => avoids excalidraw files from being scanned which can be extremely slow
+    - `Template/**` - Ignore all files in the `Template` folder (including subfolders)
+    - `**/private/**` - Ignore all files in folders that are called `private` no matter where they are in the vault
+    - `[Pp]rivate*/**` - Ignore all files and folders in the root of the vault that start with `private` or with `Private`
+- **Updating notes from file** - Your text files are the canonical source of the notes.
+- **Tags**, including **tags for an entire file**.
+- **Adding to user-specified deck** on a _per-file_ basis.
+- **Markdown formatting**.
+- **Math formatting**.
+- **Embedded images**. GIFs should work too.
+- **Audio**.
+- **Auto-deleting notes from the file**.
+- **Reading from all files in a directory automatically** - recursively too!
+- **Inline Notes** - Shorter syntax for typing out notes on a single line.
+- **Easy cloze formatting** - A more compact syntax to do Cloze text
+- **Frozen Fields**
+- **Obsidian integration** - A link to the file that made the flashcard, full link and image embed support.
+- **Custom syntax** - Using **regular expressions**, add custom syntax to generate **notes that make sense for you.** Some examples:
+  - RemNote single-line style. `This is how to use::Remnote single-line style`  
+    ![Remnote 1](Images/Remnote_1.png)
+  - Header paragraph style.
   <pre>
   # Style
   This style is suitable for having the header as the front, and the answer as the back

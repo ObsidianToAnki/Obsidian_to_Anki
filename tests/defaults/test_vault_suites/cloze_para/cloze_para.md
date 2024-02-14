@@ -8,7 +8,3 @@ The script should ignore paragraphs that have math formatting like $\frac{3}{4}$
 
 With {2:CurlyCloze} enabled, you can also use the {c1|easier cloze formatting},
 but of course {{c3::Anki}}'s formatting is always an option.
-
-
-
-

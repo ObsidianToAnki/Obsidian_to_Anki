@@ -1,5 +1,5 @@
-
 <!-- CARD -->
+
 START
 Basic
 This is a test. Subfolders should be scanned for cards.
@@ -8,6 +8,7 @@ Tags: Testing
 END
 
 <!-- CARD -->
+
 START
 Basic
 Front: This is a test with Front specified. Subfolders should be scanned for cards.
@@ -16,6 +17,7 @@ Tags: Testing 2
 END
 
 <!-- CARD -->
+
 START
 Basic
 This is a test. Subfolders should be scanned for cards.

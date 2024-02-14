@@ -1,5 +1,3 @@
-
-
 <!-- CARD -->
 
 This is a ==c1::test==.

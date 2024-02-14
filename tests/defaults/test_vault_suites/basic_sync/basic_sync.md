@@ -1,4 +1,5 @@
 <!-- CARD -->
+
 START
 Basic
 This is a test.
@@ -7,6 +8,7 @@ Tags: Testing
 END
 
 <!-- CARD -->
+
 START
 Basic
 Front: This is a test with Front specified.
@@ -15,6 +17,7 @@ Tags: Testing 2
 END
 
 <!-- CARD -->
+
 START
 Basic
 This is a test.
