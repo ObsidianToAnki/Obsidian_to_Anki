@@ -1,4 +1,5 @@
 <!-- NOT A CARD BECAUSE ITS OUTSIDE OF SCANDIR -->
+
 START
 Basic
 This is a test. Ouside of scandir.
@@ -8,6 +9,7 @@ Tags: Testing
 END
 
 <!-- NOT A CARD BECAUSE ITS OUTSIDE OF SCANDIR -->
+
 START
 Basic
 Front: This is a test with Front specified. Outside of scandir.
@@ -16,6 +18,7 @@ Tags: Testing 2
 END
 
 <!-- NOT A CARD BECAUSE ITS OUTSIDE OF SCANDIR -->
+
 START
 Basic
 This is a test. Outside of scandir.

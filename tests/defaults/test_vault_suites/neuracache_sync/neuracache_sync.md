@@ -14,5 +14,4 @@ the question and answer are one paragraph.
 
 And, of course #flashcard
 
-
 Whitespace is ignored!

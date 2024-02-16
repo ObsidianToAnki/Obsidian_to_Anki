@@ -1,4 +1,5 @@
 <!-- CARD -->
+
 START
 Basic
 This is a test.
@@ -7,6 +8,7 @@ Tags: Tag1 Tag2 Tag3
 END
 
 <!-- CARD -->
+
 START
 Basic
 This is a test. This should not have any tags except default ones.
@@ -15,6 +17,7 @@ Back: Test successful!
 END
 
 <!-- CARD -->
+
 START
 Basic
 This is a test. this should have meow-tag
