@@ -1,4 +1,5 @@
-import { PluginSettingTab, Setting, Notice, TFolder } from 'obsidian'
+import { PluginSettingTab, Setting, Notice, TFolder, Plugin_2, App } from 'obsidian'
+import MyPlugin from '../main';
 import * as AnkiConnect from './anki'
 
 const defaultDescs = {
@@ -20,8 +21,12 @@ export const DEFAULT_IGNORED_FILE_GLOBS = [
 
 export class SettingsTab extends PluginSettingTab {
 
+	constructor(app: App, private plugin: MyPlugin) {
+		super(app, plugin)
+	}
+
 	setup_custom_regexp(note_type: string, row_cells: HTMLCollection) {
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		let regexp_section = plugin.settings["CUSTOM_REGEXPS"]
 		let custom_regexp = new Setting(row_cells[1] as HTMLElement)
 			.addText(
@@ -39,7 +44,7 @@ export class SettingsTab extends PluginSettingTab {
 	}
 
 	setup_link_field(note_type: string, row_cells: HTMLCollection) {
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		let link_fields_section = plugin.settings.FILE_LINK_FIELDS
 		let link_field = new Setting(row_cells[2] as HTMLElement)
 			.addDropdown(
@@ -77,7 +82,7 @@ export class SettingsTab extends PluginSettingTab {
 	}
 
 	setup_context_field(note_type: string, row_cells: HTMLCollection) {
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		let context_fields_section: Record<string, string> = plugin.settings.CONTEXT_FIELDS
 		let context_field = new Setting(row_cells[3] as HTMLElement)
 			.addDropdown(
@@ -121,7 +126,7 @@ export class SettingsTab extends PluginSettingTab {
 
 	setup_note_table() {
 		let {containerEl} = this;
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		containerEl.createEl('h3', {text: 'Note type settings'})
 		this.create_collapsible("Note Type Table")
 		let note_type_table = containerEl.createEl('table', {cls: "anki-settings-table"})
@@ -155,7 +160,7 @@ export class SettingsTab extends PluginSettingTab {
 
 	setup_syntax() {
 		let {containerEl} = this;
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		let syntax_settings = containerEl.createEl('h3', {text: 'Syntax Settings'})
 		for (let key of Object.keys(plugin.settings["Syntax"])) {
 			new Setting(syntax_settings)
@@ -172,7 +177,7 @@ export class SettingsTab extends PluginSettingTab {
 
 	setup_defaults() {
 		let {containerEl} = this;
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		let defaults_settings = containerEl.createEl('h3', {text: 'Defaults'})
 
 		// To account for new scan directory
@@ -235,11 +240,11 @@ export class SettingsTab extends PluginSettingTab {
 								plugin.settings["Defaults"][key] = value
 								await plugin.saveAllData()
 								if (plugin.hasOwnProperty("schedule_id")) {
-									window.clearInterval(plugin.schedule_id)
+									window.clearInterval((plugin as any).schedule_id)
 								}
 								if (value != 0) {
-									plugin.schedule_id = window.setInterval(async () => await plugin.scanVault(), value * 1000 * 60)
-									plugin.registerInterval(plugin.schedule_id)
+									(plugin as any).schedule_id = window.setInterval(async () => await plugin.scanVault(), value * 1000 * 60)
+									plugin.registerInterval((plugin as any).schedule_id)
 								}
 
 							})
@@ -250,7 +255,7 @@ export class SettingsTab extends PluginSettingTab {
 	}
 
 	get_folders(): TFolder[] {
-		const app = (this as any).plugin.app
+		const app = this.plugin.app
 		let folder_list: TFolder[] = [app.vault.getRoot()]
 		for (let folder of folder_list) {
 			let filtered_list: TFolder[] = folder.children.filter((element) => element.hasOwnProperty("children")) as TFolder[]
@@ -260,7 +265,7 @@ export class SettingsTab extends PluginSettingTab {
 	}
 
 	setup_folder_deck(folder: TFolder, row_cells: HTMLCollection) {
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		let folder_decks = plugin.settings.FOLDER_DECKS
 		if (!(folder_decks.hasOwnProperty(folder.path))) {
 			folder_decks[folder.path] = ""
@@ -279,7 +284,7 @@ export class SettingsTab extends PluginSettingTab {
 	}
 
 	setup_folder_tag(folder: TFolder, row_cells: HTMLCollection) {
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		let folder_tags = plugin.settings.FOLDER_TAGS
 		if (!(folder_tags.hasOwnProperty(folder.path))) {
 			folder_tags[folder.path] = ""
@@ -299,7 +304,7 @@ export class SettingsTab extends PluginSettingTab {
 
 	setup_folder_table() {
 		let {containerEl} = this;
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		const folder_list = this.get_folders()
 		containerEl.createEl('h3', {text: 'Folder settings'})
 		this.create_collapsible("Folder Table")
@@ -336,7 +341,7 @@ export class SettingsTab extends PluginSettingTab {
 
 	setup_buttons() {
 		let {containerEl} = this
-		const plugin = (this as any).plugin
+		const plugin = this.plugin
 		let action_buttons = containerEl.createEl('h3', {text: 'Actions'})
 		new Setting(action_buttons)
 			.setName("Regenerate Note Type Table")
@@ -347,19 +352,17 @@ export class SettingsTab extends PluginSettingTab {
 					.onClick(async () => {
 						new Notice("Need to connect to Anki to update note types...")
 						try {
+							new Notice('Need to connect to Anki to generate fields dictionary...')
 							plugin.note_types = await AnkiConnect.invoke('modelNames')
 							plugin.regenerateSettingsRegexps()
 							plugin.fields_dict = await plugin.loadFieldsDict()
-							if (Object.keys(plugin.fields_dict).length != plugin.note_types.length) {
-								new Notice('Need to connect to Anki to generate fields dictionary...')
-								try {
-									plugin.fields_dict = await plugin.generateFieldsDict()
-									new Notice("Fields dictionary successfully generated!")
-								}
-								catch(e) {
-									new Notice("Couldn't connect to Anki! Check console for error message.")
-									return
-								}
+							try {
+								plugin.fields_dict = await plugin.generateFieldsDict()
+								new Notice("Fields dictionary successfully generated!")
+							}
+							catch(e) {
+								new Notice("Couldn't connect to Anki! Check console for error message.")
+								return
 							}
 							await plugin.saveAllData()
 							this.setup_display()

@@ -29,7 +29,7 @@ let converter: Converter = new Converter({
 	tables: true, tasklists: true,
 	simpleLineBreaks: true,
 	requireSpaceBeforeHeadingText: true,
-	extensions: [showdownHighlight]
+	extensions: [showdownHighlight as any]
 })
 
 function escapeHtml(unsafe: string): string {
