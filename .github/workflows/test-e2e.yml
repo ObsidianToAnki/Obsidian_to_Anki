@@ -79,7 +79,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 16
-      - uses: iterative/setup-cml@v1
+      - uses: iterative/setup-cml@v3
         if: always()
       
       - name: Publish Screenshots - Find Comment
@@ -287,7 +287,7 @@ jobs:
       #     path: logs/test-reports/wdio.xml
       #     reporter: jest-junit
       
-      - uses: iterative/setup-cml@v1
+      - uses: iterative/setup-cml@v3
         if: always()
       
       - name: Publish Screenshots - Find Comment
