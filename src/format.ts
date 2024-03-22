@@ -58,7 +58,30 @@ export class FormatConverter {
     }
 
 	format_note_with_url(note: AnkiConnectNote, url: string, field: string): void {
-		note.fields[field] += '<br><a href="' + url + '" class="obsidian-link">Obsidian</a>'
+		let mdFilename: string = ""
+
+		// We separate the string by "&file=".
+		const splitUrl: string[] = url.split("&file=");
+
+		// Check if the split resulted in two parts
+		if (splitUrl.length === 2) {
+			// Extract the part after "&file="
+			const encodedPathWithExtension: string = splitUrl[1]; // Extracted part containing path with extension
+			const decodedPathWithExtension: string = decodeURIComponent(encodedPathWithExtension);
+
+			// Split the filename from its directory path
+			const pathSegments: string[] = decodedPathWithExtension.split('/');
+			const filenameWithExtension: string | undefined = pathSegments.pop()?.trim();
+
+			// Check if the filename with extension is not empty
+			if (filenameWithExtension) {
+				// Split the filename from its extension
+				const filenameSegments: string[] = filenameWithExtension.split('.');
+				mdFilename = filenameSegments[0]?.trim();
+			}
+		}
+
+		note.fields[field] += '<br><a href="' + url + `" class="obsidian-link">Obsidian${mdFilename ? " - " + mdFilename : ""}</a>`;
 	}
 
 	format_note_with_frozen_fields(note: AnkiConnectNote, frozen_fields_dict: Record<string, Record<string, string>>): void {
